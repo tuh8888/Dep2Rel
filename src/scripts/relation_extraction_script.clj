@@ -2,7 +2,7 @@
   (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]
             [clojure.java.io :as io]
             [taoensso.timbre :as t]
-            [edu.ucdenver.ccp.nlp.readers :refer :all]
+            [edu.ucdenver.ccp.nlp.readers :as rdr]
             [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [edu.ucdenver.ccp.knowtator-clj :as k]
@@ -26,17 +26,12 @@
 (def references-dir (io/file craft-dir "concepts+assertions_1_article" "Articles"))
 
 
-#_(def articles (->> (file-seq references-dir)
-                     (filter #(.isFile ^File %))
-                     (map #(.getName %))
-                     (filter #(s/ends-with? % ".txt"))
-                     (map #(s/replace % #"\.txt" ""))))
-(def articles ["11532192"])
+(def articles [(second (rdr/article-names-in-dir references-dir "txt"))])
 
-(def references (read-references articles references-dir))
+(def references (rdr/read-references articles references-dir))
 (def annotations (k/view annotations-file))
-(def dependency (read-dependency word2vec-db articles references dependency-dir))
-(def sentences (read-sentences annotations dependency articles))
+(def dependency (rdr/read-dependency word2vec-db articles references dependency-dir))
+(def sentences (rdr/read-sentences annotations dependency articles))
 (t/info "Num sentences:" (count sentences))
 
 (defn get-sentences-with-ann

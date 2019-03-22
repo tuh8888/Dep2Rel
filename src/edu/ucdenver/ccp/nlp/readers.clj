@@ -4,7 +4,8 @@
             [edu.ucdenver.ccp.nlp.word2vec :as word2vec]
             [taoensso.timbre :as t]
             [clojure.java.io :as io]
-            [edu.ucdenver.ccp.conll :as conll]))
+            [edu.ucdenver.ccp.conll :as conll])
+  (:import (java.io File)))
 
 (defn biocreative-read-abstracts
   [f]
@@ -43,6 +44,14 @@
               :tok     (subs (doc reference) start end)})))
        (vec)))
 
+(defn article-names-in-dir
+  [dir ext]
+  (->> (file-seq dir)
+       (filter #(.isFile ^File %))
+       (map #(.getName %))
+       (filter #(s/ends-with? % (str "." ext)))
+       (map #(s/replace % (re-pattern (str "\\." ext)) ""))))
+
 (defn read-references
   [articles references-dir]
   (->> articles
@@ -52,26 +61,37 @@
                (slurp)))
        (into [])))
 
+(defn assign-embedding
+  [m v embedding-fn]
+  (assoc m :VEC (embedding-fn v)))
+
+(defn toks-with-embeddings
+  [toks k embedding-fn]
+  (mapv
+    (fn [{lemma k :as tok}]
+      (assign-embedding tok lemma embedding-fn))
+    toks))
+
+(defn conll-with-embeddings
+  [reference f]
+  (mapv
+    #(toks-with-embeddings % :LEMMA word2vec/word-embedding)
+    (conll/read-conll reference true f)))
+
 (defn read-dependency
   [word2vec-db articles references dependency-dir]
   (word2vec/with-word2vec word2vec-db
-                          (->> articles
-                               (pmap
-                                 #(do
-                                    (t/warn %2)
-                                    [%2 (->>
-                                          (str %2 ".tree.conllu")
-                                          (io/file dependency-dir)
-                                          (conll/read-conll %1 true)
-                                          (map
-                                            (fn [toks]
-                                              (into [] (map
-                                                         (fn [tok]
-                                                           (assoc tok :VEC (word2vec/get-word-vector (:LEMMA tok))))
-                                                         toks))))
-                                          (into []))])
-                                 references)
-                               (into {}))))
+    (zipmap articles
+            (->> articles
+                 (map
+                   #(str % ".tree.conllu"))
+                 (map
+                   #(io/file dependency-dir %))
+                 (pmap
+                   conll-with-embeddings
+                   references)))))
+
+
 
 (defn read-sentences
   [annotations dependency articles]

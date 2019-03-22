@@ -43,7 +43,7 @@
   (dv (take (count (get *word-vectors* "the"))
             (repeat 0))))
 
-(defn get-word-vector
+(defn word-embedding
   [word]
   (if-let [vec (get *word-vectors* word)]
     (dv vec)
