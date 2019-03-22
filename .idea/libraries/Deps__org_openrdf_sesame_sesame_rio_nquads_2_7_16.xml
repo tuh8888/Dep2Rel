@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: org.openrdf.sesame/sesame-rio-nquads:2.7.16">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/openrdf/sesame/sesame-rio-nquads/2.7.16/sesame-rio-nquads-2.7.16.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

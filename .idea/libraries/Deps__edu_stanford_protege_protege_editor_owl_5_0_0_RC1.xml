@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: edu.stanford.protege/protege-editor-owl:5.0.0-RC1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/edu/stanford/protege/protege-editor-owl/5.0.0-RC1/protege-editor-owl-5.0.0-RC1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

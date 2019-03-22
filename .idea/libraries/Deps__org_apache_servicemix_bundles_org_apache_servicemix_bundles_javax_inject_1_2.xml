@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: org.apache.servicemix.bundles/org.apache.servicemix.bundles.javax-inject:1_2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/servicemix/bundles/org.apache.servicemix.bundles.javax-inject/1_2/org.apache.servicemix.bundles.javax-inject-1_2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

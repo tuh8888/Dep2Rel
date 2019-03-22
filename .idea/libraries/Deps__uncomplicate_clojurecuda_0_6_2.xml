@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: uncomplicate/clojurecuda:0.6.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/uncomplicate/clojurecuda/0.6.2/clojurecuda-0.6.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

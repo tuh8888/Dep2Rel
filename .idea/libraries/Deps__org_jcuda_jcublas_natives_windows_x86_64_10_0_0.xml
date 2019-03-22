@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: org.jcuda/jcublas-natives$windows-x86_64:10.0.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/jcuda/jcublas-natives/10.0.0/jcublas-natives-10.0.0-windows-x86_64.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

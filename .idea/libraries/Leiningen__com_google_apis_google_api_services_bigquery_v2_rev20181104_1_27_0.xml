@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Leiningen: com.google.apis/google-api-services-bigquery:v2-rev20181104-1.27.0">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/com/google/apis/google-api-services-bigquery/v2-rev20181104-1.27.0/google-api-services-bigquery-v2-rev20181104-1.27.0.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

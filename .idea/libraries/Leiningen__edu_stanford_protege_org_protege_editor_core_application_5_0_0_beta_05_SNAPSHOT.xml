@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Leiningen: edu.stanford.protege/org.protege.editor.core.application:5.0.0-beta-05-SNAPSHOT">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/edu/stanford/protege/org.protege.editor.core.application/5.0.0-beta-05-SNAPSHOT/org.protege.editor.core.application-5.0.0-beta-05-SNAPSHOT.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

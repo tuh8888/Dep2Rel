@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Leiningen: org.mapdb/mapdb:3.0.7">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/mapdb/mapdb/3.0.7/mapdb-3.0.7.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

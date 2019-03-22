@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: net.sourceforge.owlapi/org.semanticweb.hermit:1.3.8.413">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/sourceforge/owlapi/org.semanticweb.hermit/1.3.8.413/org.semanticweb.hermit-1.3.8.413.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

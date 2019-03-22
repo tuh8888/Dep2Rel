@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: uncomplicate/commons:0.7.2">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/uncomplicate/commons/0.7.2/commons-0.7.2.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
