@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: org.openjfx/javafx-media:11.0.1:win">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/openjfx/javafx-media/11.0.1/javafx-media-11.0.1-win.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

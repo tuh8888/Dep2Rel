@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: spicerack:0.1.6">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/spicerack/spicerack/0.1.6/spicerack-0.1.6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

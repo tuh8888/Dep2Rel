@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: org.mapdb/elsa:3.0.0-M5">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/mapdb/elsa/3.0.0-M5/elsa-3.0.0-M5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

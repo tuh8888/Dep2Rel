@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: asm/asm-tree:3.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/asm/asm-tree/3.0/asm-tree-3.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

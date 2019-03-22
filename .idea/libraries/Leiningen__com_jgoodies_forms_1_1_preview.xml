@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: com.jgoodies/forms:1.1-preview">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/jgoodies/forms/1.1-preview/forms-1.1-preview.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

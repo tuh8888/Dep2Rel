@@ -1,0 +1,15 @@
+[
+  {
+    "sentence_text": "'''It is therefore conceivable that part of KLF4's tumor suppressor activity is due to its ability to suppress cholesterol biosynthesis.'''",
+    "sentence_start": "26021",
+    "sentence_end": "26154",
+    "concept1_type": "http://purl.obolibrary.org/obo/GO_0051726",
+    "concept1_ancestor": "http://purl.obolibrary.org/obo/GO_0008150",
+    "concept1_start": "26069",
+    "concept1_end": "26085",
+    "concept2_type": "http://purl.obolibrary.org/obo/CHEBI_16113",
+    "concept2_ancestor": "http://purl.obolibrary.org/obo/CHEBI_16113",
+    "concept2_start": "26129",
+    "concept2_end": "26140"
+  }
+]

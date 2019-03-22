@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: org.openrdf.sesame/sesame-rio-n3:2.7.16">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/openrdf/sesame/sesame-rio-n3/2.7.16/sesame-rio-n3-2.7.16.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Leiningen: com.google.auto.value/auto-value:1.4">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/google/auto/value/auto-value/1.4/auto-value-1.4.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
