@@ -3,7 +3,7 @@
             [util :refer [unit-vec-sum]]
             [edu.ucdenver.ccp.conll :as conll]
             [clojure.math.combinatorics :as combo]
-            [taoensso.timbre :refer [info warn debug]]
+            [taoensso.timbre :as t]
             [clojure.set :refer [difference union intersection]]
             [edu.ucdenver.ccp.knowtator-clj :as k]))
 
@@ -35,7 +35,7 @@
 
 (defn make-sentences
   [annotations dependency articles]
-  (let [mem-get-descs (memoize #(k/get-owl-descendants (k/reasoner annotations) %))]
+  (let [mem-get-owl-descendants (memoize #(k/get-owl-descendants (k/reasoner annotations) %))]
     (mapcat
       (fn [doc-id]
         (->>
@@ -46,11 +46,11 @@
             (fn [[sent sent-entities]]
               (map
                 (fn [[i [e1 e2]]]
-                  (warn i)
+                  (t/debug "Sentence" i)
                   (let [entities #{e1 e2}
                         concepts (->> [e1 e2]
                                       (map :concept)
-                                      (map #(-> (mem-get-descs %)
+                                      (map #(-> (mem-get-owl-descendants %)
                                                 (set)
                                                 (conj %)))
                                       (set))

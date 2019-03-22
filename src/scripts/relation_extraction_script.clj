@@ -1,14 +1,14 @@
 (ns scripts.relation-extraction-script
   (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]
             [clojure.java.io :as io]
-            [taoensso.timbre :refer [set-level! info]]
+            [taoensso.timbre :as t]
+            [edu.ucdenver.ccp.nlp.readers :refer :all]
             [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]
-            [edu.ucdenver.ccp.nlp.core :refer :all]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [util :refer [cosine-sim]]
             [clojure.set :as set1]))
-(set-level! :info)
+(t/set-level! :debug)
 
 (def craft-dir
   (io/file "E:" "data" "craft-versions")
@@ -37,7 +37,7 @@
 (def annotations (k/view annotations-file))
 (def dependency (read-dependency word2vec-db articles references dependency-dir))
 (def sentences (read-sentences annotations dependency articles))
-(info "Num sentences:" (count sentences))
+(t/info "Num sentences:" (count sentences))
 
 (defn get-sentences-with-ann
   [sentences id]

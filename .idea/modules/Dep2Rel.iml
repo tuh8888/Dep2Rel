@@ -172,5 +172,15 @@
     <orderEntry type="library" name="Deps: org.slf4j/slf4j-simple:1.7.26" level="project" />
     <orderEntry type="library" name="Deps: edu.ucdenver.ccp/knowtator:2.1.6" level="project" />
     <orderEntry type="library" name="Deps: com.google.cloud/google-cloud-bigquery:1.64.0" level="project" />
+    <orderEntry type="library" name="Deps: spicerack:0.1.6" level="project" />
+    <orderEntry type="library" name="Deps: org.eclipse.collections/eclipse-collections:7.1.1" level="project" />
+    <orderEntry type="library" name="Deps: org.eclipse.collections/eclipse-collections-forkjoin:7.1.1" level="project" />
+    <orderEntry type="library" name="Deps: org.eclipse.collections/eclipse-collections-api:7.1.1" level="project" />
+    <orderEntry type="library" name="Deps: org.mapdb/mapdb:3.0.7" level="project" />
+    <orderEntry type="library" name="Deps: net.jcip/jcip-annotations:1.0" level="project" />
+    <orderEntry type="library" name="Deps: org.jetbrains.kotlin/kotlin-stdlib:1.2.71" level="project" />
+    <orderEntry type="library" name="Deps: org.mapdb/elsa:3.0.0-M5" level="project" />
+    <orderEntry type="library" name="Deps: org.jetbrains/annotations:13.0" level="project" />
+    <orderEntry type="library" name="Deps: org.jetbrains.kotlin/kotlin-stdlib-common:1.2.71" level="project" />
   </component>
 </module>

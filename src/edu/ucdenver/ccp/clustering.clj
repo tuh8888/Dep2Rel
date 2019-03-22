@@ -11,13 +11,13 @@
       [nil nil]
       clusters)))
 
-(defn add-to-cluster
+(defn update-cluster
   [clusters cluster sample merge-fn]
   (let [clusters (disj clusters cluster)
         cluster (merge-fn cluster sample)]
     (conj clusters cluster)))
 
-(defn add-new-cluster
+(defn assoc-cluster
   [clusters sample merge-fn]
   (conj clusters (merge-fn nil sample)))
 
@@ -26,7 +26,7 @@
   (reduce
     (fn [clusters sample]
       (if-let [cluster (nearest clusters sample params)]
-        (add-to-cluster clusters cluster sample cluster-merge-fn)
-        (add-new-cluster clusters sample cluster-merge-fn)))
+        (update-cluster clusters cluster sample cluster-merge-fn)
+        (assoc-cluster clusters sample cluster-merge-fn)))
     clusters
     samples))
