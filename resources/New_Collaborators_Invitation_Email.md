@@ -17,11 +17,11 @@ If you are not yet on GitHub, please sign-up for an account [here](https://githu
 
 **Once you are Added as a Collaborator**  
 In order to help manage project notifications, I’d like to ask you to make an update to your settings. This change will make it so that you only get sent emails when you are specifically `@mentioned` or assigned to an issue or when big changes to the code base are made. This will prevent you from becoming annoyed with me by ensuring that you are only notified when something _ACTUALLY_ needs your attention.
-To make this change, go to the “UnWatch” drop-down in the GitHub repository and change the default setting from “Watching” to “Releases only”. See screenshots [here](https://github.com/callahantiff/Abra-Collaboratory/wiki/Using-GitHub-as-a-Reproducible-Research-Platform#notifications).
+To make this change, go to the “UnWatch” drop-down in the GitHub repository and change the default setting from “Watching” to “Releases only”. See screenshots [here](https://github.com/tuh8888/Dep2Rel/wiki/Using-GitHub-as-a-Reproducible-Research-Platform#notifications).
 
 **Getting Comfortable with the Repository**  
-I strongly recommend you start by reading the [Abra-Collaboratory tutorial](https://github.com/callahantiff/Abra-Collaboratory/wiki/Using-GitHub-as-a-Reproducible-Research-Platform) on the project Wiki.  
-Then, review the [Abra-Collaboratory guidelines](https://github.com/callahantiff/Abra-Collaboratory/wiki/Our-Reproducible-Repository-Guidelines-%F0%9F%98%83) (err, suggestions :smiley:) for collaboration.
+I strongly recommend you start by reading the [Dep2Rel tutorial](https://github.com/tuh8888/Dep2Rel/wiki/Using-GitHub-as-a-Reproducible-Research-Platform) on the project Wiki.  
+Then, review the [Dep2Rel guidelines](https://github.com/tuh8888/Dep2Rel/wiki/Our-Reproducible-Repository-Guidelines-%F0%9F%98%83) (err, suggestions :smiley:) for collaboration.
 
 <br>
 
