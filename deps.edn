@@ -5,12 +5,12 @@
            com.taoensso/nippy                     {:mvn/version "2.14.0"}
            com.climate/claypoole                  {:mvn/version "1.1.4"}
            com.taoensso/timbre                    {:mvn/version "4.10.0"}
-           edu.ucdenver.ccp/knowtator             {:mvn/version "2.1.6"}
+           edu.ucdenver.ccp/knowtator             {:mvn/version "2.1.6" :exclusions [net.sourceforge.owlapi/org.semanticweb.hermit]}
            org.clojure/math.combinatorics         {:mvn/version "0.1.4"}
            spicerack                              {:mvn/version "0.1.6"}}
  :aliases {:rebl {:extra-deps {org.clojure/clojure         {:mvn/version "1.10.0"}
                                org.clojure/core.async      {:mvn/version "0.4.490"}
-                               com.cognitect/rebl          {:mvn/version "0.9.149"}
+                               com.cognitect/REBL          {:mvn/version "0.9.149"}
                                org.openjfx/javafx-fxml     {:mvn/version "11.0.1"}
                                org.openjfx/javafx-controls {:mvn/version "11.0.1"}
                                org.openjfx/javafx-swing    {:mvn/version "11.0.1"}

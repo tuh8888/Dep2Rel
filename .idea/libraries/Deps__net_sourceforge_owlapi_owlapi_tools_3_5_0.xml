@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: net.sourceforge.owlapi/owlapi-tools:3.5.0">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/sourceforge/owlapi/owlapi-tools/3.5.0/owlapi-tools-3.5.0.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

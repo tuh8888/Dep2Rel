@@ -8,7 +8,7 @@
           <option name="externalProjectPath" value="$PROJECT_DIR$" />
           <option name="modules">
             <set>
-              <option value="C:\Users\pielkelh\Drive\projects\Dep2Rel" />
+              <option value="$PROJECT_DIR$" />
             </set>
           </option>
           <option name="useAutoImport" value="true" />
