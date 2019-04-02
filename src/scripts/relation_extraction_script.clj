@@ -7,7 +7,8 @@
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [util :refer [cosine-sim]]
-            [clojure.set :as set1]))
+            [clojure.set :as set1]
+            [edu.ucdenver.ccp.nlp.sentence :as sentence]))
 (t/set-level! :debug)
 
 (def home-dir
@@ -41,13 +42,7 @@
 (def sentences (rdr/read-sentences annotations dependency articles))
 (t/info "Num sentences:" (count sentences))
 
-(defn get-sentences-with-ann
-  [sentences id]
-  (filter (fn [s]
-            (some (fn [e]
-                    (= id (get-in e [:ann :id])))
-                  (get s :entities)))
-          sentences))
+
 
 
 (comment
@@ -57,8 +52,8 @@
   ;; Mutation located in gene
   (def matches (let [property "has_location_in"
                      seeds (set1/intersection
-                             (set (get-sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21741"))
-                             (set (get-sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21947")))
+                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21741"))
+                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21947")))
                      seed-thresh 0.9
                      context-thresh 0.9
                      cluster-thresh 0.75

@@ -71,3 +71,11 @@
                     (->Sentence concepts entities doc-id sent context context-vector)))
                 (map-indexed vector (combo/combinations sent-entities 2)))))))
       articles)))
+
+(defn sentences-with-ann
+  [sentences id]
+  (filter (fn [s]
+            (some (fn [e]
+                    (= id (get-in e [:ann :id])))
+                  (get s :entities)))
+          sentences))
