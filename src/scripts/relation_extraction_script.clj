@@ -10,23 +10,30 @@
             [clojure.set :as set1]))
 (t/set-level! :debug)
 
+(def home-dir
+  (io/file "/" "media" "tuh8888" "Seagate Expansion Drive" "data"))
+
 (def craft-dir
-  (io/file "E:" "data" "craft-versions")
-  #_(io/file "/home" "harrison" "craft-3.0"))
+  (io/file home-dir "craft-versions" "concepts+assertions_1_article"))
 (def word-vector-dir
-  (io/file "E:" "data" "WordVectors")
-  #_(io/file "/home" "harrison" "word-vectors"))
-(def word2vec-db (.getAbsolutePath (io/file word-vector-dir "bio-word-vectors-clj.vec")))
+  (io/file home-dir "WordVectors"))
+
+(def word2vec-db
+  (.getAbsolutePath
+    (io/file word-vector-dir "bio-word-vectors-clj.vec")))
 
 
-(def annotations-file (io/file (io/file craft-dir "concepts+assertions_1_article")
-                               "concepts+assertions.knowtator"))
+(def annotations-file
+  (io/file craft-dir "concepts+assertions.knowtator"))
 
-(def dependency-dir (io/file craft-dir "CRAFT" "structural-annotation" "dependency" "conllu"))
-(def references-dir (io/file craft-dir "concepts+assertions_1_article" "Articles"))
+(def dependency-dir
+  (io/file craft-dir "Structures"))
+(def references-dir
+  (io/file craft-dir "Articles"))
 
 
-(def articles [(second (rdr/article-names-in-dir references-dir "txt"))])
+(def articles
+  [(first (rdr/article-names-in-dir references-dir "txt"))])
 
 (def references (rdr/read-references articles references-dir))
 (def annotations (k/view annotations-file))
@@ -71,11 +78,9 @@
                                   (map #(merge % params))
                                   (map #(let [t (evaluation/matched-triples % annotations property)]
                                           (assoc % :num-matches (count t) :triples t))))]
-                 (info "Final matches:" (count matches))
-                 (info "Triples matched" (count (distinct (mapcat :triples matches))))
+                 (t/info "Final matches:" (count matches))
+                 (t/info "Triples matched" (count (distinct (mapcat :triples matches))))
                  matches))
-
-
 
   (evaluation/format-matches matches)
   (evaluation/to-csv (io/file "." "matches.csv") matches)
