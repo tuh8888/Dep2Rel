@@ -3,7 +3,8 @@
            (javax.swing JFrame)
            (org.semanticweb.HermiT ReasonerFactory)
            (org.semanticweb.owlapi.reasoner OWLReasoner)
-           (org.semanticweb.owlapi.model OWLObjectProperty)))
+           (org.semanticweb.owlapi.model OWLObjectProperty)
+           (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))
 
 (defn display
   [v]
@@ -19,8 +20,12 @@
     v))
 
 (defn model
-  [v]
-  (.get (.getModel v)))
+  ([v]
+   (if (instance? KnowtatorModel v)
+     v
+     (.get (.getModel v))))
+  ([f owl-workspace]
+    (KnowtatorModel. f owl-workspace)))
 
 (defn simple-model
   [v]
