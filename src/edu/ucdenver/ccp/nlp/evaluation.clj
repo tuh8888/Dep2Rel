@@ -48,7 +48,10 @@
                [e1-tok e2-tok] (map :tok entities)
                [e1-tok e2-tok] (map :FORM [e1-tok e2-tok])
                source-sent (pprint-sent sent)
-               seed (map :concept (get-in match [:seed :entities]))]
+               seed (->> (get-in match [:seed :entities])
+                         (map :concept)
+                         (map #(.getShortForm (.getIRI %)))
+                         (interpose ", "))]
            {:doc        doc
             ;;:e1-ann        e1-ann
             :context    context

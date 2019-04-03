@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="90b85686-47e2-43a7-abf1-031e772e3d27" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/src/BioCreative 2017 - Relation Extraction.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/src/BioCreative 2017 - Relation Extraction.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/CRAFT 3.1 - Relation Extraction.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/src/CRAFT 3.1 - Relation Extraction.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/out/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -82,29 +83,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/deps.edn">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="198">
-              <caret line="9" column="72" lean-forward="true" selection-start-line="9" selection-start-column="10" selection-end-line="9" selection-end-column="72" />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj">
+        <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="347">
-              <caret line="34" column="47" selection-start-line="34" selection-start-column="47" selection-end-line="34" selection-end-column="47" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/readers.clj">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="499">
-              <caret line="97" column="33" selection-start-line="97" selection-start-column="33" selection-end-line="97" selection-end-column="33" />
+            <state relative-caret-position="301">
+              <caret line="53" column="41" selection-start-line="53" selection-start-column="41" selection-end-line="53" selection-end-column="41" />
             </state>
           </provider>
         </entry>
@@ -112,8 +95,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="281">
-              <caret line="37" column="74" selection-start-line="37" selection-start-column="74" selection-end-line="37" selection-end-column="74" />
+            <state relative-caret-position="535">
+              <caret line="74" column="6" lean-forward="true" selection-start-line="74" selection-start-column="6" selection-end-line="74" selection-end-column="6" />
             </state>
           </provider>
         </entry>
@@ -121,8 +104,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/scripts/relation_extraction_script.clj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="88">
-              <caret line="28" column="19" lean-forward="true" selection-start-line="28" selection-start-column="19" selection-end-line="28" selection-end-column="19" />
+            <state relative-caret-position="227">
+              <caret line="25" lean-forward="true" selection-start-line="25" selection-end-line="25" />
             </state>
           </provider>
         </entry>
@@ -151,15 +134,16 @@
         <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/core.clj" />
         <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/relation_extraction.clj" />
         <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/clustering.clj" />
-        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj" />
         <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/readers.clj" />
         <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/conll.clj" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/resources/New_Collaborators_Invitation_Email.md" />
         <option value="$PROJECT_DIR$/notebooks/README.md" />
         <option value="$PROJECT_DIR$/deps.edn" />
-        <option value="$PROJECT_DIR$/src/scripts/relation_extraction_script.clj" />
         <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj" />
+        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj" />
+        <option value="$PROJECT_DIR$/src/scripts/relation_extraction_script.clj" />
+        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj" />
       </list>
     </option>
   </component>
@@ -235,7 +219,7 @@
       <recent name="C:\Users\pielkelh\Drive\projects\Dep2Rel\src\edu\ucdenver\ccp\nlp" />
     </key>
   </component>
-  <component name="ReplState" timestamp="1554249274247">{:repl-history {:ide [], :local [{:command &quot;(t/set-level! :info)&quot;, :offset 20, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file \&quot;E:\&quot; \&quot;data\&quot; \&quot;craft-versions\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;craft-3.0\&quot;))&quot;, :offset 101, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word-vector-dir\n  (io/file \&quot;E:\&quot; \&quot;data\&quot; \&quot;WordVectors\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;word-vectors\&quot;))&quot;, :offset 107, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word2vec-db (.getAbsolutePath (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))&quot;, :offset 89, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def annotations-file (io/file (io/file craft-dir \&quot;concepts+assertions_1_article\&quot;)\n                               \&quot;concepts+assertions.knowtator\&quot;))&quot;, :offset 147, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency-dir (io/file craft-dir \&quot;CRAFT\&quot; \&quot;structural-annotation\&quot; \&quot;dependency\&quot; \&quot;conllu\&quot;))&quot;, :offset 94, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references-dir (io/file craft-dir \&quot;concepts+assertions_1_article\&quot; \&quot;Articles\&quot;))&quot;, :offset 83, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles [\&quot;11532192\&quot;])&quot;, :offset 27, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references (read-references articles references-dir))&quot;, :offset 58, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency (read-dependency word2vec-db articles references dependency-dir))&quot;, :offset 81, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def sentences (read-sentences annotations dependency articles))&quot;, :offset 64, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(t/info \&quot;Num sentences:\&quot; (count sentences))&quot;, :offset 43, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn get-sentences-with-ann\n  [sentences id]\n  (filter (fn [s]\n            (some (fn [e]\n                    (= id (get-in e [:ann :id])))\n                  (get s :entities)))\n          sentences))&quot;, :offset 199, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (article-names-in-dir references-dir \&quot;.txt\&quot;))&quot;, :offset 59, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :refer :all]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]))&quot;, :offset 492, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (rdr/article-names-in-dir references-dir \&quot;.txt\&quot;))&quot;, :offset 63, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (map #(.getName %)))&quot;, :offset 56, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))&quot;, :offset 62, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;)))&quot;, :offset 71, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (take-nth 1 (rdr/article-names-in-dir references-dir \&quot;txt\&quot;)))&quot;, :offset 75, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles [(second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 73, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(hash-map [[:a \&quot;hi\&quot;]])&quot;, :offset 18, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(apply hash-map [[:a \&quot;hi\&quot;]])&quot;, :offset 28, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(apply hash-map (flatten [[:a \&quot;hi\&quot;]]))&quot;, :offset 38, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(map (fn [{x :a :as y}]\n       (t/info x y))\n     [{:a \&quot;p\&quot;}])&quot;, :offset 57, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency (rdr/read-dependency word2vec-db articles references dependency-dir))&quot;, :offset 85, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;1&quot;, :offset 1, :ns &quot;user&quot;} {:command &quot;{:a \&quot;hi\&quot;}&quot;, :offset 7, :ns &quot;user&quot;} {:command &quot;(t/set-level! :debug)&quot;, :offset 21, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot; \&quot;craft-versions\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;craft-3.0\&quot;))&quot;, :offset 144, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(.exists craft-dir)&quot;, :offset 19, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))&quot;, :offset 81, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;craft-3.0\&quot;))&quot;, :offset 98, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;word-vectors\&quot;))&quot;, :offset 104, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word2vec-db \n  (.getAbsolutePath \n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))&quot;, :offset 97, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles \n  [(second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 76, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))&quot;, :offset 85, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))&quot;, :offset 56, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))&quot;, :offset 95, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))&quot;, :offset 76, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(.exists annotations-file)&quot;, :offset 26, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency-dir\n  (io/file craft-dir \&quot;Structures\&quot;))&quot;, :offset 55, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def annotations (k/view annotations-file))&quot;, :offset 43, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]))&quot;, :offset 488, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))&quot;, :offset 53, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;references-dir&quot;, :offset 14, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(file-seq references-dir)&quot;, :offset 25, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile ^File %)))&quot;, :offset 64, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile %)))&quot;, :offset 58, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile %))\n     (map #(.getName %)))&quot;, :offset 82, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(require '[clojure.string :as s])&quot;, :offset 33, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile %))\n     (map #(.getName %))\n     (filter #(s/ends-with? % (str \&quot;.\&quot; \&quot;txt\&quot;))))&quot;, :offset 131, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  [(second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 75, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(rdr/article-names-in-dir references-dir \&quot;txt\&quot;)&quot;, :offset 47, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  [(rdr/article-names-in-dir references-dir \&quot;txt\&quot;)])&quot;, :offset 66, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;articles&quot;, :offset 8, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))&quot;, :offset 64, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 74, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references (rdr/read-references articles references-dir))&quot;, :offset 62, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(+ 1 1)&quot;, :offset 7, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(k/display annotations)&quot;, :offset 23, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(k/selected-annotation annotations)&quot;, :offset 35, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;*e&quot;, :offset 2, :ns &quot;scripts.relation-extraction-script&quot;}], :remote []}}</component>
+  <component name="ReplState" timestamp="1554253013337">{:repl-history {:ide [], :local [{:command &quot;(t/set-level! :info)&quot;, :offset 20, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file \&quot;E:\&quot; \&quot;data\&quot; \&quot;craft-versions\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;craft-3.0\&quot;))&quot;, :offset 101, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word-vector-dir\n  (io/file \&quot;E:\&quot; \&quot;data\&quot; \&quot;WordVectors\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;word-vectors\&quot;))&quot;, :offset 107, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word2vec-db (.getAbsolutePath (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))&quot;, :offset 89, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def annotations-file (io/file (io/file craft-dir \&quot;concepts+assertions_1_article\&quot;)\n                               \&quot;concepts+assertions.knowtator\&quot;))&quot;, :offset 147, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency-dir (io/file craft-dir \&quot;CRAFT\&quot; \&quot;structural-annotation\&quot; \&quot;dependency\&quot; \&quot;conllu\&quot;))&quot;, :offset 94, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references-dir (io/file craft-dir \&quot;concepts+assertions_1_article\&quot; \&quot;Articles\&quot;))&quot;, :offset 83, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles [\&quot;11532192\&quot;])&quot;, :offset 27, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references (read-references articles references-dir))&quot;, :offset 58, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency (read-dependency word2vec-db articles references dependency-dir))&quot;, :offset 81, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def sentences (read-sentences annotations dependency articles))&quot;, :offset 64, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(t/info \&quot;Num sentences:\&quot; (count sentences))&quot;, :offset 43, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn get-sentences-with-ann\n  [sentences id]\n  (filter (fn [s]\n            (some (fn [e]\n                    (= id (get-in e [:ann :id])))\n                  (get s :entities)))\n          sentences))&quot;, :offset 199, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (article-names-in-dir references-dir \&quot;.txt\&quot;))&quot;, :offset 59, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :refer :all]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]))&quot;, :offset 492, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (rdr/article-names-in-dir references-dir \&quot;.txt\&quot;))&quot;, :offset 63, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (map #(.getName %)))&quot;, :offset 56, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))&quot;, :offset 62, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;)))&quot;, :offset 71, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (take-nth 1 (rdr/article-names-in-dir references-dir \&quot;txt\&quot;)))&quot;, :offset 75, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles [(second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 73, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(hash-map [[:a \&quot;hi\&quot;]])&quot;, :offset 18, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(apply hash-map [[:a \&quot;hi\&quot;]])&quot;, :offset 28, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(apply hash-map (flatten [[:a \&quot;hi\&quot;]]))&quot;, :offset 38, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(map (fn [{x :a :as y}]\n       (t/info x y))\n     [{:a \&quot;p\&quot;}])&quot;, :offset 57, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency (rdr/read-dependency word2vec-db articles references dependency-dir))&quot;, :offset 85, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;1&quot;, :offset 1, :ns &quot;user&quot;} {:command &quot;{:a \&quot;hi\&quot;}&quot;, :offset 7, :ns &quot;user&quot;} {:command &quot;(t/set-level! :debug)&quot;, :offset 21, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot; \&quot;craft-versions\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;craft-3.0\&quot;))&quot;, :offset 144, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(.exists craft-dir)&quot;, :offset 19, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))&quot;, :offset 81, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;craft-3.0\&quot;))&quot;, :offset 98, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;word-vectors\&quot;))&quot;, :offset 104, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word2vec-db \n  (.getAbsolutePath \n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))&quot;, :offset 97, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles \n  [(second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 76, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))&quot;, :offset 85, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))&quot;, :offset 56, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))&quot;, :offset 95, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))&quot;, :offset 76, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(.exists annotations-file)&quot;, :offset 26, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency-dir\n  (io/file craft-dir \&quot;Structures\&quot;))&quot;, :offset 55, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def annotations (k/view annotations-file))&quot;, :offset 43, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]))&quot;, :offset 488, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))&quot;, :offset 53, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;references-dir&quot;, :offset 14, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(file-seq references-dir)&quot;, :offset 25, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile ^File %)))&quot;, :offset 64, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile %)))&quot;, :offset 58, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile %))\n     (map #(.getName %)))&quot;, :offset 82, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(require '[clojure.string :as s])&quot;, :offset 33, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile %))\n     (map #(.getName %))\n     (filter #(s/ends-with? % (str \&quot;.\&quot; \&quot;txt\&quot;))))&quot;, :offset 131, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  [(second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 75, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(rdr/article-names-in-dir references-dir \&quot;txt\&quot;)&quot;, :offset 47, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  [(rdr/article-names-in-dir references-dir \&quot;txt\&quot;)])&quot;, :offset 66, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;articles&quot;, :offset 8, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))&quot;, :offset 64, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 74, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references (rdr/read-references articles references-dir))&quot;, :offset 62, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(+ 1 1)&quot;, :offset 7, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(k/display annotations)&quot;, :offset 23, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(k/selected-annotation annotations)&quot;, :offset 35, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;*e&quot;, :offset 2, :ns &quot;scripts.relation-extraction-script&quot;}], :remote []}}</component>
   <component name="RunDashboard">
     <option name="ruleStates">
       <list>
@@ -403,7 +387,9 @@
     <MESSAGE value="Added BeakerX usage suggestion" />
     <MESSAGE value="Moved notebooks to root" />
     <MESSAGE value="Allow for read from linux" />
-    <option name="LAST_COMMIT_MESSAGE" value="Allow for read from linux" />
+    <MESSAGE value="Load all files in jupyter notebook" />
+    <MESSAGE value="Run clustering in notebook" />
+    <option name="LAST_COMMIT_MESSAGE" value="Run clustering in notebook" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -489,24 +475,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/deps.edn">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="9" column="72" lean-forward="true" selection-start-line="9" selection-start-column="10" selection-end-line="9" selection-end-column="72" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/word2vec.clj">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="352">
           <caret line="16" column="21" lean-forward="true" selection-start-line="16" selection-start-column="21" selection-end-line="16" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/scripts/relation_extraction_script.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="88">
-          <caret line="28" column="19" lean-forward="true" selection-start-line="28" selection-start-column="19" selection-end-line="28" selection-end-column="19" />
         </state>
       </provider>
     </entry>
@@ -517,17 +489,38 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj">
+    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="281">
-          <caret line="37" column="74" selection-start-line="37" selection-start-column="74" selection-end-line="37" selection-end-column="74" />
+        <state relative-caret-position="435">
+          <caret line="29" column="10" lean-forward="true" selection-start-line="29" selection-start-column="10" selection-end-line="29" selection-end-column="10" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj">
+    <entry file="file://$PROJECT_DIR$/deps.edn">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="347">
-          <caret line="34" column="47" selection-start-line="34" selection-start-column="47" selection-end-line="34" selection-end-column="47" />
+        <state relative-caret-position="198">
+          <caret line="9" column="72" lean-forward="true" selection-start-line="9" selection-start-column="10" selection-end-line="9" selection-end-column="72" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="535">
+          <caret line="74" column="6" lean-forward="true" selection-start-line="74" selection-start-column="6" selection-end-line="74" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/scripts/relation_extraction_script.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="227">
+          <caret line="25" lean-forward="true" selection-start-line="25" selection-end-line="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="301">
+          <caret line="53" column="41" selection-start-line="53" selection-start-column="41" selection-end-line="53" selection-end-column="41" />
         </state>
       </provider>
     </entry>
