@@ -43,8 +43,6 @@
 (t/info "Num sentences:" (count sentences))
 
 
-
-
 (comment
   (k/display annotations)
   (k/selected-annotation annotations)

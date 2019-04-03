@@ -9,40 +9,51 @@
 
 (defn biocreative-read-abstracts
   [f]
-  (->> (line-seq f)
-       (map #(s/split % "\t"))
-       (map (fn [line] [(first line) (apply str (interpose "\n" (rest line)))]))
-       (into {})))
+  (let [lines (->> (io/reader f)
+                   (line-seq)
+                   (map #(s/split % #"\t")))]
+    (zipmap (->> lines
+                 (map first)
+                 (map keyword))
+            (->> lines
+                 (map
+                   (fn [[id title abstract]]
+                     {:id       id
+                      :title    title
+                      :abstract abstract
+                      :full     (str title "\n" abstract)}))
+                 (map #(assoc % :sentences (s/split (:full %) #"[.\n]")))))))
 
 (defn biocreative-read-relations
   [f]
-  (->> (line-seq f)
-       (map #(s/split % "\t"))
+  (->> (io/reader f)
+       (line-seq)
+       (map #(s/split % #"\t"))
        (map
          (fn [[doc id has-relevant-relation? property source target]]
            {:doc           doc
             :id            id
             :has-relation? (= has-relevant-relation? "Y")
             :property      property
-            :source        (second (s/split source ":"))
-            :target        (second (s/split target ":"))}))
-       (vec)))
+            :source        (second (s/split source #":"))
+            :target        (second (s/split target #":"))}))))
 
 (defn biocreative-read-entities
   [f reference]
-  (->> (line-seq f)
-       (map #(s/split % "\t"))
+  (->> (io/reader f)
+       (line-seq)
+       (map #(s/split % #"\t"))
        (map
          (fn [[doc id concept start end spanned-text]]
            (let [start (Integer/parseInt start)
-                 end (Integer/parseInt end)]
+                 end (Integer/parseInt end)
+                 doc (keyword doc)]
              {:doc     doc
               :id      id
               :concept concept
               :start   start
               :end     end
-              :tok     (subs (doc reference) start end)})))
-       (vec)))
+              :tok     (subs (get-in reference [doc :full]) start end)})))))
 
 (defn article-names-in-dir
   [dir ext]
