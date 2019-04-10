@@ -4,9 +4,9 @@
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [taoensso.timbre :as t]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
-            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
-            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]])
+            [edu.ucdenver.ccp.nlp.evaluation :as evaluation])
   (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))
+
 (t/set-level! :debug)
 
 (def home-dir
@@ -15,7 +15,7 @@
 (def annotations-file
   (io/file home-dir "craft-versions" "concepts+assertions1" "CRAFT_assertions.knowtator"))
 
-(def annotations-file
+#_(def annotations-file
   (io/file home-dir "craft-versions" "concepts+assertions64" "CRAFT_assertions.knowtator"))
 
 (def annotations (k/view annotations-file))

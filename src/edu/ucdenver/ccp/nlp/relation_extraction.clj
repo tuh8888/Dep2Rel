@@ -2,8 +2,8 @@
   (:require [taoensso.timbre :as t]
             [math]
             [util]
-            [clojure.set :refer [subset? intersection]]
-            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]))
+            [cluster-tools]
+            [clojure.set :refer [subset? intersection]]))
 
 (defrecord Pattern [context-vector support])
 
