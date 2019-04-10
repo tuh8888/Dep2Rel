@@ -3,41 +3,11 @@
             [clojure.string :as str]
             [ubergraph.alg]
             [graph]
+            [math]
             [word2vec]
             [taoensso.timbre :as t]))
 
 (defrecord Sentence [concepts entities context context-vector])
-
-
-;(defn walk-dep
-;  ([dependency tok1 tok2]
-;   (assert (= (:DOC tok1) (:DOC tok2)))
-;   (assert (= (:SENT tok1) (:SENT tok2)))
-;   (let [sent (:SENT tok1)
-;         doc (:DOC tok1)
-;         dependency (filter #(and (= (:SENT %) sent)
-;                                  (= (:DOC %) doc))
-;                            dependency)]
-;     (loop [tok tok1
-;            path []]
-;       (let [next-tok (some #(when (= (:HEAD tok) (:ID %)) %)
-;                            dependency)]
-;         (cond (= tok tok2) path
-;               (not next-tok) (conj path (reverse (walk-dep dependency tok2)))
-;               :else (recur next-tok (conj path tok)))))))
-;  ([dependency tok]
-;   (let [sent (:SENT tok)
-;         doc (:DOC tok)
-;         dependency (filter #(and (= (:SENT %) sent)
-;                                  (= (:DOC %) doc))
-;                            dependency)]
-;     (loop [tok tok
-;            path []]
-;       (let [next-tok (some #(when (= (:HEAD tok) (:ID %)) %)
-;                            dependency)]
-;         (if (not next-tok)
-;           path
-;           (recur next-tok (conj path tok))))))))
 
 (defn annotation->entity
   [model ann]
@@ -84,7 +54,7 @@
                           (t/info (:id e1))
                           (let [concepts (->> entities
                                               (map :concept)
-                                              (map set))
+                                              (map hash-set))
                                 context (-> (graph/undirected-graph sent)
                                             (ubergraph.alg/shortest-path
                                               (-> e1 :tok :id)
@@ -126,8 +96,10 @@
 
 (defn sentences-with-ann
   [sentences id]
-  (filter (fn [s]
-            (some (fn [e]
-                    (= id (:id e)))
-                  (get s :entities)))
-          sentences))
+  (filter
+    (fn [s]
+      (some
+        (fn [e]
+          (= id (:id e)))
+        (:entities s)))
+    sentences))

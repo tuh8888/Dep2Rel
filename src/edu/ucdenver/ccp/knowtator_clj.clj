@@ -40,9 +40,9 @@
   (or (:owlClass annotation) (:annotationType annotation)))
 
 (defn simple-collection
-  [collection simplify-fn]
+  [collection simplify-fn & {:keys [key-fn] :or {key-fn :id}}]
   (let [collection (map bean collection)]
-    (zipmap (map :id collection)
+    (zipmap (map key-fn collection)
             (map simplify-fn collection))))
 
 (defn simple-concept-annotation
@@ -104,7 +104,8 @@
                                        (util/map-kv
                                          #(assoc % :doc id)
                                          (simple-collection (:graphSpaces doc)
-                                                            simple-graph-space)))
+                                                            simple-graph-space
+                                                            :key-fn #(str id (:id %)))))
                                      text-sources))
      :structure-graphs      (apply merge
                                    (map
@@ -112,7 +113,8 @@
                                        (util/map-kv
                                          #(assoc % :doc id)
                                          (simple-collection (:structureGraphSpaces doc)
-                                                            simple-graph-space)))
+                                                            simple-graph-space
+                                                            :key-fn #(str id (:id %)))))
                                      text-sources))}))
 
 (defn selected-annotation

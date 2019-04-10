@@ -12,14 +12,14 @@
   (io/file "/" "media" "tuh8888" "Seagate Expansion Drive" "data"))
 
 (def annotations-file
-  (io/file home-dir "craft-versions" "concepts+assertions_1_article" "concepts+assertions.knowtator"))
+  (io/file home-dir "craft-versions" "concepts+assertions1" "CRAFT_assertions.knowtator"))
 
-(def annotations-file
-  (io/file home-dir "craft-versions" "concepts+assertions_64" "CRAFT_assertions.knowtator"))
+#_(def annotations-file
+    (io/file home-dir "craft-versions" "concepts+assertions64" "CRAFT_assertions.knowtator"))
 
-(def ^KnowtatorModel annotations (k/model annotations-file nil))
+(def annotations (k/view annotations-file))
 
-(.save annotations)
+;(.save annotations)
 
 (def word-vector-dir
   (io/file home-dir "WordVectors"))
@@ -30,6 +30,8 @@
 (def model
   (word2vec/with-word2vec word2vec-db
     (sentence/make-sentences (k/simple-model annotations))))
+
+;(spit "/tmp/model.edn" (with-out-str (pr model)))
 
 (def reasoner (k/reasoner annotations))
 
@@ -45,41 +47,47 @@
                       #(update % :concepts
                                (fn [concepts]
                                  (map
-                                   (fn [concepts]
-                                     (into concepts (mem-descs (first concepts))))
+                                   (fn [concept-set]
+                                     (into concept-set (mem-descs (first concept-set))))
                                    concepts))))
                     (doall)))
 
 (t/info "Num sentences:" (count sentences))
 
 
-
-
-
 ;(k/display annotations)
 ;(k/selected-annotation annotations)
 
 ;; Mutation located in gene
-(def property (.get (.getOwlObjectPropertyById annotations "has_location_in")))
+(def property (.get (.getOwlObjectPropertyById ^KnowtatorModel (k/model annotations) "exists_at_or_derives_from")))
+
+(def actual-true (set (map #(evaluation/edge->triple model %)
+                           (k/edges-for-property model property))))
+(def all-triples (set (map evaluation/sent->triple sentences)))
+(defn predicted-true
+  [matches]
+  (set (map evaluation/sent->triple matches)))
 
 (defn c-metrics
   [matches]
-  (evaluation/calc-metrics (set (map evaluation/sent->triple matches))
-                           (set (map #(evaluation/edge->triple model %)
-                                     (k/edges-for-property model property)))
-                           (set (map evaluation/sent->triple sentences))))
+  (evaluation/calc-metrics {:predicted-true (predicted-true matches)
+                            :actual-true    actual-true
+                            :all            all-triples}))
 
-(def matches (let [seeds (into
+(def matches (let [seeds (clojure.set/union
                            (clojure.set/intersection
-                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21741"))
-                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21947")))
+                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21437"))
+                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_22305")))
                            (clojure.set/intersection
-                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21945"))
-                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21819"))))
-                   seed-thresh 0.975
+                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21583"))
+                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21881")))
+                           (clojure.set/intersection
+                             (set (sentence/sentences-with-ann sentences"CRAFT_aggregate_ontology_Instance_21543"))
+                             (set (sentence/sentences-with-ann sentences"CRAFT_aggregate_ontology_Instance_21887"))))
+                   seed-thresh 0.95
                    context-thresh 0.9
-                   cluster-thresh 0.9
-                   min-support 10
+                   cluster-thresh 0.95
+                   min-support 2
                    params {:seed             (first seeds)
                            :seed-thresh      seed-thresh
                            :context-thresh   context-thresh
@@ -100,29 +108,34 @@
 
 (t/info "Metrics" metrics)
 
-(evaluation/format-matches model matches)
-(evaluation/->csv (io/file "." "matches.csv") matches model)
+(evaluation/fn {:predicted-true (predicted-true matches)
+                :actual-true    actual-true
+                :all            all-triples})
 
-(def param-results (evaluation/parameter-walk annotations
-                                              "has_location_in"
-                                              (clojure.set/intersection
-                                                (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21741"))
-                                                (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21947")))
-                                              sentences))
+(comment
+  (evaluation/format-matches model matches)
+  (evaluation/->csv (io/file "." "matches.csv") matches model)
 
-(def p2 (map last (partition 4 param-results)))
-(def p3 (map (fn [[a b c d]] [a b c (count d) (reduce + (map :num-matches d))]) (partition 4 param-results)))
+  (def param-results (evaluation/parameter-walk annotations
+                                                "has_location_in"
+                                                (clojure.set/intersection
+                                                  (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21741"))
+                                                  (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21947")))
+                                                sentences))
 
-(count param-results)
-(let [f (io/file "." "params.csv")
-      p p3
-      col-names [:seed-thresh :cluster-thresh :min-support :count :num-matches]
-      csv-form (str (apply str col-names) "\n"
-                    (apply str
-                           (map
-                             #(str (apply str (interpose "," %)) "\n")
-                             p3)))]
-  (spit f csv-form))
+  (def p2 (map last (partition 4 param-results)))
+  (def p3 (map (fn [[a b c d]] [a b c (count d) (reduce + (map :num-matches d))]) (partition 4 param-results)))
+
+  (count param-results)
+  (let [f (io/file "." "params.csv")
+        p p3
+        col-names [:seed-thresh :cluster-thresh :min-support :count :num-matches]
+        csv-form (str (apply str col-names) "\n"
+                      (apply str
+                             (map
+                               #(str (apply str (interpose "," %)) "\n")
+                               p3)))]
+    (spit f csv-form)))
 
 
 
