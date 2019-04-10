@@ -24,9 +24,11 @@
 
 (defn form-to-string
   [tok]
-  (-> (get tok :FORM "")
-      (s/replace #"\'\'" "\"")
-      (s/replace #"\`\`" "\"")))
+  (update tok :FORM #(-> (or % "")
+                         (s/replace #"\'\'" "\"")
+                         (s/replace #"\`\`" "\"")
+                         (s/replace #"-LRB-" "[")
+                         (s/replace #"-RRB-" "]"))))
 
 (defn find-span
   [tok form start end reference]
@@ -34,10 +36,11 @@
         check (partial subs reference)]
     (try
       (or (when (= form (apply check span)) span)
-          (when (zero? start) (throw (Throwable. (str "Can't match token token " tok start end form " to reference"))))
-          (let [span (map dec span)] (when (= form (apply check span)) span))
+          (when-not (zero? start)
+            (let [span (map dec span)] (when (= form (apply check span)) span)))
           (let [span (map inc span)] (when (= form (apply check span)) span))
-          (let [span (map (partial - 2) span)] (when (= form (apply check span)) span))
+          (when-not (zero? start)
+            (let [span (map (partial - 2) span)] (when (= form (apply check span)) span)))
           (let [span (map (partial + 2) span)] (when (= form (apply check span)) span))
           (do
             (warn "Can't match token token" tok start end form " to reference")
@@ -48,14 +51,25 @@
 (defn match-toks-to-reference
   [reference c]
   (first (reduce
-           (fn [[c start] [tok-idx tok]]
-             (let [form (form-to-string tok)
+           (fn [[c start] tok]
+             (let [form (:FORM tok)
                    end (+ start (count form))
                    [start end] (find-span tok form start end reference)
-                   c (update c tok-idx assoc :START start :END end)]
-               [c (inc end)]))
-           [c 0]
-           (map-indexed vector c))))
+                   tok (assoc tok :START start :END end)]
+               [(conj c tok) (inc end)]))
+           [[] 0]
+           c)))
+
+(defn assign-sent-idx
+  [c]
+  (first
+    (reduce
+      (fn [[c sent-idx] tok]
+        (if (and (string? (:ID tok))
+                 (empty? (:ID tok)))
+          [c (inc sent-idx)]
+          [(conj c (assoc tok :SENT sent-idx)) sent-idx]))
+      [[] 0] c)))
 
 (defn read-conll
   [reference conllu? f]
@@ -64,12 +78,10 @@
     (s/split-lines)
     (map #(s/split % #"\t"))
     (map #(interleave (if conllu? conllu-names conll-names) %))
-    (mapv #(apply assoc {} %))
+    (map #(apply assoc {} %))
+    (map form-to-string)
     (match-toks-to-reference reference)
     (map #(assoc % :DOC (.getName f)))
     (map #(update % :HEAD (fn [x] (when-let [x (parse-int x)] (dec x)))))
     (map #(update % :ID parse-int))
-    (reduce #(if (and (string? (:ID %2)) (empty? (:ID %2)))
-               (conj (conj %1 []) [])
-               (conj (rest %1) (conj (first %1) %2)))
-            [[]])))
+    (assign-sent-idx)))

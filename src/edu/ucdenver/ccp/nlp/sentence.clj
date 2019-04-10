@@ -1,81 +1,124 @@
 (ns edu.ucdenver.ccp.nlp.sentence
   (:require [uncomplicate.neanderthal.core :refer [xpy]]
             [util :refer [unit-vec-sum]]
-            [edu.ucdenver.ccp.conll :as conll]
             [clojure.math.combinatorics :as combo]
-            [taoensso.timbre :as t]
-            [clojure.set :refer [difference union intersection]]
-            [edu.ucdenver.ccp.knowtator-clj :as k]))
+            [ubergraph.alg :as uber-alg]
+            [clojure.set :refer [difference union intersection]]))
 
-(defrecord Sentence [concepts entities doc sent context context-vector])
+(defrecord Sentence [entities context context-vector])
 
-(defrecord Entity [concept ann sent tok dep])
 
-(defn overlap
-  [tok concept-start concept-end]
-  (or (<= (:START tok) concept-start concept-end (:END tok))
-      (<= concept-start (:START tok) (:END tok) concept-end)))
+;(defn walk-dep
+;  ([dependency tok1 tok2]
+;   (assert (= (:DOC tok1) (:DOC tok2)))
+;   (assert (= (:SENT tok1) (:SENT tok2)))
+;   (let [sent (:SENT tok1)
+;         doc (:DOC tok1)
+;         dependency (filter #(and (= (:SENT %) sent)
+;                                  (= (:DOC %) doc))
+;                            dependency)]
+;     (loop [tok tok1
+;            path []]
+;       (let [next-tok (some #(when (= (:HEAD tok) (:ID %)) %)
+;                            dependency)]
+;         (cond (= tok tok2) path
+;               (not next-tok) (conj path (reverse (walk-dep dependency tok2)))
+;               :else (recur next-tok (conj path tok)))))))
+;  ([dependency tok]
+;   (let [sent (:SENT tok)
+;         doc (:DOC tok)
+;         dependency (filter #(and (= (:SENT %) sent)
+;                                  (= (:DOC %) doc))
+;                            dependency)]
+;     (loop [tok tok
+;            path []]
+;       (let [next-tok (some #(when (= (:HEAD tok) (:ID %)) %)
+;                            dependency)]
+;         (if (not next-tok)
+;           path
+;           (recur next-tok (conj path tok))))))))
+
+(defn annotation->entity
+  [model ann]
+  (let [concept-start (-> ann :spans vals first :start)
+        concept-end (-> ann :spans vals first :end)]
+    (some
+      (fn [tok]
+        (let [tok-start (-> tok :spans vals first :start)
+              tok-end (-> tok :spans vals first :end)]
+          (when (or (<= tok-start concept-start concept-end tok-end)
+                    (<= concept-start tok-start tok-end concept-end))
+            tok)))
+      (vals (:structure-annotations model)))))
+
+(defn tok-sent
+  [model tok]
+  (first
+    (filter #(get-in % [:node-map (:id tok)])
+            (vals (:structure-graphs model)))))
 
 (defn annotations->entities
-  [concept-annotations dep-doc]
-  (map
-    (fn [ann]
-      (let [concept-start (get-in ann [:spans 0 :start])
-            concept-end (get-in ann [:spans 0 :end])
-            concept (get ann :owlClass)]
-        (some
-          (fn [sent]
-            (some
-              (fn [tok]
-                (when (overlap tok concept-start concept-end)
-                  (->Entity concept ann sent tok (conll/walk-dep sent tok))))
-              sent))
-          dep-doc)))
-    concept-annotations))
+  [model]
+  (reduce
+    (fn [model [id ann]]
+      (let [tok (annotation->entity model ann)
+            sent (tok-sent model tok)]
+        (-> model
+            (assoc-in [:concept-annotations id :tok] tok)
+            (assoc-in [:concept-annotations id :sent] sent))))
+    model
+    (get model :concept-annotations)))
+
+(defn undirected-graph
+  [g]
+  (apply ubergraph.core/multigraph
+         (map #(vector (loom.graph/src %)
+                       (loom.graph/dest %))
+              (loom.graph/edges g))))
+
+(defn entities->sentences
+  [model]
+  (reduce
+    (fn [model [sent sentence-entities]]
+      (update model :sentences into
+              (keep
+                (fn [[e1 e2 :as entities]]
+                  (when-not (= (:tok e1)
+                               (:tok e2))
+                    (let [context (-> (undirected-graph sent)
+                                      (ubergraph.alg/shortest-path
+                                        (-> e1 :tok :id)
+                                        (-> e2 :tok :id))
+                                      (ubergraph.alg/nodes-in-path))
+                          context-vector (when-let [vectors (->> context
+                                                                 (map #(get (:structure-annotations model) %))
+                                                                 (keep :VEC)
+                                                                 (seq))]
+                                           (apply unit-vec-sum vectors))]
+                      (->Sentence entities context context-vector))))
+                (combo/combinations sentence-entities 2))))
+    model
+    (->> model
+         :concept-annotations
+         vals
+         (group-by :sent)
+         (remove (comp nil? first)))))
 
 (defn make-sentences
-  [annotations dependency articles]
-  (let [mem-get-owl-descendants (memoize #(k/get-owl-descendants (k/reasoner annotations) %))]
-    (mapcat
-      (fn [doc-id]
-        (->>
-          (annotations->entities (get-in (k/simple-model annotations) [doc-id :conceptAnnotations])
-                                 (get dependency doc-id))
-          (group-by :sent)
-          (mapcat
-            (fn [[sent sent-entities]]
-              (map
-                (fn [[i [e1 e2]]]
-                  (t/debug "Sentence" i)
-                  (let [entities #{e1 e2}
-                        concepts (->> [e1 e2]
-                                      (map :concept)
-                                      (map #(-> (mem-get-owl-descendants %)
-                                                (set)
-                                                (conj %)))
-                                      (set))
-                        deps (map (comp set :dep) [e1 e2])
-                        context (conj (difference (apply union deps)
-                                                  (let [same (apply intersection deps)]
-                                                    (if (= (count same) 1)
-                                                      (remove
-                                                        #(= -1 (get % :HEAD))
-                                                        same)
-                                                      same)))
-                                      (get e1 :tok)
-                                      (get e2 :tok))
-                        context-vector (when-let [vectors (->> context
-                                                               (keep :VEC)
-                                                               (seq))]
-                                         (apply unit-vec-sum vectors))]
-                    (->Sentence concepts entities doc-id sent context context-vector)))
-                (map-indexed vector (combo/combinations sent-entities 2)))))))
-      articles)))
+  [model]
+  (reduce
+    (fn [model doc-id]
+      (update model doc-id
+              #(-> %
+                   annotations->entities
+                   entities->sentences)))
+    model
+    (keys model)))
 
 (defn sentences-with-ann
   [sentences id]
   (filter (fn [s]
             (some (fn [e]
-                    (= id (get-in e [:ann :id])))
+                    (= id (:id e)))
                   (get s :entities)))
           sentences))

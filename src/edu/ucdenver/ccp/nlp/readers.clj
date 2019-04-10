@@ -2,58 +2,92 @@
   (:require [clojure.string :as s]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
             [edu.ucdenver.ccp.nlp.word2vec :as word2vec]
-            [taoensso.timbre :as t]
             [clojure.java.io :as io]
-            [edu.ucdenver.ccp.conll :as conll])
-  (:import (java.io File)))
+            [edu.ucdenver.ccp.conll :as conll]
+            [org.clojurenlp.core :as corenlp]
+            [clojure.string :as str])
+  (:import (java.io File)
+           (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
+           (edu.ucdenver.ccp.knowtator.model.object TextSource ConceptAnnotation Span GraphSpace AnnotationNode Quantifier RelationAnnotation)))
 
 (defn biocreative-read-abstracts
-  [f]
+  [^KnowtatorModel annotations f]
   (let [lines (->> (io/reader f)
                    (line-seq)
                    (map #(s/split % #"\t")))]
-    (zipmap (->> lines
-                 (map first)
-                 (map keyword))
-            (->> lines
-                 (map
-                   (fn [[id title abstract]]
-                     {:id       id
-                      :title    title
-                      :abstract abstract
-                      :full     (str title "\n" abstract)}))
-                 (map #(assoc % :sentences (s/split (:full %) #"[.\n]")))))))
+    (map
+      (fn [[id title abstract]]
+        (let [article-f (io/file (.getArticlesLocation annotations) (str id ".txt"))]
+          (spit article-f (str title "\n" abstract))
+          (let [text-sources (.getTextSources annotations)
+                text-source (TextSource. annotations
+                                         (io/file (.getAnnotationsLocation annotations)
+                                                  (str id ".xml"))
+                                         (.getName article-f))]
+            (.add text-sources
+                  text-source))))
+      lines)))
+
+(defn sentenize
+  [^KnowtatorModel annotations]
+  (into {}
+        (map
+          #(vector (.getId %) (corenlp/sentenize (.getContent %)))
+          (.getTextSources annotations))))
 
 (defn biocreative-read-relations
-  [f]
+  [^KnowtatorModel annotations f]
   (->> (io/reader f)
        (line-seq)
        (map #(s/split % #"\t"))
        (map
-         (fn [[doc id has-relevant-relation? property source target]]
-           {:doc           doc
-            :id            id
-            :has-relation? (= has-relevant-relation? "Y")
-            :property      property
-            :source        (second (s/split source #":"))
-            :target        (second (s/split target #":"))}))))
+         (fn [[doc id _ property source target]]
+           (let [text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
+                 graph-space (GraphSpace. text-source nil)
+                 source (second (s/split source #":"))
+
+                 source (AnnotationNode. (str source "Node")
+                                         (.get (.get (.getConceptAnnotations text-source)
+                                                     source))
+                                         0
+                                         0
+                                         graph-space)
+                 target (second (s/split target #":"))
+                 target (AnnotationNode. (str target "Node")
+                                         (.get (.get (.getConceptAnnotations text-source)
+                                                     target))
+                                         0
+                                         0
+                                         graph-space)]
+             (.addCellToGraph graph-space source)
+             (.addCellToGraph graph-space target)
+             (.addTriple graph-space
+                         source
+                         target
+                         id
+                         (.getDefaultProfile annotations)
+                         nil
+                         (Quantifier/some)
+                         ""
+                         false
+                         "")
+             (.setValue ^RelationAnnotation (first (filter #(= (.getId %) id) (.getRelationAnnotations graph-space)))
+                        property))))))
 
 (defn biocreative-read-entities
-  [f reference]
+  [^KnowtatorModel annotations f]
   (->> (io/reader f)
        (line-seq)
        (map #(s/split % #"\t"))
        (map
-         (fn [[doc id concept start end spanned-text]]
+         (fn [[doc id concept start end _]]
            (let [start (Integer/parseInt start)
                  end (Integer/parseInt end)
-                 doc (keyword doc)]
-             {:doc     doc
-              :id      id
-              :concept concept
-              :start   start
-              :end     end
-              :tok     (subs (get-in reference [doc :full]) start end)})))))
+                 text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
+                 concept-annotation (ConceptAnnotation. text-source id nil (.getDefaultProfile annotations) concept nil)
+                 span (Span. concept-annotation nil start end)]
+             (.add ^ConceptAnnotation concept-annotation span)
+             (.add (.getConceptAnnotations text-source) concept-annotation))))))
 
 (defn article-names-in-dir
   [dir ext]
@@ -76,36 +110,31 @@
   [m v embedding-fn]
   (assoc m :VEC (embedding-fn v)))
 
-(defn toks-with-embeddings
-  [toks k embedding-fn]
-  (mapv
-    (fn [{lemma k :as tok}]
-      (assign-embedding tok lemma embedding-fn))
-    toks))
 
 (defn conll-with-embeddings
-  [reference f]
+  [k reference f]
   (mapv
-    #(toks-with-embeddings % :LEMMA word2vec/word-embedding)
-    (conll/read-conll reference true f)))
+    (fn [{lemma k :as tok}]
+      (assign-embedding tok
+                        (str/lower-case lemma)
+                        word2vec/word-embedding))
+    (try
+      (conll/read-conll reference true f)
+      (catch Throwable e
+        (println f)
+        (throw e)))))
 
 (defn read-dependency
-  [word2vec-db articles references dependency-dir]
+  [word2vec-db articles references dependency-dir & {:keys [ext tok-key] :or {tok-key :LEMMA}}]
   (word2vec/with-word2vec word2vec-db
     (zipmap articles
             (->> articles
                  (map
-                   #(str % ".tree.conllu"))
+                   #(str % "." ext))
                  (map
                    #(io/file dependency-dir %))
                  (pmap
-                   conll-with-embeddings
+                   (partial conll-with-embeddings tok-key)
                    references)))))
-
-
-
-(defn read-sentences
-  [annotations dependency articles]
-  (doall (vec (sentence/make-sentences annotations dependency articles))))
 
 

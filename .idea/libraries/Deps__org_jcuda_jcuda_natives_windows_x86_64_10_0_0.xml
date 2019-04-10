@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Deps: org.jcuda/jcuda-natives$windows-x86_64:10.0.0">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/jcuda/jcuda-natives/10.0.0/jcuda-natives-10.0.0-windows-x86_64.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>

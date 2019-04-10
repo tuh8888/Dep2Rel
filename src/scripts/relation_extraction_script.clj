@@ -8,7 +8,10 @@
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [util :refer [cosine-sim]]
             [clojure.set :as set1]
-            [edu.ucdenver.ccp.nlp.sentence :as sentence]))
+            [edu.ucdenver.ccp.nlp.sentence :as sentence]
+            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]
+            [clojure.string :as str])
+  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))
 (t/set-level! :debug)
 
 (def home-dir
@@ -16,43 +19,61 @@
 
 (def craft-dir
   (io/file home-dir "craft-versions" "concepts+assertions_1_article"))
+
+
+(def references-dir
+  (io/file craft-dir "Articles"))
+(def articles
+  [(first (rdr/article-names-in-dir references-dir "txt"))])
+
+(def annotations-file
+  (io/file craft-dir "concepts+assertions.knowtator"))
+(def ^KnowtatorModel annotations (k/model annotations-file nil))
+
 (def word-vector-dir
   (io/file home-dir "WordVectors"))
-
 (def word2vec-db
   (.getAbsolutePath
     (io/file word-vector-dir "bio-word-vectors-clj.vec")))
 
+(defn assign-word-embedding
+  [annotation]
+  (assoc annotation :VEC (word2vec/word-embedding
+                           (str/lower-case
+                             (-> annotation
+                                 :spans
+                                 vals
+                                 first
+                                 :text)))))
 
-(def annotations-file
-  (io/file craft-dir "concepts+assertions.knowtator"))
+(def model (word2vec/with-word2vec word2vec-db
+             (let [model (k/simple-model annotations)]
+              (->> (keys model)
+                   (reduce
+                     (fn [model doc]
+                       (reduce
+                         (fn [model ann]
+                           (update-in model [doc :structure-annotations ann]
+                                      assign-word-embedding))
+                         model
+                         (keys (get-in model [doc :structure-annotations]))))
+                     model)
+                   (sentence/make-sentences)))))
 
-(def dependency-dir
-  (io/file craft-dir "Structures"))
-(def references-dir
-  (io/file craft-dir "Articles"))
+(def sentences (mapcat :sentences (vals model)))
 
-
-(def articles
-  [(first (rdr/article-names-in-dir references-dir "txt"))])
-
-(def references (rdr/read-references articles references-dir))
-(def annotations (k/view annotations-file))
-(def dependency (rdr/read-dependency word2vec-db articles references dependency-dir))
-(def sentences (rdr/read-sentences annotations dependency articles))
 (t/info "Num sentences:" (count sentences))
 
-
 (comment
-  (k/display annotations)
-  (k/selected-annotation annotations)
+  ;(k/display annotations)
+  ;(k/selected-annotation annotations)
 
   ;; Mutation located in gene
   (def matches (let [property "has_location_in"
                      seeds (set1/intersection
                              (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21741"))
                              (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21947")))
-                     seed-thresh 0.9
+                     seed-thresh 0.8
                      context-thresh 0.9
                      cluster-thresh 0.75
                      min-support 20

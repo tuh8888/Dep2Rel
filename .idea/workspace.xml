@@ -1,15 +1,227 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="90b85686-47e2-43a7-abf1-031e772e3d27" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="fd68d31a-9ca3-4dbc-9e5f-186ec0e5f744" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/bug_report.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/coding-tasks.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/feature-request.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/help.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/meetings.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/other.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/project-organization-tasks.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/pubs-and-presentations.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/ISSUE_TEMPLATE/wiki.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/ClojureProjectResolveSettings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/ClojureProjectResolveSettings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/checkstyle-idea.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/checkstyle-idea.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/pielkelh.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dictionaries/tuh8888.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dictionaries/tuh8888.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/google-java-format.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/google-java-format.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__aopalliance_1_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__aopalliance_1_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__asm_3_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__asm_asm_commons_3_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__asm_asm_tree_3_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__ch_qos_logback_logback_classic_1_1_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__ch_qos_logback_logback_classic_1_1_3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__ch_qos_logback_logback_core_1_1_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__ch_qos_logback_logback_core_1_1_3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_beust_jcommander_1_27.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_climate_claypoole_1_1_4.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_climate_claypoole_1_1_4.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_fasterxml_jackson_core_jackson_annotations_2_5_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_fasterxml_jackson_core_jackson_annotations_2_5_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_fasterxml_jackson_core_jackson_core_2_9_6.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_fasterxml_jackson_core_jackson_core_2_9_6.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_fasterxml_jackson_core_jackson_databind_2_5_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_fasterxml_jackson_core_jackson_databind_2_5_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_github_jsonld_java_jsonld_java_0_5_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_github_jsonld_java_jsonld_java_0_5_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_github_jsonld_java_jsonld_java_sesame_0_5_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_github_jsonld_java_jsonld_java_sesame_0_5_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_github_vlsi_mxgraph_jgraphx_3_9_8_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_github_vlsi_mxgraph_jgraphx_3_9_8_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_api_common_1_7_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_api_common_1_7_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_client_google_api_client_1_27_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_client_google_api_client_1_27_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_gax_1_40_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_gax_1_40_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_gax_httpjson_0_57_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_gax_httpjson_0_57_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_grpc_proto_google_common_protos_1_14_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_grpc_proto_google_common_protos_1_14_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_grpc_proto_google_iam_v1_0_12_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_api_grpc_proto_google_iam_v1_0_12_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_apis_google_api_services_bigquery_v2_rev20181104_1_27_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_apis_google_api_services_bigquery_v2_rev20181104_1_27_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_auth_google_auth_library_credentials_0_13_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_auth_google_auth_library_credentials_0_13_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_auth_google_auth_library_oauth2_http_0_13_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_auth_google_auth_library_oauth2_http_0_13_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_cloud_google_cloud_bigquery_1_64_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_cloud_google_cloud_bigquery_1_64_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_cloud_google_cloud_core_1_64_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_cloud_google_cloud_core_1_64_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_cloud_google_cloud_core_http_1_64_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_cloud_google_cloud_core_http_1_64_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_code_findbugs_jsr305_3_0_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_code_findbugs_jsr305_3_0_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_code_gson_gson_2_7.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_code_gson_gson_2_7.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_errorprone_error_prone_annotations_2_1_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_errorprone_error_prone_annotations_2_1_3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_guava_guava_26_0_android.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_guava_guava_26_0_android.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_http_client_google_http_client_1_28_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_http_client_google_http_client_1_28_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_http_client_google_http_client_appengine_1_28_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_http_client_google_http_client_appengine_1_28_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_http_client_google_http_client_jackson2_1_28_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_http_client_google_http_client_jackson2_1_28_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_inject_extensions_guice_assistedinject_4_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_inject_extensions_guice_assistedinject_4_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_inject_extensions_guice_multibindings_4_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_inject_extensions_guice_multibindings_4_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_inject_guice_4_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_inject_guice_4_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_j2objc_j2objc_annotations_1_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_j2objc_j2objc_annotations_1_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_oauth_client_google_oauth_client_1_27_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_oauth_client_google_oauth_client_1_27_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_protobuf_protobuf_java_3_6_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_protobuf_protobuf_java_3_6_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_protobuf_protobuf_java_util_3_6_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_google_protobuf_protobuf_java_util_3_6_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_googlecode_mdock_mdock_2_0_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_googlecode_mdock_mdock_2_0_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_intellij_forms_rt_7_0_3.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_jgoodies_forms_1_1_preview.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_jgoodies_jgoodies_common_1_6_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_jgoodies_jgoodies_common_1_6_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_jgoodies_jgoodies_looks_2_5_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_jgoodies_jgoodies_looks_2_5_3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_jgoodies_looks_2_2_2.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_taoensso_encore_2_93_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_taoensso_encore_2_93_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_taoensso_nippy_2_14_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_taoensso_nippy_2_14_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_taoensso_timbre_4_10_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_taoensso_timbre_4_10_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__com_taoensso_truss_1_5_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__com_taoensso_truss_1_5_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__commons_cli_1_4.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__commons_cli_1_4.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__commons_codec_1_9.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__commons_codec_1_9.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__commons_io_2_4.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__commons_io_2_4.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__commons_logging_1_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__commons_logging_1_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__dk_brics_automaton_automaton_1_11_8.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__dk_brics_automaton_automaton_1_11_8.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_org_protege_common_5_0_0_beta_05_SNAPSHOT.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_org_protege_editor_core_application_5_0_0_beta_05_SNAPSHOT.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_org_protege_editor_owl_5_0_0_beta_05_SNAPSHOT.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_org_protege_xmlcatalog_1_0_5.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_org_protege_xmlcatalog_1_0_5.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_protege_common_5_0_0_RC1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_protege_common_5_0_0_RC1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_protege_editor_core_5_0_0_RC1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_protege_editor_core_5_0_0_RC1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_protege_editor_owl_5_0_0_RC1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_protege_editor_owl_5_0_0_RC1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_protege_owlapi_extensions_3_2_6.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__edu_stanford_protege_protege_owlapi_extensions_3_2_6.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__edu_ucdenver_ccp_knowtator_2_1_6.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__edu_ucdenver_ccp_knowtator_2_1_6.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__io_aviso_pretty_0_1_33.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__io_aviso_pretty_0_1_33.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__io_grpc_grpc_context_1_14_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__io_grpc_grpc_context_1_14_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__io_opencensus_opencensus_api_0_18_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__io_opencensus_opencensus_api_0_18_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__io_opencensus_opencensus_contrib_http_util_0_18_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__io_opencensus_opencensus_contrib_http_util_0_18_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__javax_annotation_javax_annotation_api_1_3_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__javax_annotation_javax_annotation_api_1_3_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__javax_inject_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__javax_inject_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__jaxen_1_1_4.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__jaxen_1_1_4.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__jdom_1_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__junit_4_10.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__log4j_1_2_17.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__log4j_1_2_17.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_jcip_jcip_annotations_1_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__net_jcip_jcip_annotations_1_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_jpountz_lz4_lz4_1_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__net_jpountz_lz4_lz4_1_3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sf_trove4j_trove4j_3_0_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__net_sf_trove4j_trove4j_3_0_3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_jfact_1_0_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_jfact_1_0_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_org_semanticweb_hermit_1_3_8_413.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_org_semanticweb_hermit_1_3_8_413.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_api_3_5_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_apibinding_3_5_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_contract_3_5_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_distribution_3_5_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_distribution_4_1_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_distribution_4_1_3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_impl_3_5_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_oboformat_3_5_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_osgidistribution_4_2_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_osgidistribution_4_2_3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_parsers_3_5_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__net_sourceforge_owlapi_owlapi_tools_3_5_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_commons_commons_lang3_3_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_commons_commons_math3_3_6_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_commons_commons_math3_3_6_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_felix_org_apache_felix_framework_4_4_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_felix_org_apache_felix_framework_4_4_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_felix_org_apache_felix_main_4_4_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_felix_org_apache_felix_main_4_4_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_felix_org_osgi_core_1_4_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_geronimo_specs_geronimo_activation_1_1_spec_1_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_geronimo_specs_geronimo_activation_1_1_spec_1_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_geronimo_specs_geronimo_javamail_1_4_spec_1_7_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_geronimo_specs_geronimo_javamail_1_4_spec_1_7_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_geronimo_specs_geronimo_stax_api_1_0_spec_1_0_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_geronimo_specs_geronimo_stax_api_1_0_spec_1_0_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_httpcomponents_httpclient_4_5_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_httpcomponents_httpclient_4_5_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_httpcomponents_httpclient_cache_4_5_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_httpcomponents_httpclient_cache_4_5_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_httpcomponents_httpcore_4_4_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_httpcomponents_httpcore_4_4_3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_james_apache_mime4j_core_0_7_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_james_apache_mime4j_core_0_7_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_servicemix_bundles_org_apache_servicemix_bundles_aopalliance_1_0_6.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_servicemix_bundles_org_apache_servicemix_bundles_aopalliance_1_0_6.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_servicemix_bundles_org_apache_servicemix_bundles_javax_inject_1_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_servicemix_bundles_org_apache_servicemix_bundles_javax_inject_1_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_ws_commons_axiom_axiom_api_1_2_14.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_ws_commons_axiom_axiom_api_1_2_14.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_ws_commons_axiom_axiom_c14n_1_2_14.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_ws_commons_axiom_axiom_c14n_1_2_14.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_ws_commons_axiom_axiom_dom_1_2_14.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_ws_commons_axiom_axiom_dom_1_2_14.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_ws_commons_axiom_axiom_impl_1_2_14.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apache_ws_commons_axiom_axiom_impl_1_2_14.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_apiguardian_apiguardian_api_1_0_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_apiguardian_apiguardian_api_1_0_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_beanshell_bsh_2_0b4.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_checkerframework_checker_compat_qual_2_5_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_checkerframework_checker_compat_qual_2_5_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_clojure_1_10_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_clojure_1_10_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_clojure_1_9_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_core_async_0_4_490.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_core_async_0_4_490.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_core_cache_0_6_5.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_core_cache_0_6_5.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_core_memoize_0_5_9.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_core_memoize_0_5_9.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_core_specs_alpha_0_1_24.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_core_specs_alpha_0_2_44.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_core_specs_alpha_0_2_44.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_data_priority_map_0_0_7.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_data_priority_map_0_0_7.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_math_combinatorics_0_1_4.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_math_combinatorics_0_1_4.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_spec_alpha_0_1_143.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_spec_alpha_0_2_176.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_spec_alpha_0_2_176.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_tools_analyzer_0_6_9.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_tools_analyzer_0_6_9.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_tools_analyzer_jvm_0_7_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_tools_analyzer_jvm_0_7_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_tools_reader_1_1_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_clojure_tools_reader_1_1_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_codehaus_mojo_animal_sniffer_annotations_1_14.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_codehaus_mojo_animal_sniffer_annotations_1_14.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_codehaus_woodstox_stax2_api_3_1_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_codehaus_woodstox_stax2_api_3_1_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_codehaus_woodstox_woodstox_core_asl_4_1_4.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_codehaus_woodstox_woodstox_core_asl_4_1_4.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_collections_eclipse_collections_7_1_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_collections_eclipse_collections_7_1_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_collections_eclipse_collections_api_7_1_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_collections_eclipse_collections_api_7_1_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_collections_eclipse_collections_forkjoin_7_1_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_collections_eclipse_collections_forkjoin_7_1_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_core_org_eclipse_core_jobs_3_5_0_v20100515.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_core_org_eclipse_core_jobs_3_5_0_v20100515.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_equinox_org_eclipse_equinox_common_3_6_0_v20100503.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_equinox_org_eclipse_equinox_common_3_6_0_v20100503.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_equinox_org_eclipse_equinox_registry_3_5_0_v20100503.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_equinox_org_eclipse_equinox_registry_3_5_0_v20100503.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_osgi_3_6_0_v20100517.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_eclipse_osgi_3_6_0_v20100517.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_hamcrest_hamcrest_core_1_1.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_iq80_snappy_snappy_0_4.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_iq80_snappy_snappy_0_4.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_jcuda_jcublas_10_0_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_jcuda_jcublas_10_0_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_jcuda_jcublas_natives_windows_x86_64_10_0_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_jcuda_jcuda_10_0_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_jcuda_jcuda_10_0_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_jcuda_jcuda_natives_windows_x86_64_10_0_0.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_jetbrains_annotations_13_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_jetbrains_annotations_13_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_jetbrains_kotlin_kotlin_stdlib_1_2_71.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_jetbrains_kotlin_kotlin_stdlib_1_2_71.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_jetbrains_kotlin_kotlin_stdlib_common_1_2_71.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_jetbrains_kotlin_kotlin_stdlib_common_1_2_71.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_jocl_jocl_2_0_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_jocl_jocl_2_0_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_jocl_jocl_blast_1_5_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_jocl_jocl_blast_1_5_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_junit_jupiter_junit_jupiter_api_5_3_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_junit_jupiter_junit_jupiter_api_5_3_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_junit_platform_junit_platform_commons_1_3_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_junit_platform_junit_platform_commons_1_3_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_mapdb_elsa_3_0_0_M5.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_mapdb_elsa_3_0_0_M5.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_mapdb_mapdb_3_0_7.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_mapdb_mapdb_3_0_7.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_model_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_model_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_api_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_api_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_binary_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_binary_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_datatypes_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_datatypes_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_languages_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_languages_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_n3_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_n3_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_nquads_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_nquads_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_ntriples_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_ntriples_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_rdfjson_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_rdfjson_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_rdfxml_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_rdfxml_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_trig_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_trig_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_trix_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_trix_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_turtle_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_rio_turtle_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_util_2_7_16.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_openrdf_sesame_sesame_util_2_7_16.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_opentest4j_opentest4j_1_1_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_opentest4j_opentest4j_1_1_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_ow2_asm_asm_all_4_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_ow2_asm_asm_all_4_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_semarglproject_semargl_core_0_6_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_semarglproject_semargl_core_0_6_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_semarglproject_semargl_rdf_0_6_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_semarglproject_semargl_rdf_0_6_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_semarglproject_semargl_rdfa_0_6_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_semarglproject_semargl_rdfa_0_6_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_semarglproject_semargl_sesame_0_6_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_semarglproject_semargl_sesame_0_6_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_slf4j_jcl_over_slf4j_1_7_7.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_slf4j_jcl_over_slf4j_1_7_7.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_slf4j_jul_to_slf4j_1_7_12.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_slf4j_jul_to_slf4j_1_7_12.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_slf4j_log4j_over_slf4j_1_7_12.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_slf4j_log4j_over_slf4j_1_7_12.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_slf4j_slf4j_api_1_7_26.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_slf4j_slf4j_api_1_7_26.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_slf4j_slf4j_simple_1_7_26.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_slf4j_slf4j_simple_1_7_26.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_testng_testng_6_8_7.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_threeten_threetenbp_1_3_3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_threeten_threetenbp_1_3_3.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_tukaani_xz_1_6.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__org_tukaani_xz_1_6.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__org_yaml_snakeyaml_1_12.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__spicerack_0_1_6.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__spicerack_0_1_6.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_clojurecl_0_10_6.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_clojurecl_0_10_6.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_clojurecuda_0_6_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_clojurecuda_0_6_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_commons_0_7_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_commons_0_7_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_fluokitten_0_9_1.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_fluokitten_0_9_1.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_neanderthal_0_22_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_neanderthal_0_22_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_neanderthal_native_0_21_0.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__uncomplicate_neanderthal_native_0_21_0.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/libraries/Deps__xml_resolver_1_2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/libraries/Deps__xml_resolver_1_2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/Dep2Rel.iml" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/deps.edn" beforeDir="false" afterPath="$PROJECT_DIR$/deps.edn" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/.ipynb_checkpoints/BioCreative 2017 - Relation Extraction-checkpoint.ipynb" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/.ipynb_checkpoints/CRAFT 3.1 - Relation Extraction-checkpoint.ipynb" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/BioCreative 2017 - Relation Extraction.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/src/BioCreative 2017 - Relation Extraction.ipynb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/edu/ucdenver/ccp/conll.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/edu/ucdenver/ccp/conll.clj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/readers.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/readers.clj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/scripts/relation_extraction_script.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/relation_extraction_script.clj" afterDir="false" />
     </list>
-    <ignored path="$PROJECT_DIR$/out/" />
+    <ignored path="$PROJECT_DIR$/classes/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,8 +252,8 @@
     <option name="modificationStamps">
       <map>
         <entry key="$USER_HOME$/.clojure/deps.edn" value="2745614147" />
-        <entry key="$PROJECT_DIR$" value="4661932991000" />
-        <entry key="$PROJECT_DIR$/deps.edn" value="1811806584" />
+        <entry key="$PROJECT_DIR$" value="4663654887000" />
+        <entry key="$PROJECT_DIR$/deps.edn" value="1061348235" />
         <entry key="/usr/local/lib/clojure/deps.edn" value="3427141421" />
       </map>
     </option>
@@ -66,17 +278,6 @@
                 <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
                 <item name="Dep2Rel" type="f1a62948:ProjectNode" />
               </path>
-              <path>
-                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
-                <item name="Dep2Rel" type="f1a62948:ProjectNode" />
-                <item name="Dep2Rel" type="2d1252cf:ModuleNode" />
-              </path>
-              <path>
-                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
-                <item name="Dep2Rel" type="f1a62948:ProjectNode" />
-                <item name="Dep2Rel" type="2d1252cf:ModuleNode" />
-                <item name="Dependencies" type="6de06a37:ExternalSystemViewDefaultContributor$MyDependenciesNode" />
-              </path>
             </expand>
             <select />
           </tree_state>
@@ -87,44 +288,38 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj">
+        <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="462">
-              <caret line="21" column="8" lean-forward="true" selection-start-line="21" selection-start-column="8" selection-end-line="21" selection-end-column="8" />
+            <state relative-caret-position="1540">
+              <caret line="70" column="37" selection-start-line="70" selection-start-column="37" selection-end-line="70" selection-end-column="37" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/readers.clj">
+        <entry file="file://$PROJECT_DIR$/src/scripts/relation_extraction_script.clj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="352">
-              <caret line="16" column="31" lean-forward="true" selection-start-line="16" selection-start-column="31" selection-end-line="16" selection-end-column="31" />
+            <state relative-caret-position="359">
+              <caret line="79" column="28" selection-start-line="79" selection-start-column="28" selection-end-line="79" selection-end-column="28" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1826">
+              <caret line="83" column="12" selection-start-line="83" selection-start-column="12" selection-end-line="83" selection-end-column="12" />
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
   </component>
-  <component name="FileTemplateManagerImpl">
-    <option name="RECENT_TEMPLATES">
-      <list>
-        <option value="Clojure Namespace" />
-      </list>
-    </option>
-  </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>callahantiff</find>
-      <find>Abra-Collaboratory</find>
-      <find>util</find>
-      <find>read-se</find>
-      <find>line-seq</find>
+      <find>lower</find>
     </findStrings>
-    <replaceStrings>
-      <replace>tuh8888</replace>
-      <replace>Dep2Rel</replace>
-    </replaceStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -132,104 +327,38 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/core.clj" />
-        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/relation_extraction.clj" />
-        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/clustering.clj" />
+        <option value="$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj" />
         <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/conll.clj" />
-        <option value="$PROJECT_DIR$/README.md" />
-        <option value="$PROJECT_DIR$/resources/New_Collaborators_Invitation_Email.md" />
-        <option value="$PROJECT_DIR$/notebooks/README.md" />
+        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/readers.clj" />
         <option value="$PROJECT_DIR$/deps.edn" />
         <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj" />
-        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj" />
-        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj" />
         <option value="$PROJECT_DIR$/src/scripts/relation_extraction_script.clj" />
-        <option value="$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj" />
-        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/readers.clj" />
+        <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj" />
       </list>
     </option>
-  </component>
-  <component name="MavenProjectNavigator">
-    <treeState>
-      <expand />
-      <select />
-    </treeState>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="3600" />
     <option name="y" value="34" />
     <option name="width" value="1600" />
-    <option name="height" value="866" />
+    <option name="height" value="896" />
   </component>
-  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
-    <ConfirmationsSetting value="2" id="Add" />
-  </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes>
-      <pane id="PackagesPane" />
-      <pane id="Scope" />
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Dep2Rel" type="72ca9032:PsiDirectoryNodeCustom" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Dep2Rel" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="src" type="72ca9032:PsiDirectoryNodeCustom" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Dep2Rel" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="src" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="ccp" type="72ca9032:PsiDirectoryNodeCustom" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Dep2Rel" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="src" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="ccp" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="nlp" type="72ca9032:PsiDirectoryNodeCustom" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Dep2Rel" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="src" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="scripts" type="72ca9032:PsiDirectoryNodeCustom" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-    </panes>
+    <panes />
   </component>
   <component name="PropertiesComponent">
+    <property name="GoToKeyword.includeLibraries" value="false" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="cursive.last.file.extension./home/tuh8888/Documents/Dep2Rel/src" value="clj" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../Knowtator-2.0" />
-    <property name="node.js.detected.package.eslint" value="true" />
-    <property name="node.js.path.for.package.eslint" value="project" />
-    <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="project.structure.last.edited" value="Project" />
-    <property name="project.structure.proportion" value="0.15" />
-    <property name="project.structure.side.proportion" value="0.2" />
-    <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Mappings" />
   </component>
-  <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\pielkelh\Drive\projects\Dep2Rel\src\edu\ucdenver\ccp\nlp" />
-    </key>
-  </component>
-  <component name="ReplState" timestamp="1554273031756">{:repl-history {:ide [], :local [{:command &quot;(t/set-level! :info)&quot;, :offset 20, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file \&quot;E:\&quot; \&quot;data\&quot; \&quot;craft-versions\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;craft-3.0\&quot;))&quot;, :offset 101, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word-vector-dir\n  (io/file \&quot;E:\&quot; \&quot;data\&quot; \&quot;WordVectors\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;word-vectors\&quot;))&quot;, :offset 107, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word2vec-db (.getAbsolutePath (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))&quot;, :offset 89, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def annotations-file (io/file (io/file craft-dir \&quot;concepts+assertions_1_article\&quot;)\n                               \&quot;concepts+assertions.knowtator\&quot;))&quot;, :offset 147, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency-dir (io/file craft-dir \&quot;CRAFT\&quot; \&quot;structural-annotation\&quot; \&quot;dependency\&quot; \&quot;conllu\&quot;))&quot;, :offset 94, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references-dir (io/file craft-dir \&quot;concepts+assertions_1_article\&quot; \&quot;Articles\&quot;))&quot;, :offset 83, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles [\&quot;11532192\&quot;])&quot;, :offset 27, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references (read-references articles references-dir))&quot;, :offset 58, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency (read-dependency word2vec-db articles references dependency-dir))&quot;, :offset 81, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def sentences (read-sentences annotations dependency articles))&quot;, :offset 64, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(t/info \&quot;Num sentences:\&quot; (count sentences))&quot;, :offset 43, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn get-sentences-with-ann\n  [sentences id]\n  (filter (fn [s]\n            (some (fn [e]\n                    (= id (get-in e [:ann :id])))\n                  (get s :entities)))\n          sentences))&quot;, :offset 199, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (article-names-in-dir references-dir \&quot;.txt\&quot;))&quot;, :offset 59, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :refer :all]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]))&quot;, :offset 492, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (rdr/article-names-in-dir references-dir \&quot;.txt\&quot;))&quot;, :offset 63, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (map #(.getName %)))&quot;, :offset 56, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))&quot;, :offset 62, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;)))&quot;, :offset 71, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles (take-nth 1 (rdr/article-names-in-dir references-dir \&quot;txt\&quot;)))&quot;, :offset 75, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles [(second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 73, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(hash-map [[:a \&quot;hi\&quot;]])&quot;, :offset 18, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(apply hash-map [[:a \&quot;hi\&quot;]])&quot;, :offset 28, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(apply hash-map (flatten [[:a \&quot;hi\&quot;]]))&quot;, :offset 38, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(map (fn [{x :a :as y}]\n       (t/info x y))\n     [{:a \&quot;p\&quot;}])&quot;, :offset 57, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency (rdr/read-dependency word2vec-db articles references dependency-dir))&quot;, :offset 85, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;1&quot;, :offset 1, :ns &quot;user&quot;} {:command &quot;{:a \&quot;hi\&quot;}&quot;, :offset 7, :ns &quot;user&quot;} {:command &quot;(t/set-level! :debug)&quot;, :offset 21, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot; \&quot;craft-versions\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;craft-3.0\&quot;))&quot;, :offset 144, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(.exists craft-dir)&quot;, :offset 19, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;craft-3.0\&quot;))&quot;, :offset 98, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;)\n  #_(io/file \&quot;/home\&quot; \&quot;harrison\&quot; \&quot;word-vectors\&quot;))&quot;, :offset 104, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word2vec-db \n  (.getAbsolutePath \n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))&quot;, :offset 97, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles \n  [(second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 76, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))&quot;, :offset 85, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))&quot;, :offset 76, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(.exists annotations-file)&quot;, :offset 26, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def dependency-dir\n  (io/file craft-dir \&quot;Structures\&quot;))&quot;, :offset 55, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def annotations (k/view annotations-file))&quot;, :offset 43, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]))&quot;, :offset 488, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))&quot;, :offset 53, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;references-dir&quot;, :offset 14, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(file-seq references-dir)&quot;, :offset 25, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile ^File %)))&quot;, :offset 64, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile %)))&quot;, :offset 58, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile %))\n     (map #(.getName %)))&quot;, :offset 82, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(require '[clojure.string :as s])&quot;, :offset 33, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt;&gt; (file-seq references-dir)\n     (filter #(.isFile %))\n     (map #(.getName %))\n     (filter #(s/ends-with? % (str \&quot;.\&quot; \&quot;txt\&quot;))))&quot;, :offset 131, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  [(second (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 75, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(rdr/article-names-in-dir references-dir \&quot;txt\&quot;)&quot;, :offset 47, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  [(rdr/article-names-in-dir references-dir \&quot;txt\&quot;)])&quot;, :offset 66, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;articles&quot;, :offset 8, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))&quot;, :offset 64, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 74, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references (rdr/read-references articles references-dir))&quot;, :offset 62, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(+ 1 1)&quot;, :offset 7, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(k/display annotations)&quot;, :offset 23, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;*e&quot;, :offset 2, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(k/selected-annotation annotations)&quot;, :offset 35, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def matches (let [property \&quot;has_location_in\&quot;\n                     seeds (set1/intersection\n                             (set (get-sentences-with-ann sentences \&quot;CRAFT_aggregate_ontology_Instance_21741\&quot;))\n                             (set (get-sentences-with-ann sentences \&quot;CRAFT_aggregate_ontology_Instance_21947\&quot;)))\n                     seed-thresh 0.9\n                     context-thresh 0.9\n                     cluster-thresh 0.75\n                     min-support 20\n                     params {:seed             (first seeds)\n                             :seed-thresh      seed-thresh\n                             :context-thresh   context-thresh\n                             :seed-match-fn    #(and (concepts-match? %1 %2)\n                                                     (&lt; seed-thresh (context-vector-cosine-sim %1 %2)))\n                             :context-match-fn #(&lt; context-thresh (context-vector-cosine-sim %1 %2))\n                             :cluster-merge-fn add-to-pattern\n                             :cluster-match-fn #(let [score (context-vector-cosine-sim %1 %2)]\n                                                  (and (&lt; (or %3 cluster-thresh) score)\n                                                       score))\n                             :min-support      min-support}\n                     matches (-&gt;&gt; (cluster-bootstrap-extract-relations seeds sentences params)\n                                  (map #(merge % params))\n                                  (map #(let [t (evaluation/matched-triples % annotations property)]\n                                          (assoc % :num-matches (count t) :triples t))))]\n                 (info \&quot;Final matches:\&quot; (count matches))\n                 (info \&quot;Triples matched\&quot; (count (distinct (mapcat :triples matches))))\n                 matches))&quot;, :offset 1817, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def matches (let [property \&quot;has_location_in\&quot;\n                     seeds (set1/intersection\n                             (set (get-sentences-with-ann sentences \&quot;CRAFT_aggregate_ontology_Instance_21741\&quot;))\n                             (set (get-sentences-with-ann sentences \&quot;CRAFT_aggregate_ontology_Instance_21947\&quot;)))\n                     seed-thresh 0.9\n                     context-thresh 0.9\n                     cluster-thresh 0.75\n                     min-support 20\n                     params {:seed             (first seeds)\n                             :seed-thresh      seed-thresh\n                             :context-thresh   context-thresh\n                             :seed-match-fn    #(and (concepts-match? %1 %2)\n                                                     (&lt; seed-thresh (context-vector-cosine-sim %1 %2)))\n                             :context-match-fn #(&lt; context-thresh (context-vector-cosine-sim %1 %2))\n                             :cluster-merge-fn add-to-pattern\n                             :cluster-match-fn #(let [score (context-vector-cosine-sim %1 %2)]\n                                                  (and (&lt; (or %3 cluster-thresh) score)\n                                                       score))\n                             :min-support      min-support}\n                     matches (-&gt;&gt; (cluster-bootstrap-extract-relations seeds sentences params)\n                                  (map #(merge % params))\n                                  (map #(let [t (evaluation/matched-triples % annotations property)]\n                                          (assoc % :num-matches (count t) :triples t))))]\n                 (t/info \&quot;Final matches:\&quot; (count matches))\n                 (t/info \&quot;Triples matched\&quot; (count (distinct (mapcat :triples matches))))\n                 matches))&quot;, :offset 1821, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;matches&quot;, :offset 7, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(map (partial into {}) matches)&quot;, :offset 31, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;[{:a 1} {:a 2}]&quot;, :offset 15, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(count matches)&quot;, :offset 15, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(evaluation/format-matches matches)&quot;, :offset 35, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.bio-creative-relation-extraction\n  (:require [clojure.java.io :as io]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]))&quot;, :offset 134, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))&quot;, :offset 81, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(def biocreative-dir\n  (io/file home-dir \&quot;BioCreative\&quot; \&quot;BCVI-2017\&quot; \&quot;ChemProt_Corpus\&quot;))&quot;, :offset 86, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))&quot;, :offset 56, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))&quot;, :offset 95, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(file-seq biocreative-dir)&quot;, :offset 26, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(def training-dir\n  (io/file biocreative-dir \&quot;chemprot_training\&quot;))&quot;, :offset 66, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(file-seq training-dir)&quot;, :offset 23, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(def abstracts-f (io/file biocreative-dir \&quot;chemprot_training_abstracts.tsv\&quot;))&quot;, :offset 77, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(def abstracts-f (io/file training-dir \&quot;chemprot_training_abstracts.tsv\&quot;))&quot;, :offset 74, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(.exists abstracts-f)&quot;, :offset 21, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(line-seq abstracts-f)&quot;, :offset 22, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(def abstracts (-&gt;&gt; (line-seq abstracts-f)\n                    (map #(s/split % \&quot;\\t\&quot;))\n                    (map (fn [line] [(first line) (apply str (interpose \&quot;\\n\&quot; (rest line)))]))\n                    (into {})))&quot;, :offset 212, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(defn biocreative-read-abstracts\n  [f]\n  (-&gt;&gt; (io/reader f)\n       (line-seq)\n       (map #(s/split % #\&quot;\\t\&quot;))\n       (map (fn [line] [(first line) (apply str (interpose \&quot;\\n\&quot; (rest line)))]))\n       (into {})))&quot;, :offset 209, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(vals abstracts)&quot;, :offset 16, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(defn biocreative-read-abstracts\n  [f]\n  (let [lines (-&gt;&gt; (io/reader f)\n                   (line-seq)\n                   (map #(s/split % #\&quot;\\t\&quot;))\n                   )]\n    (zipmap (map first lines)\n            (-&gt;&gt; lines\n                 (map rest)\n                 (map (fn [[title abstract]] {:title title\n                                              :abstract abstract}))))))&quot;, :offset 379, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(defn biocreative-read-abstracts\n  [f]\n  (let [lines (-&gt;&gt; (io/reader f)\n                   (line-seq)\n                   (map #(s/split % #\&quot;\\t\&quot;))\n                   )]\n    (map (fn [[id title abstract]] {:id       id\n                                    :title    title\n                                    :abstract abstract})\n         lines)))&quot;, :offset 343, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(defn biocreative-read-abstracts\n  [f]\n  (let [lines (-&gt;&gt; (io/reader f)\n                   (line-seq)\n                   (map #(s/split % #\&quot;\\t\&quot;)))]\n    (map\n      (fn [[id title abstract]]\n        {:id       id\n         :title    title\n         :abstract abstract})\n      lines)))&quot;, :offset 280, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;abstracts&quot;, :offset 9, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(defn biocreative-read-entities\n  [f reference]\n  (-&gt;&gt; (io/reader f)\n       (line-seq)\n       (map #(s/split % \&quot;\\t\&quot;))\n       (map\n         (fn [[doc id concept start end spanned-text]]\n           (let [start (Integer/parseInt start)\n                 end (Integer/parseInt end)]\n             {:doc     doc\n              :id      id\n              :concept concept\n              :start   start\n              :end     end\n              :tok     (subs (doc reference) start end)})))))&quot;, :offset 479, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(defn biocreative-read-relations\n  [f]\n  (-&gt;&gt; (io/reader f)\n       (line-seq)\n       (map #(s/split % \&quot;\\t\&quot;))\n       (map\n         (fn [[doc id has-relevant-relation? property source target]]\n           {:doc           doc\n            :id            id\n            :has-relation? (= has-relevant-relation? \&quot;Y\&quot;)\n            :property      property\n            :source        (second (s/split source \&quot;:\&quot;))\n            :target        (second (s/split target \&quot;:\&quot;))}))))&quot;, :offset 464, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(defn biocreative-read-abstracts\n  [f]\n  (let [lines (-&gt;&gt; (io/reader f)\n                   (line-seq)\n                   (map #(s/split % #\&quot;\\t\&quot;)))]\n    (zipmap (map first lines)\n            (map\n              (fn [[id title abstract]]\n                {:id       id\n                 :title    title\n                 :abstract abstract})\n              lines))))&quot;, :offset 359, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(defn biocreative-read-abstracts\n  [f]\n  (let [lines (-&gt;&gt; (io/reader f)\n                   (line-seq)\n                   (map #(s/split % #\&quot;\\t\&quot;)))]\n    (zipmap (-&gt;&gt; lines\n                 (map first)\n                 (map keyword))\n            (map\n              (fn [[id title abstract]]\n                {:id       id\n                 :title    title\n                 :abstract abstract})\n              lines))))&quot;, :offset 413, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(defn biocreative-read-entities\n  [f reference]\n  (-&gt;&gt; (io/reader f)\n       (line-seq)\n       (map #(s/split % \&quot;\\t\&quot;))\n       (map\n         (fn [[doc id concept start end spanned-text]]\n           (let [start (Integer/parseInt start)\n                 end (Integer/parseInt end)\n                 doc (keyword doc)]\n             {:doc     doc\n              :id      id\n              :concept concept\n              :start   start\n              :end     end\n              :tok     (subs (get-in reference [doc :abstract]) start end)})))))&quot;, :offset 533, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(def entities-f (io/file training-dir \&quot;chemprot_training_entities.tsv\&quot;))&quot;, :offset 72, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(defn biocreative-read-relations\n  [f]\n  (-&gt;&gt; (io/reader f)\n       (line-seq)\n       (map #(s/split % #\&quot;\\t\&quot;))\n       (map\n         (fn [[doc id has-relevant-relation? property source target]]\n           {:doc           doc\n            :id            id\n            :has-relation? (= has-relevant-relation? \&quot;Y\&quot;)\n            :property      property\n            :source        (second (s/split source \&quot;:\&quot;))\n            :target        (second (s/split target \&quot;:\&quot;))}))))&quot;, :offset 465, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(defn biocreative-read-entities\n  [f reference]\n  (-&gt;&gt; (io/reader f)\n       (line-seq)\n       (map #(s/split % #\&quot;\\t\&quot;))\n       (map\n         (fn [[doc id concept start end spanned-text]]\n           (let [start (Integer/parseInt start)\n                 end (Integer/parseInt end)\n                 doc (keyword doc)]\n             {:doc     doc\n              :id      id\n              :concept concept\n              :start   start\n              :end     end\n              :tok     (subs (get-in reference [doc :abstract]) start end)})))))&quot;, :offset 534, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(defn biocreative-read-abstracts\n  [f]\n  (let [lines (-&gt;&gt; (io/reader f)\n                   (line-seq)\n                   (map #(s/split % #\&quot;\\t\&quot;)))]\n    (zipmap (-&gt;&gt; lines\n                 (map first)\n                 (map keyword))\n            (map\n              (fn [[id title abstract]]\n                {:id       id\n                 :title    title\n                 :abstract abstract\n                 :full (str title\&quot;\\n\&quot; abstract)})\n              lines))))&quot;, :offset 461, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(def abstracts (rdr/biocreative-read-abstracts abstracts-f))&quot;, :offset 60, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(defn biocreative-read-entities\n  [f reference]\n  (-&gt;&gt; (io/reader f)\n       (line-seq)\n       (map #(s/split % #\&quot;\\t\&quot;))\n       (map\n         (fn [[doc id concept start end spanned-text]]\n           (let [start (Integer/parseInt start)\n                 end (Integer/parseInt end)\n                 doc (keyword doc)]\n             {:doc     doc\n              :id      id\n              :concept concept\n              :start   start\n              :end     end\n              :tok     (subs (get-in reference [doc :full]) start end)})))))&quot;, :offset 530, :ns &quot;edu.ucdenver.ccp.nlp.readers&quot;} {:command &quot;(def entities (rdr/biocreative-read-entities entities-f abstracts))&quot;, :offset 67, :ns &quot;scripts.bio-creative-relation-extraction&quot;} {:command &quot;(ns scripts.bio-creative-relation-extraction\n  (:require [clojure.java.io :as io]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [clojure.string :as s]))&quot;, :offset 169, :ns &quot;user&quot;} {:command &quot;entities&quot;, :offset 8, :ns &quot;user&quot;}], :remote []}}</component>
+  <component name="ReplState" timestamp="1554884754129">{:repl-history {:ide [], :local [{:command &quot;(first (:structure-triples (first (vals model))))&quot;, :offset 27, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]\n            [edu.ucdenver.ccp.nlp.sentence :as sentence]\n            [edu.ucdenver.ccp.nlp.word2vec :as word2vec])\n  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)\n           (org.semanticweb.owlapi.model OWLObject)))&quot;, :offset 716, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def model (word2vec/with-word2vec word2vec-db\n             (reduce\n               (fn [model doc]\n                 (update-in model [doc :structure-annotations]\n                            (fn [annotation]\n                              (assoc annotation :VEC (word2vec/word-embedding \n                                                       (get annotation [:spans 0 :text]))))))\n               model (keys model))))&quot;, :offset 416, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def model (word2vec/with-word2vec word2vec-db\n             (reduce\n               (fn [model doc]\n                 (update-in model [doc :structure-annotations]\n                            (fn [annotation]\n                              (assoc annotation :VEC (word2vec/word-embedding\n                                                       (get-in annotation [:spans 0 :text]))))))\n               model (keys model))))&quot;, :offset 418, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def model (word2vec/with-word2vec word2vec-db\n             (reduce\n               (fn [model doc]\n                 (update-in model [doc :structure-annotations]\n                            (fn [annotations]\n                              (map \n                                (fn [annotation]\n                                 (assoc annotation :VEC (word2vec/word-embedding\n                                                          (get-in annotation [:spans 0 :text])))))\n                              annotations)))\n               model (keys model))))&quot;, :offset 554, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def model (word2vec/with-word2vec word2vec-db\n             (reduce\n               (fn [model doc]\n                 (update-in model [doc :structure-annotations]\n                            (fn [annotations]\n                              (doall\n                                (map\n                                 (fn [annotation]\n                                   (assoc annotation :VEC (word2vec/word-embedding\n                                                            (get-in annotation [:spans 0 :text]))))))\n                              annotations)))\n               model (keys model))))&quot;, :offset 598, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (get-in annotation [:spans 0 :text]))))&quot;, :offset 159, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (get-in annotation [:spans 0 :text])))))&quot;, :offset 205, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (-&gt; annotation\n                                 :span\n                                 first\n                                 :text)))))&quot;, :offset 301, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def model (word2vec/with-word2vec word2vec-db\n             (reduce\n               (fn [model doc]\n                 (update-in model [doc :structure-annotations]\n                            (fn [annotations]\n                              (doall\n                                (map\n                                  assign-word-embedding\n                                  annotations)))))\n               model (keys model))))&quot;, :offset 425, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (-&gt; annotation\n                                 :spans\n                                 first\n                                 :text)))))&quot;, :offset 302, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(:structure-graphs model)&quot;, :offset 0, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(t/set-level! :debug)&quot;, :offset 21, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))&quot;, :offset 81, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))&quot;, :offset 85, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))&quot;, :offset 53, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])&quot;, :offset 74, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def model (k/simple-model annotations))&quot;, :offset 40, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(first (:structure-graphs model))&quot;, :offset 7, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(first (:structure-annotations model))&quot;, :offset 30, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;model&quot;, :offset 5, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(first (:structure-annotations (first model)))&quot;, :offset 0, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(keys (first model))&quot;, :offset 0, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(keys model)&quot;, :offset 0, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(first (:structure-graphs (first (vals model))))&quot;, :offset 7, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def model (word2vec/with-word2vec word2vec-db\n             (reduce\n               (fn [model doc]\n                 (update-in model [doc :structure-annotations]\n                            (fn [annotations]\n                              (doall\n                                (map\n                                  assign-word-embedding\n                                  (vals annotations))))))\n               model (keys model))))&quot;, :offset 432, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def model (let [model (k/simple-model annotations)] \n             (word2vec/with-word2vec word2vec-db\n              (reduce\n                (fn [model doc]\n                  (update-in model [doc :structure-annotations]\n                             (fn [annotations]\n                               (doall\n                                 (map\n                                   assign-word-embedding\n                                   (vals annotations))))))\n                model (keys model)))))&quot;, :offset 498, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def sentences\n  (sentence/make-sentences model))&quot;, :offset 49, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn annotation-&gt;entity\n  [model ann]\n  (let [concept-start (get-in ann [:spans 0 :start])\n        concept-end (get-in ann [:spans 0 :end])]\n    (some\n      (fn [tok]\n        (let [tok-start (-&gt; tok :spans first :start)\n              tok-end (-&gt; tok :spans first :end)]\n          (when (or (&lt;= tok-start concept-start concept-end tok-end)\n                    (&lt;= concept-start tok-start tok-end concept-end))\n            tok)))\n      (:structure-annotations model))))&quot;, :offset 468, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(t/info \&quot;Num sentences:\&quot; (count (:sentences sentence-model)))&quot;, :offset 61, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(count (:sentences sentence-model))&quot;, :offset 35, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(keys sentence-model)&quot;, :offset 6, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(count (:sentences (first sentence-model)))&quot;, :offset 43, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(keys (first sentence-model))&quot;, :offset 6, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(keys (first (vals sentence-model)))&quot;, :offset 19, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(first (keys sentence-model))&quot;, :offset 12, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(t/info \&quot;Num sentences:\&quot; (count (:sentences (first sentence-model))))&quot;, :offset 69, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(first (vals sentence-model))&quot;, :offset 29, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(count (group-by :sent (vals (:concept-annotations (first (vals model))))))&quot;, :offset 75, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(count (group-by :sent (vals (:concept-annotations (first (vals sentence-model))))))&quot;, :offset 84, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (map\n                (fn [[e1 e2 :as entities]]\n                  (let [context (uber-alg/shortest-path sent (:id e1) (:id e2))\n                        context-vector (when-let [vectors (-&gt;&gt; context\n                                                               (keep :VEC)\n                                                               (seq))]\n                                         (apply unit-vec-sum vectors))]\n                    (-&gt;Sentence entities context context-vector)))\n                (combo/combinations sentence-entities 2))))\n    model\n    (group-by :sent (vals (:concept-annotations model)))))&quot;, :offset 749, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(def sentence-model\n  (sentence/make-sentences model))&quot;, :offset 54, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(t/info \&quot;Num sentences:\&quot; (count (:sentences (first (vals sentence-model)))))&quot;, :offset 76, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(t/info \&quot;Num sentences:\&quot; (count (:sentences (first (vals model)))))&quot;, :offset 67, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(t/info \&quot;Num sentences:\&quot; (count sentences))&quot;, :offset 43, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn sentences-with-ann\n  [sentences id]\n  (filter (fn [s]\n            (some (fn [e]\n                    (= id (:id e)))\n                  (get s :entities)))\n          sentences))&quot;, :offset 181, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(def matches (let [property \&quot;has_location_in\&quot;\n                     seeds (set1/intersection\n                             (set (sentence/sentences-with-ann sentences \&quot;CRAFT_aggregate_ontology_Instance_21741\&quot;))\n                             (set (sentence/sentences-with-ann sentences \&quot;CRAFT_aggregate_ontology_Instance_21947\&quot;)))\n                     seed-thresh 0.9\n                     context-thresh 0.9\n                     cluster-thresh 0.75\n                     min-support 20\n                     params {:seed             (first seeds)\n                             :seed-thresh      seed-thresh\n                             :context-thresh   context-thresh\n                             :seed-match-fn    #(and (concepts-match? %1 %2)\n                                                     (&lt; seed-thresh (context-vector-cosine-sim %1 %2)))\n                             :context-match-fn #(&lt; context-thresh (context-vector-cosine-sim %1 %2))\n                             :cluster-merge-fn add-to-pattern\n                             :cluster-match-fn #(let [score (context-vector-cosine-sim %1 %2)]\n                                                  (and (&lt; (or %3 cluster-thresh) score)\n                                                       score))\n                             :min-support      min-support}\n                     matches (-&gt;&gt; (cluster-bootstrap-extract-relations seeds sentences params)\n                                  (map #(merge % params))\n                                  (map #(let [t (evaluation/matched-triples % annotations property)]\n                                          (assoc % :num-matches (count t) :triples t))))]\n                 (t/info \&quot;Final matches:\&quot; (count matches))\n                 (t/info \&quot;Triples matched\&quot; (count (distinct (mapcat :triples matches))))\n                 matches))&quot;, :offset 1831, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def matches (let [property \&quot;has_location_in\&quot;\n                   seeds (set1/intersection\n                           (set (sentence/sentences-with-ann sentences \&quot;CRAFT_aggregate_ontology_Instance_21741\&quot;))\n                           (set (sentence/sentences-with-ann sentences \&quot;CRAFT_aggregate_ontology_Instance_21947\&quot;)))\n                   seed-thresh 0.8\n                   context-thresh 0.9\n                   cluster-thresh 0.75\n                   min-support 20\n                   params {:seed             (first seeds)\n                           :seed-thresh      seed-thresh\n                           :context-thresh   context-thresh\n                           :seed-match-fn    #(and (concepts-match? %1 %2)\n                                                   (&lt; seed-thresh (context-vector-cosine-sim %1 %2)))\n                           :context-match-fn #(&lt; context-thresh (context-vector-cosine-sim %1 %2))\n                           :cluster-merge-fn add-to-pattern\n                           :cluster-match-fn #(let [score (context-vector-cosine-sim %1 %2)]\n                                                (and (&lt; (or %3 cluster-thresh) score)\n                                                     score))\n                           :min-support      min-support}\n                   matches (-&gt;&gt; (cluster-bootstrap-extract-relations seeds sentences params)\n                                (map #(merge % params))\n                                (map #(let [t (evaluation/matched-triples % annotations property)]\n                                        (assoc % :num-matches (count t) :triples t))))]\n               (t/info \&quot;Final matches:\&quot; (count matches))\n               (t/info \&quot;Triples matched\&quot; (count (distinct (mapcat :triples matches))))\n               matches))&quot;, :offset 1781, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]\n            [edu.ucdenver.ccp.nlp.sentence :as sentence]\n            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]\n            [clojure.string :as str])\n  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)\n           (org.semanticweb.owlapi.model OWLObject)))&quot;, :offset 753, :ns &quot;user&quot;} {:command &quot;(t/set-level! :debug)\n\n(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))\n\n(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))\n\n\n(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))\n(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])\n\n(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))\n(def ^KnowtatorModel annotations (k/model annotations-file nil))\n\n\n\n(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))\n(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))\n\n(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (-&gt; annotation\n                                 :spans\n                                 vals\n                                 first\n                                 :text)))))\n\n(def model (word2vec/with-word2vec word2vec-db\n             (let [model (k/simple-model annotations)]\n              (-&gt;&gt; (keys model)\n                   (reduce\n                     (fn [model doc]\n                       (update-in model [doc :structure-annotations]\n                                  (fn [annotations]\n                                    (doall\n                                      (map\n                                        assign-word-embedding\n                                        (vals annotations))))))\n                     model)\n                   (sentence/make-sentences)))))\n\n(def sentences (mapcat :sentences (vals model)))\n\n(t/info \&quot;Num sentences:\&quot; (count sentences))&quot;, :offset 1667, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;sentences&quot;, :offset 9, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]\n            [edu.ucdenver.ccp.nlp.sentence :as sentence]\n            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]\n            [clojure.string :as str])\n  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)\n           (org.semanticweb.owlapi.model OWLObject)))\n(t/set-level! :debug)\n\n(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))\n\n(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))\n\n\n(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))\n(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])\n\n(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))\n(def ^KnowtatorModel annotations (k/model annotations-file nil))\n\n\n\n(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))\n(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))\n\n(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (-&gt; annotation\n                                 :spans\n                                 vals\n                                 first\n                                 :text)))))\n\n(def model (word2vec/with-word2vec word2vec-db\n             (let [model (k/simple-model annotations)]\n              (-&gt;&gt; (keys model)\n                   (reduce\n                     (fn [model doc]\n                       (update-in model [doc :structure-annotations]\n                                  (fn [annotations]\n                                    (doall\n                                      (map\n                                        assign-word-embedding\n                                        (vals annotations))))))\n                     model)\n                   (sentence/make-sentences)))))\n\n(def sentences (mapcat :sentences (vals model)))\n\n(t/info \&quot;Num sentences:\&quot; (count sentences))&quot;, :offset 2421, :ns &quot;user&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (map\n                (fn [[e1 e2 :as entities]]\n                  (let [context (uber-alg/shortest-path (ubergraph.core/multigraph sent) \n                                                        (-&gt; e1 :tok :id) \n                                                        (-&gt; e2 :tok :id))\n                        context-vector (when-let [vectors (-&gt;&gt; context\n                                                               (keep :VEC)\n                                                               (seq))]\n                                         (apply unit-vec-sum vectors))]\n                    (-&gt;Sentence entities context context-vector)))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent)\n         (remove #(nil? (first %))))))&quot;, :offset 972, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (map\n                (fn [[e1 e2 :as entities]]\n                  (let [context (uber-alg/shortest-path (apply ubergraph.core/multigraph (loom.graph/edges sent))\n                                                        (-&gt; e1 :tok :id)\n                                                        (-&gt; e2 :tok :id))\n                        context-vector (when-let [vectors (-&gt;&gt; context\n                                                               (keep :VEC)\n                                                               (seq))]\n                                         (apply unit-vec-sum vectors))]\n                    (-&gt;Sentence entities context context-vector)))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent)\n         (remove #(nil? (first %))))))&quot;, :offset 995, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(defn undirected-graph\n  [g]\n  (apply ubergraph.core/multigraph\n         (map #(vector (loom.graph/src %)\n                       (loom.graph/dest %))\n              (loom.graph/edges g))))&quot;, :offset 187, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (map\n                (fn [[e1 e2 :as entities]]\n                  (let [context (ubergraph.alg/shortest-path\n                                  (undirected-graph sent)\n                                  (-&gt; e1 :tok :id)\n                                  (-&gt; e2 :tok :id))\n                        context-vector (when-let [vectors (-&gt;&gt; context\n                                                               (keep :VEC)\n                                                               (seq))]\n                                         (apply unit-vec-sum vectors))]\n                    (-&gt;Sentence entities context context-vector)))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent)\n         (remove #(nil? (first %))))))&quot;, :offset 956, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (map\n                (fn [[e1 e2 :as entities]]\n                  (let [context (-&gt; (undirected-graph sent)\n                                    (ubergraph.alg/shortest-path\n                                      (-&gt; e1 :tok :id)\n                                      (-&gt; e2 :tok :id))\n                                    (ubergraph.alg/nodes-in-path))\n                        context-vector (when-let [vectors (-&gt;&gt; context\n                                                               (map #(get (:concept-annotations model) %))\n                                                               (keep :VEC)\n                                                               (seq))]\n                                         (apply unit-vec-sum vectors))]\n                    (-&gt;Sentence entities context context-vector)))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent)\n         (remove #(nil? (first %))))))&quot;, :offset 1144, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;y&quot;, :offset 1, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (map\n                (fn [[e1 e2 :as entities]]\n                  (let [context (-&gt; (undirected-graph sent)\n                                    (ubergraph.alg/shortest-path\n                                      (-&gt; e1 :tok :id)\n                                      (-&gt; e2 :tok :id))\n                                    (ubergraph.alg/nodes-in-path))\n                        context-vector (when-let [vectors (-&gt;&gt; context\n                                                               (map #(filter (fn [ann]\n                                                                               (= (-&gt; ann :tok :id))) \n                                                                             (:concept-annotations model)))\n                                                               (keep :VEC)\n                                                               (seq))]\n                                         (apply unit-vec-sum vectors))]\n                    (-&gt;Sentence entities context context-vector)))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent)\n         (remove #(nil? (first %))))))&quot;, :offset 1335, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (map\n                (fn [[e1 e2 :as entities]]\n                  (let [context (-&gt; (undirected-graph sent)\n                                    (ubergraph.alg/shortest-path\n                                      (-&gt; e1 :tok :id)\n                                      (-&gt; e2 :tok :id))\n                                    (ubergraph.alg/nodes-in-path))\n                        context-vector (when-let [vectors (-&gt;&gt; context\n                                                               (map #(filter (fn [ann]\n                                                                               (= (-&gt; ann :tok :id)))\n                                                                             (:concept-annotations model)))\n                                                               (keep :VEC)\n                                                               (seq))]\n                                         (apply unit-vec-sum vectors))]\n                    (-&gt;Sentence entities context context-vector)))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent)\n         (remove #(nil? (first %))))))&quot;, :offset 1334, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (map\n                (fn [[e1 e2 :as entities]]\n                  (let [context (-&gt; (undirected-graph sent)\n                                    (ubergraph.alg/shortest-path\n                                      (-&gt; e1 :tok :id)\n                                      (-&gt; e2 :tok :id))\n                                    (ubergraph.alg/nodes-in-path))\n                        context-vector (when-let [vectors (-&gt;&gt; context\n                                                               (map #(get (:structure-annotations model) %))\n                                                               (keep :VEC)\n                                                               (seq))]\n                                         (apply unit-vec-sum vectors))]\n                    (-&gt;Sentence entities context context-vector)))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent)\n         (remove #(nil? (first %))))))&quot;, :offset 1146, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(def model (word2vec/with-word2vec word2vec-db\n             (let [model (k/simple-model annotations)]\n              (-&gt;&gt; (keys model)\n                   (reduce\n                     (fn [model doc]\n                       (update-in model [doc :structure-annotations]\n                                  (fn [annotations]\n                                    (doall\n                                      (map\n                                        assign-word-embedding\n                                        (vals annotations))))))\n                     model)\n                   (sentence/make-sentences)))))&quot;, :offset 607, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn annotation-&gt;entity\n  [model ann]\n  (let [concept-start (-&gt; ann :spans vals first :start)\n        concept-end (-&gt; ann :spans vals first :end)]\n    (some\n      (fn [tok]\n        (let [tok-start (-&gt; tok :spans vals first :start)\n              tok-end (-&gt; tok :spans vals first :end)]\n          (when (or (&lt;= tok-start concept-start concept-end tok-end)\n                    (&lt;= concept-start tok-start tok-end concept-end))\n            tok)))\n      (vals (:structure-annotations model)))))&quot;, :offset 491, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (keep\n                (fn [[e1 e2 :as entities]]\n                  (when-not (= (:tok e1)\n                               (:tok e2)))\n                  (let [context (-&gt; (undirected-graph sent)\n                                    (ubergraph.alg/shortest-path\n                                      (-&gt; e1 :tok :id)\n                                      (-&gt; e2 :tok :id))\n                                    (ubergraph.alg/nodes-in-path))\n                        context-vector (when-let [vectors (-&gt;&gt; context\n                                                               (map #(get (:structure-annotations model) %))\n                                                               (keep :VEC)\n                                                               (seq))]\n                                         (apply unit-vec-sum vectors))]\n                    (-&gt;Sentence entities context context-vector)))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent)\n         (remove #(nil? (first %))))))&quot;, :offset 1231, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(get-in model [:structure-annotations \&quot;11532191-24797\&quot;])&quot;, :offset 53, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(get-in (first (vals model)) [:structure-annotations \&quot;11532191-24797\&quot;])&quot;, :offset 21, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(first (:structure-annotations (first (vals model))))&quot;, :offset 7, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(get (:structure-annotations (first (vals model))) \&quot;11532192-24797\&quot;)&quot;, :offset 66, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (keep\n                (fn [[e1 e2 :as entities]]\n                  (when-not (= (:tok e1)\n                               (:tok e2))\n                    (let [context (-&gt; (undirected-graph sent)\n                                      (ubergraph.alg/shortest-path\n                                        (-&gt; e1 :tok :id)\n                                        (-&gt; e2 :tok :id))\n                                      (ubergraph.alg/nodes-in-path))\n                          context-vector (when-let [vectors (-&gt;&gt; context\n                                                                 (map #(get (:structure-annotations model) %))\n                                                                 (keep :VEC)\n                                                                 (seq))]\n                                           (apply unit-vec-sum vectors))]\n                      (-&gt;Sentence entities context context-vector))))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent))))&quot;, :offset 1217, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]\n            [edu.ucdenver.ccp.nlp.sentence :as sentence]\n            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]\n            [clojure.string :as str])\n  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)\n           (org.semanticweb.owlapi.model OWLObject)\n           (edu.ucdenver.ccp.knowtator.model.object TextSource)))&quot;, :offset 817, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(.save ^TextSource (first (:textSources (bean annotations))))&quot;, :offset 61, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]\n            [edu.ucdenver.ccp.nlp.sentence :as sentence]\n            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]\n            [clojure.string :as str])\n  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)\n           (org.semanticweb.owlapi.model OWLObject)\n           (edu.ucdenver.ccp.knowtator.model.object TextSource)))\n(t/set-level! :debug)\n\n(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))\n\n(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))\n\n\n(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))\n(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])\n\n(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))\n(def ^KnowtatorModel annotations (k/model annotations-file nil))\n&quot;, :offset 1284, :ns &quot;user&quot;} {:command &quot;(.save annotations)&quot;, :offset 19, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))&quot;, :offset 56, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))&quot;, :offset 95, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(k/simple-model annotations)&quot;, :offset 28, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]\n            [edu.ucdenver.ccp.nlp.sentence :as sentence]\n            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]\n            [clojure.string :as str])\n  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)\n           (org.semanticweb.owlapi.model OWLObject)\n           (edu.ucdenver.ccp.knowtator.model.object TextSource)))\n(t/set-level! :debug)\n\n(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))\n\n(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))\n\n\n(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))\n(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])\n\n(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))\n(def ^KnowtatorModel annotations (k/model annotations-file nil))\n\n(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))\n(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))\n\n(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (-&gt; annotation\n                                 :spans\n                                 vals\n                                 first\n                                 :text)))))\n\n(def model (word2vec/with-word2vec word2vec-db\n             (let [model (k/simple-model annotations)]\n              (-&gt;&gt; (keys model)\n                   (reduce\n                     (fn [model doc]\n                       (reduce\n                         (fn [model ann]\n                           (update-in model [doc :structure-annotations ann]\n                                      assign-word-embedding))\n                         model\n                         (keys (get-in model [doc :structure-annotations]))))\n                     model)\n                   (sentence/make-sentences)))))\n&quot;, :offset 2376, :ns &quot;user&quot;} {:command &quot;(-&gt; triple :target bean :conceptAnnotation bean :id)&quot;, :offset 52, :ns &quot;edu.ucdenver.ccp.knowtator-clj&quot;} {:command &quot;(defn simple-triple\n  [triple]\n  (let [source (-&gt; triple :source bean :conceptAnnotation bean :id)\n        target (-&gt; triple :target bean :conceptAnnotation bean :id)\n        value {:value (or (:property triple) (:value triple))}]\n    [source target value]))&quot;, :offset 258, :ns &quot;edu.ucdenver.ccp.knowtator-clj&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]\n            [edu.ucdenver.ccp.nlp.sentence :as sentence]\n            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]\n            [clojure.string :as str])\n  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)\n           (org.semanticweb.owlapi.model OWLObject)\n           (edu.ucdenver.ccp.knowtator.model.object TextSource)))\n(t/set-level! :debug)\n\n(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))\n\n(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))\n\n\n(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))\n(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])\n\n(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))\n(def ^KnowtatorModel annotations (k/model annotations-file nil))\n\n(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))\n(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))\n\n(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (-&gt; annotation\n                                 :spans\n                                 vals\n                                 first\n                                 :text)))))\n&quot;, :offset 1780, :ns &quot;user&quot;} {:command &quot;(-&gt; annotations\n    k/simple-model\n    vals\n    first\n    :structure-annotations\n    (get \&quot;11532192-23990\&quot;))&quot;, :offset 108, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt; annotations\n    k/simple-model\n    vals\n    first\n    :structure-annotations\n    first)&quot;, :offset 91, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt; annotations\n    k/simple-model\n    vals\n    first\n    :structure-annotations\n    \&quot;11532192-23988\&quot;)&quot;, :offset 102, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(-&gt; annotations\n    k/simple-model\n    vals\n    first\n    :structure-annotations\n    (get \&quot;11532192-23988\&quot;))&quot;, :offset 108, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]\n            [edu.ucdenver.ccp.nlp.sentence :as sentence]\n            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]\n            [clojure.string :as str])\n  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))\n(t/set-level! :debug)\n\n(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))\n\n(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))\n\n\n(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))\n(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])\n\n(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))\n(def ^KnowtatorModel annotations (k/model annotations-file nil))\n\n(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))\n(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))\n\n(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (-&gt; annotation\n                                 :spans\n                                 vals\n                                 first\n                                 :text)))))\n\n(-&gt; annotations\n    k/simple-model\n    vals\n    first\n    :structure-annotations\n    (get \&quot;11532192-23988\&quot;))\n(def model (word2vec/with-word2vec word2vec-db\n             (let [model (k/simple-model annotations)]\n              (-&gt;&gt; (keys model)\n                   (reduce\n                     (fn [model doc]\n                       (reduce\n                         (fn [model ann]\n                           (update-in model [doc :structure-annotations ann]\n                                      assign-word-embedding))\n                         model\n                         (keys (get-in model [doc :structure-annotations]))))\n                     model)\n                   (sentence/make-sentences)))))\n&quot;, :offset 2369, :ns &quot;user&quot;} {:command &quot;(bean annotations)&quot;, :offset 17, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(map bean (:textSources (bean annotations)))&quot;, :offset 10, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(map bean (:structureGraphSpaces (map bean (:textSources (bean annotations)))))&quot;, :offset 10, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(map :model (map bean (mapcat :structureGraphSpaces (map bean (:textSources (bean annotations))))))&quot;, :offset 10, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(map :relationAnnotations (map bean (mapcat :structureGraphSpaces (map bean (:textSources (bean annotations))))))&quot;, :offset 25, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(map bean (mapcat :structureGraphSpaces (map bean (:textSources (bean annotations)))))&quot;, :offset 0, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]\n            [edu.ucdenver.ccp.nlp.sentence :as sentence]\n            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]\n            [clojure.string :as str])\n  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))\n(t/set-level! :debug)\n\n(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))\n\n(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))\n\n\n(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))\n(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])\n\n(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))\n(def ^KnowtatorModel annotations (k/model annotations-file nil))\n\n(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))\n(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))\n\n(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (-&gt; annotation\n                                 :spans\n                                 vals\n                                 first\n                                 :text)))))\n\n(-&gt; annotations\n    k/simple-model\n    vals\n    first\n    :structure-annotations\n    (get \&quot;11532192-23988\&quot;))\n(def model (word2vec/with-word2vec word2vec-db\n             (let [model (k/simple-model annotations)]\n              (-&gt;&gt; (keys model)\n                   (reduce\n                     (fn [model doc]\n                       (reduce\n                         (fn [model ann]\n                           (update-in model [doc :structure-annotations ann]\n                                      assign-word-embedding))\n                         model\n                         (keys (get-in model [doc :structure-annotations]))))\n                     model)\n                   (sentence/make-sentences)))))&quot;, :offset 2368, :ns &quot;user&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (keep\n                (fn [[e1 e2 :as entities]]\n                  (when-not (= (:tok e1)\n                               (:tok e2))\n                    (let [context (-&gt; (undirected-graph sent)\n                                      (ubergraph.alg/shortest-path\n                                        (-&gt; e1 :tok :id)\n                                        (-&gt; e2 :tok :id))\n                                      (ubergraph.alg/nodes-in-path))\n                          context-vector (when-let [vectors (-&gt;&gt; context\n                                                                 (map #(get (:structure-annotations model) %))\n                                                                 (keep :VEC)\n                                                                 (seq))]\n                                           (apply unit-vec-sum vectors))]\n                      (-&gt;Sentence entities context context-vector))))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent)\n         (remove #(nil? (first %))))))&quot;, :offset 1253, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(def ^KnowtatorModel annotations (k/model annotations-file nil))&quot;, :offset 64, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (-&gt; annotation\n                                 :spans\n                                 vals\n                                 first\n                                 :text)))))&quot;, :offset 340, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;1&quot;, :offset 1, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(ns scripts.relation-extraction-script\n  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]\n            [clojure.java.io :as io]\n            [taoensso.timbre :as t]\n            [edu.ucdenver.ccp.nlp.readers :as rdr]\n            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]\n            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]\n            [edu.ucdenver.ccp.knowtator-clj :as k]\n            [util :refer [cosine-sim]]\n            [clojure.set :as set1]\n            [edu.ucdenver.ccp.nlp.sentence :as sentence]\n            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]\n            [clojure.string :as str])\n  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))\n(t/set-level! :debug)\n\n(def home-dir\n  (io/file \&quot;/\&quot; \&quot;media\&quot; \&quot;tuh8888\&quot; \&quot;Seagate Expansion Drive\&quot; \&quot;data\&quot;))\n\n(def craft-dir\n  (io/file home-dir \&quot;craft-versions\&quot; \&quot;concepts+assertions_1_article\&quot;))\n\n\n(def references-dir\n  (io/file craft-dir \&quot;Articles\&quot;))\n(def articles\n  [(first (rdr/article-names-in-dir references-dir \&quot;txt\&quot;))])\n\n(def annotations-file\n  (io/file craft-dir \&quot;concepts+assertions.knowtator\&quot;))\n(def ^KnowtatorModel annotations (k/model annotations-file nil))\n\n(def word-vector-dir\n  (io/file home-dir \&quot;WordVectors\&quot;))\n(def word2vec-db\n  (.getAbsolutePath\n    (io/file word-vector-dir \&quot;bio-word-vectors-clj.vec\&quot;)))\n\n(defn assign-word-embedding\n  [annotation]\n  (assoc annotation :VEC (word2vec/word-embedding\n                           (str/lower-case\n                             (-&gt; annotation\n                                 :spans\n                                 vals\n                                 first\n                                 :text)))))\n\n(def model (word2vec/with-word2vec word2vec-db\n             (let [model (k/simple-model annotations)]\n              (-&gt;&gt; (keys model)\n                   (reduce\n                     (fn [model doc]\n                       (reduce\n                         (fn [model ann]\n                           (update-in model [doc :structure-annotations ann]\n                                      assign-word-embedding))\n                         model\n                         (keys (get-in model [doc :structure-annotations]))))\n                     model)\n                   (sentence/make-sentences)))))&quot;, :offset 2259, :ns &quot;user&quot;} {:command &quot;(defn entities-&gt;sentences\n  [model]\n  (reduce\n    (fn [model [sent sentence-entities]]\n      (update model :sentences into\n              (keep\n                (fn [[e1 e2 :as entities]]\n                  (when-not (= (:tok e1)\n                               (:tok e2))\n                    (let [context (-&gt; (undirected-graph sent)\n                                      (ubergraph.alg/shortest-path\n                                        (-&gt; e1 :tok :id)\n                                        (-&gt; e2 :tok :id))\n                                      (ubergraph.alg/nodes-in-path))\n                          context-vector (when-let [vectors (-&gt;&gt; context\n                                                                 (map #(get (:structure-annotations model) %))\n                                                                 (keep :VEC)\n                                                                 (seq))]\n                                           (apply unit-vec-sum vectors))]\n                      (-&gt;Sentence entities context context-vector))))\n                (combo/combinations sentence-entities 2))))\n    model\n    (-&gt;&gt; model\n         :concept-annotations\n         vals\n         (group-by :sent)\n         (remove (comp nil? first)))))&quot;, :offset 1253, :ns &quot;edu.ucdenver.ccp.nlp.sentence&quot;} {:command &quot;(def model (word2vec/with-word2vec word2vec-db\n             (let [model (k/simple-model annotations)]\n              (-&gt;&gt; (keys model)\n                   (reduce\n                     (fn [model doc]\n                       (reduce\n                         (fn [model ann]\n                           (update-in model [doc :structure-annotations ann]\n                                      assign-word-embedding))\n                         model\n                         (keys (get-in model [doc :structure-annotations]))))\n                     model)\n                   (sentence/make-sentences)))))&quot;, :offset 594, :ns &quot;scripts.relation-extraction-script&quot;} {:command &quot;(def sentences (mapcat :sentences (vals model)))&quot;, :offset 48, :ns &quot;scripts.relation-extraction-script&quot;}], :remote []}}</component>
   <component name="RunDashboard">
     <option name="ruleStates">
       <list>
@@ -254,11 +383,11 @@
       <setting name="aliases" value="rebl" />
       <method v="2" />
     </configuration>
-    <configuration name="REPL for Dep2Rel" type="ClojureREPL" factoryName="Local" activateToolWindowBeforeRun="false">
+    <configuration name="REPL for Dep2Rel" type="ClojureREPL" factoryName="Local" activateToolWindowBeforeRun="false" temporary="true">
       <module name="Dep2Rel" />
       <setting name="replType" value="NREPL" />
       <setting name="execution" value="DEPS" />
-      <setting name="jvmArgs" value="" />
+      <setting name="jvmArgs" value="-Xmx8g" />
       <setting name="parameters" value="" />
       <setting name="workingDir" value="$PROJECT_DIR$" />
       <setting name="profiles" value="" />
@@ -283,351 +412,369 @@
       <module name="" />
       <method v="2" />
     </configuration>
-    <configuration name="scripts.relation-extraction-script" type="ClojureScriptRunConfiguration" factoryName="Clojure Script" temporary="true">
-      <module name="Dep2Rel" />
-      <setting name="path" value="$PROJECT_DIR$/src/scripts/relation_extraction_script.clj" />
-      <setting name="namespace" value="" />
-      <setting name="execution" value="INTELLIJ" />
-      <setting name="profiles" value="" />
-      <setting name="aliases" value="" />
-      <setting name="vmparams" value="" />
-      <setting name="params" value="" />
-      <setting name="workDir" value="$PROJECT_DIR$/src/scripts" />
-      <method v="2" />
-    </configuration>
     <list>
-      <item itemvalue="Clojure Application.scripts.relation-extraction-script" />
-      <item itemvalue="Clojure REPL.REPL for Dep2Rel" />
       <item itemvalue="Clojure REPL.REBL" />
+      <item itemvalue="Clojure REPL.REPL for Dep2Rel" />
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Clojure Application.scripts.relation-extraction-script" />
+        <item itemvalue="Clojure REPL.REPL for Dep2Rel" />
       </list>
     </recent_temporary>
   </component>
   <component name="ToolWindowManager">
-    <frame x="3600" y="34" width="1600" height="866" extended-state="6" />
+    <frame x="3600" y="34" width="1600" height="896" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" internal_type="SLIDING" order="0" type="SLIDING" weight="0.2583763" />
+      <window_info auto_hide="true" content_ui="combo" id="Project" order="0" weight="0.253866" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Designer" order="2" />
       <window_info id="UI Designer" order="3" />
       <window_info id="Favorites" order="4" side_tool="true" />
-      <window_info anchor="bottom" id="Messages" order="0" sideWeight="0.49953228" weight="0.32950193" />
-      <window_info anchor="bottom" id="Message" order="1" />
-      <window_info anchor="bottom" id="Find" order="2" />
-      <window_info anchor="bottom" id="Run" order="3" weight="0.39566395" />
-      <window_info anchor="bottom" id="Debug" order="4" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="5" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="6" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="7" />
-      <window_info anchor="bottom" id="FindBugs-IDEA" order="8" />
-      <window_info anchor="bottom" id="Build" order="9" weight="0.32791328" />
-      <window_info anchor="bottom" id="Terminal" order="10" sideWeight="0.49949545" weight="0.3297546" />
-      <window_info anchor="bottom" id="Docker" order="11" show_stripe_button="false" />
-      <window_info anchor="bottom" id="CheckStyle" order="12" />
-      <window_info anchor="bottom" id="Event Log" order="13" sideWeight="0.5004677" side_tool="true" weight="0.32950193" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.32939634" />
+      <window_info anchor="bottom" id="Debug" order="3" weight="0.38057742" />
+      <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="FindBugs-IDEA" order="7" />
+      <window_info anchor="bottom" id="Build" order="8" weight="0.32939634" />
+      <window_info anchor="bottom" id="Docker" order="9" show_stripe_button="false" />
+      <window_info anchor="bottom" id="CheckStyle" order="10" />
+      <window_info anchor="bottom" id="Event Log" order="11" side_tool="true" />
+      <window_info anchor="bottom" id="Database Changes" order="12" />
+      <window_info active="true" anchor="bottom" id="Version Control" order="13" visible="true" weight="0.32894737" />
       <window_info anchor="bottom" id="Run with VisualVM" order="14" />
-      <window_info anchor="bottom" id="Database Changes" order="15" />
-      <window_info anchor="bottom" id="Version Control" order="16" weight="0.3292683" />
-      <window_info anchor="bottom" id="Debug with VisualVM" order="17" />
-      <window_info anchor="bottom" x="0" y="0" width="354" height="716" id="Documentation" order="18" side_tool="true" visible="true" weight="0.20817369" />
+      <window_info anchor="bottom" id="Debug with VisualVM" order="15" />
+      <window_info anchor="bottom" id="Terminal" order="16" weight="0.32939634" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info anchor="right" id="Maven" order="3" weight="0.3298969" />
-      <window_info anchor="right" id="Leiningen" order="4" />
-      <window_info anchor="right" id="Palette" order="5" />
-      <window_info anchor="right" id="Google Cloud Storage" order="6" />
-      <window_info anchor="right" id="SciView" order="7" />
-      <window_info anchor="right" id="Database" order="8" />
+      <window_info anchor="right" id="Maven" order="3" />
+      <window_info anchor="right" id="Palette" order="4" />
+      <window_info anchor="right" id="Google Cloud Storage" order="5" show_stripe_button="false" />
+      <window_info anchor="right" id="SciView" order="6" />
+      <window_info anchor="right" id="Database" order="7" />
+      <window_info anchor="right" id="Leiningen" order="8" />
       <window_info anchor="right" id="Palette&#9;" order="9" />
-      <window_info anchor="right" auto_hide="true" id="Clojure Deps" order="10" sideWeight="0.49322492" weight="0.32925257" />
-      <window_info anchor="right" id="REPL" order="11" sideWeight="0.5067751" side_tool="true" visible="true" weight="0.3060567" />
+      <window_info anchor="right" auto_hide="true" id="Clojure Deps" order="10" sideWeight="0.49440715" weight="0.20167525" />
+      <window_info anchor="right" x="5200" y="465" width="1319" height="649" id="REPL" order="11" sideWeight="0.5055928" side_tool="true" weight="0.39755154" />
     </layout>
-    <layout-to-restore>
-      <window_info id="Designer" order="0" />
-      <window_info id="UI Designer" order="1" />
-      <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info active="true" content_ui="combo" id="Project" order="3" visible="true" weight="0.25" />
-      <window_info id="Structure" order="4" side_tool="true" weight="0.25" />
-      <window_info anchor="bottom" id="FindBugs-IDEA" order="0" />
-      <window_info anchor="bottom" id="Build" order="1" visible="true" weight="0.32950193" />
-      <window_info anchor="bottom" id="Terminal" order="2" />
-      <window_info anchor="bottom" id="Docker" order="3" show_stripe_button="false" />
-      <window_info anchor="bottom" id="CheckStyle" order="4" />
-      <window_info anchor="bottom" id="Event Log" order="5" side_tool="true" />
-      <window_info anchor="bottom" id="Database Changes" order="6" />
-      <window_info anchor="bottom" id="Version Control" order="7" />
-      <window_info anchor="bottom" id="Message" order="8" />
-      <window_info anchor="bottom" id="Find" order="9" />
-      <window_info anchor="bottom" id="Run" order="10" />
-      <window_info anchor="bottom" id="Debug" order="11" weight="0.4" />
-      <window_info anchor="bottom" id="Cvs" order="12" weight="0.25" />
-      <window_info anchor="bottom" id="Inspection" order="13" weight="0.4" />
-      <window_info anchor="bottom" id="TODO" order="14" />
-      <window_info anchor="right" id="Maven" order="0" />
-      <window_info anchor="right" id="Palette" order="1" />
-      <window_info anchor="right" id="Google Cloud Storage" order="2" />
-      <window_info anchor="right" id="Clojure Deps" order="3" />
-      <window_info anchor="right" id="SciView" order="4" />
-      <window_info anchor="right" id="Database" order="5" />
-      <window_info anchor="right" id="Leiningen" order="6" />
-      <window_info anchor="right" id="Palette&#9;" order="7" />
-      <window_info anchor="right" id="REPL" order="8" side_tool="true" />
-      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="9" type="SLIDING" weight="0.4" />
-      <window_info anchor="right" id="Ant Build" order="10" weight="0.25" />
-      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="11" weight="0.25" />
-    </layout-to-restore>
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="1" />
   </component>
-  <component name="VcsManagerConfiguration">
-    <ignored-roots>
-      <path value="$PROJECT_DIR$/notebooks/CRAFT" />
-    </ignored-roots>
-    <MESSAGE value="Changed to deps project" />
-    <MESSAGE value="Added gitignore" />
-    <MESSAGE value="Reorganization and made scripts work" />
-    <MESSAGE value="Simplified reading of conll" />
-    <MESSAGE value="Changed REBL dependency" />
-    <MESSAGE value="Added noteboooks" />
-    <MESSAGE value="Changed links to point to this repository" />
-    <MESSAGE value="Modified invite email to reflect my project vs Abra-C" />
-    <MESSAGE value="Added BeakerX usage suggestion" />
-    <MESSAGE value="Moved notebooks to root" />
-    <MESSAGE value="Allow for read from linux" />
-    <MESSAGE value="Load all files in jupyter notebook" />
-    <MESSAGE value="Run clustering in notebook" />
-    <MESSAGE value="Clustering runs to output" />
-    <option name="LAST_COMMIT_MESSAGE" value="Clustering runs to output" />
-  </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj</url>
-          <line>17</line>
+        <line-breakpoint type="java-line">
+          <condition expression="(nil? context)" language="Clojure" />
+          <url>file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj</url>
+          <line>92</line>
           <properties />
-          <option name="timeStamp" value="1" />
+          <option name="timeStamp" value="55" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="evaluateCodeFragment">
+      <expression>
+        <expression-string>(:relationAnnotations graph-space)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(ubergraph.core/viz-graph
+  (apply ubergraph.core/multigraph
+        (map #(vector (loom.graph/src %)
+                      (loom.graph/dest %))
+             (loom.graph/edges sent))))</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(apply ubergraph.core/multigraph
+         (map #(vector (loom.graph/src %)
+                       (loom.graph/dest %))
+              (loom.graph/edges sent)))</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(seq (loom.graph/edges sent))</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(undirected-graph sent)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(-&gt; (undirected-graph sent)
+    (ubergraph.alg/shortest-path
+      (-&gt; e1 :tok :id)
+      (-&gt; e2 :tok :id)))</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(-&gt; (undirected-graph sent)
+                                      (ubergraph.alg/shortest-path
+                                        (-&gt; e1 :tok :id)
+                                        (-&gt; e2 :tok :id))
+    )</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(-&gt; (undirected-graph sent)
+                                      (ubergraph.alg/shortest-path
+                                        (-&gt; e1 :tok :id)
+                                        (-&gt; e2 :tok :id))
+                                      (ubergraph.alg/nodes-in-path))</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(get-in model [:structure-annotations (first context)])</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+    </expressions>
+    <expressions id="breakpointCondition">
+      <expression>
+        <expression-string>(= (:id graph-space) &quot;Sentence 243&quot;)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(= (:id triple) &quot;4&quot;)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(= target &quot;11532192-23988&quot;)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(nil? context)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(nil? sent)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(not (or e1 e2))</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+    <expressions id="evaluateExpression">
+      <expression>
+        <expression-string>(-&gt; annotation
+                                 :spans
+                                 first
+                                 :text)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(seq annotation)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(doall annotation)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(doseq annotation)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>annotation</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(simple-concep (:conceptAnnotation (bean (:source triple))))</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(:conceptAnnotation (bean (:source triple)))</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(bean (:source triple))</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(:source triple)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(bean triple)</expression-string>
+        <language-id>Clojure</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+  </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="303">
-          <caret line="15" column="9" lean-forward="true" selection-start-line="15" selection-start-column="9" selection-end-line="15" selection-end-column="9" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/breds.clj" />
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/core.clj" />
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/util.clj" />
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/clustering.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="425">
-          <caret line="17" column="29" selection-start-line="17" selection-start-column="29" selection-end-line="17" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/biostacks.clj">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="FIRST">
-          <first_editor relative-caret-position="132">
-            <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/notebooks/README.md" />
-    <entry file="file://$PROJECT_DIR$/notebooks/.ipynb_checkpoints/BioCreative 2017 - Relation Extraction-checkpoint.ipynb" />
-    <entry file="file://$PROJECT_DIR$/notebooks/.ipynb_checkpoints/CRAFT 3.1 - Relation Extraction-checkpoint.ipynb" />
-    <entry file="file://$PROJECT_DIR$/resources/New_Collaborators_Invitation_Email.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="704">
-            <caret line="13" column="41" selection-start-line="13" selection-start-column="41" selection-end-line="13" selection-end-column="41" />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/relation_extraction.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="17" column="55" lean-forward="true" selection-start-line="17" selection-start-column="55" selection-end-line="17" selection-end-column="55" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/util.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="271">
-          <caret line="19" column="5" selection-start-line="19" selection-start-column="5" selection-end-line="19" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar://$MAVEN_REPOSITORY$/edu/ucdenver/ccp/knowtator/2.1.6/knowtator-2.1.6.jar!/edu/ucdenver/ccp/knowtator/model/object/ConceptAnnotation.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="237">
-          <caret line="92" selection-start-line="92" selection-end-line="92" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/conll.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="484">
-          <caret line="22" column="33" lean-forward="true" selection-start-line="22" selection-start-column="33" selection-end-line="22" selection-end-column="33" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj">
-      <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="435">
-          <caret line="29" column="10" lean-forward="true" selection-start-line="29" selection-start-column="10" selection-end-line="29" selection-end-column="10" />
+          <caret line="186" lean-forward="true" selection-start-line="186" selection-end-line="186" />
+          <folding>
+            <element signature="e#6089#6090#0" expanded="true" />
+            <element signature="e#6159#6160#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/deps.edn">
+    <entry file="jar://$MAVEN_REPOSITORY$/edu/ucdenver/ccp/knowtator/2.1.6/knowtator-2.1.6.jar!/edu/ucdenver/ccp/knowtator/model/BaseModel.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="9" column="72" lean-forward="true" selection-start-line="9" selection-start-column="10" selection-end-line="9" selection-end-column="72" />
+        <state relative-caret-position="220">
+          <caret line="66" column="16" lean-forward="true" selection-start-line="66" selection-start-column="16" selection-end-line="66" selection-end-column="16" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj">
+    <entry file="jar://$MAVEN_REPOSITORY$/net/sourceforge/owlapi/org.semanticweb.hermit/1.3.8.413/org.semanticweb.hermit-1.3.8.413.jar!/org/semanticweb/HermiT/Reasoner.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="939">
-          <caret line="58" column="15" selection-start-line="58" selection-start-column="15" selection-end-line="58" selection-end-column="15" />
+        <state relative-caret-position="22">
+          <caret line="161" selection-start-line="161" selection-end-line="161" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj">
+    <entry file="jar://$MAVEN_REPOSITORY$/org/clojure/clojure/1.10.0/clojure-1.10.0.jar!/clojure/core.clj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="535">
-          <caret line="74" column="6" lean-forward="true" selection-start-line="74" selection-start-column="6" selection-end-line="74" selection-end-column="6" />
+        <state relative-caret-position="245">
+          <caret line="2754" selection-start-line="2754" selection-end-line="2754" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/word2vec.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="171">
-          <caret line="26" column="8" selection-start-line="26" selection-start-column="8" selection-end-line="26" selection-end-column="8" />
-        </state>
-      </provider>
+    <entry file="file://$PROJECT_DIR$/src/CRAFT 3.1 - Relation Extraction.ipynb">
+      <provider selected="true" editor-type-id="jupyter-editor" />
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/scripts/relation_extraction_script.clj">
+    <entry file="jar://$MAVEN_REPOSITORY$/edu/ucdenver/ccp/knowtator/2.1.6/knowtator-2.1.6.jar!/edu/ucdenver/ccp/knowtator/view/KnowtatorView.class">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="38" column="29" lean-forward="true" selection-start-line="38" selection-start-column="29" selection-end-line="38" selection-end-column="29" />
+        <state relative-caret-position="245">
+          <caret line="190" column="11" selection-start-line="190" selection-start-column="11" selection-end-line="190" selection-end-column="11" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="462">
-          <caret line="21" column="8" lean-forward="true" selection-start-line="21" selection-start-column="8" selection-end-line="21" selection-end-column="8" />
+        <state relative-caret-position="427">
+          <caret line="36" column="24" selection-start-line="36" selection-start-column="24" selection-end-line="36" selection-end-column="24" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/net/sourceforge/owlapi/owlapi-distribution/4.1.3/owlapi-distribution-4.1.3.jar!/uk/ac/manchester/cs/owl/owlapi/OWLClassImpl.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="281">
+          <caret line="223" selection-start-line="223" selection-end-line="223" />
+          <folding>
+            <element signature="e#6261#6262#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/conll.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="306">
+          <caret line="63" column="5" selection-start-line="63" selection-start-column="5" selection-end-line="63" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/deps.edn">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="110">
+          <caret line="5" column="67" selection-start-line="5" selection-start-column="67" selection-end-line="5" selection-end-column="67" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/readers.clj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="352">
-          <caret line="16" column="31" lean-forward="true" selection-start-line="16" selection-start-column="31" selection-end-line="16" selection-end-column="31" />
+        <state relative-caret-position="161">
+          <caret line="118" column="34" selection-start-line="118" selection-start-column="29" selection-end-line="118" selection-end-column="34" />
         </state>
       </provider>
     </entry>
-  </component>
-  <component name="masterDetails">
-    <states>
-      <state key="ArtifactsStructureConfigurable.UI">
-        <settings>
-          <artifact-editor />
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="FacetStructureConfigurable.UI">
-        <settings>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="GlobalLibrariesConfigurable.UI">
-        <settings>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="JdkListConfigurable.UI">
-        <settings>
-          <last-edited>11</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="ModuleStructureConfigurable.UI">
-        <settings>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="ProjectJDKs.UI">
-        <settings>
-          <last-edited>1.8</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-      <state key="ProjectLibrariesConfigurable.UI">
-        <settings>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-    </states>
+    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/word2vec.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="303">
+          <caret line="51" column="9" selection-start-line="51" selection-start-column="9" selection-end-line="51" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/relation_extraction.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="140">
+          <caret line="30" column="6" selection-start-line="30" selection-start-column="6" selection-end-line="30" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/ubergraph/ubergraph/0.5.2/ubergraph-0.5.2.jar!/ubergraph/core.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="259">
+          <caret line="561" column="53" lean-forward="true" selection-start-line="561" selection-start-column="53" selection-end-line="561" selection-end-column="53" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/ubergraph/ubergraph/0.5.2/ubergraph-0.5.2.jar!/ubergraph/protocols.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="159">
+          <caret line="38" column="3" selection-start-line="38" selection-start-column="3" selection-end-line="38" selection-end-column="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/edu/ucdenver/ccp/knowtator/2.1.6/knowtator-2.1.6.jar!/edu/ucdenver/ccp/knowtator/model/OwlModel.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="551">
+          <caret line="271" column="16" selection-start-line="271" selection-start-column="16" selection-end-line="271" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar://$MAVEN_REPOSITORY$/edu/ucdenver/ccp/knowtator/2.1.6/knowtator-2.1.6.jar!/edu/ucdenver/ccp/knowtator/model/KnowtatorModel.class">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-85">
+          <caret line="39" column="16" selection-start-line="39" selection-start-column="16" selection-end-line="39" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/knowtator_clj.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1540">
+          <caret line="70" column="37" selection-start-line="70" selection-start-column="37" selection-end-line="70" selection-end-column="37" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/sentence.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1826">
+          <caret line="83" column="12" selection-start-line="83" selection-start-column="12" selection-end-line="83" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/scripts/relation_extraction_script.clj">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="359">
+          <caret line="79" column="28" selection-start-line="79" selection-start-column="28" selection-end-line="79" selection-end-column="28" />
+        </state>
+      </provider>
+    </entry>
   </component>
 </project>

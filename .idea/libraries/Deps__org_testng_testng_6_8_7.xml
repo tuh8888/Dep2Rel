@@ -1,9 +1,0 @@
-<component name="libraryTable">
-  <library name="Deps: org.testng/testng:6.8.7">
-    <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/testng/testng/6.8.7/testng-6.8.7.jar!/" />
-    </CLASSES>
-    <JAVADOC />
-    <SOURCES />
-  </library>
-</component>
