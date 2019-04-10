@@ -1,5 +1,6 @@
 (ns edu.ucdenver.ccp.nlp.evaluation
-  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all])
+  (:require [cluster-tools]
+            [edu.ucdenver.ccp.nlp.relation-extraction :as re])
   (:import (org.semanticweb.owlapi.model HasIRI)))
 
 (defn count-seed-matches
@@ -84,50 +85,23 @@
                     :id)]
     #{source target}))
 
-(defn predicted-false
-  [& [{:keys [predicted-true all]}]]
-  (clojure.set/difference all predicted-true))
+(defn cluster-sentences
+  [sentences]
+  (map
+    #(map (fn [x] (map :id x)) %)
+    (map
+      #(map :entities %)
+      (map :support
+           (filter
+             #(when (< 1 (count (:support %)))
+                %)
+             (cluster-tools/single-pass-cluster sentences #{}
+                                          {:cluster-merge-fn re/add-to-pattern
+                                           :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                                (and (< (or %3 0.9) score)
+                                                                     score))}))))))
 
-(defn actual-false
-  [& [{:keys [actual-true all]}]]
-  (clojure.set/difference all actual-true))
 
-(defn tp
-  [& [{:keys [predicted-true actual-true]}]]
-  (clojure.set/intersection predicted-true actual-true))
-(defn tn
-  [& [params]]
-  (clojure.set/intersection (predicted-false params)
-                            (actual-false params)))
-(defn fp
-  [& [{:keys [predicted-true] :as params}]]
-  (clojure.set/intersection predicted-true
-                            (actual-false params)))
-(defn fn
-  [& [{:keys [actual-true] :as params}]]
-  (clojure.set/intersection (predicted-false params)
-                            actual-true))
-
-(defn precision
-  [& [params]]
-  (float (/ (count (tp params)) (+ (count (tp params)) (count (fp params))))))
-(defn recall
-  [& [params]]
-  (float (/ (count (tp params)) (+ (count (tp params)) (count (fn params))))))
-(defn f1
-  [& [params]]
-  (float (/ (* 2 (precision params) (recall params))
-            (+ (precision params) (recall params)))))
-
-(defn calc-metrics
-  [& [params]]
-  {:tp        (count (tp params))
-   :tn        (count (tn params))
-   :fp        (count (fp params))
-   :fn        (count (fn params))
-   :precision (precision params)
-   :recall    (recall params)
-   :f1        (params f1)})
 ;
 ;(defn parameter-walk
 ;  [seeds sentences & [{:keys [seed-thresh-min seed-thresh-max seed-thresh-step

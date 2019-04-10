@@ -4,7 +4,7 @@
            github-tuh8888/kabob-mops              {:git/url "git@github.com:tuh8888/Word2Vec-clj.git"
                                                    :sha     "dc457f16a25b60a2984b3240c956e040d8303141"}
            github-tuh8888/hpl-utl                 {:git/url "git@github.com:tuh8888/hpl-util.git"
-                                                   :sha     "e0868a96300a64867e50046a865befc98c819e54"}
+                                                   :sha     "17b59d2ae8bb15cf21b8ccb4c4a605fc5b18871f"}
            edu.ucdenver.ccp/knowtator             {:mvn/version "2.1.6"}
            org.clojurenlp/core                    {:mvn/version "3.7.0"}}
  :aliases {:rebl {:extra-deps {org.clojure/clojure         {:mvn/version "1.10.0"}

@@ -1,10 +1,11 @@
 (ns scripts.relation-extraction-script
-  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]
+  (:require [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [clojure.java.io :as io]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [taoensso.timbre :as t]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
-            [edu.ucdenver.ccp.nlp.evaluation :as evaluation])
+            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
+            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]])
   (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))
 (t/set-level! :debug)
 
@@ -14,8 +15,8 @@
 (def annotations-file
   (io/file home-dir "craft-versions" "concepts+assertions1" "CRAFT_assertions.knowtator"))
 
-#_(def annotations-file
-    (io/file home-dir "craft-versions" "concepts+assertions64" "CRAFT_assertions.knowtator"))
+(def annotations-file
+  (io/file home-dir "craft-versions" "concepts+assertions64" "CRAFT_assertions.knowtator"))
 
 (def annotations (k/view annotations-file))
 
@@ -70,36 +71,47 @@
 
 (defn c-metrics
   [matches]
-  (evaluation/calc-metrics {:predicted-true (predicted-true matches)
-                            :actual-true    actual-true
-                            :all            all-triples}))
+  (math/calc-metrics {:predicted-true (predicted-true matches)
+                      :actual-true    actual-true
+                      :all            all-triples}))
+
+
+(def actual-true-sentences (filter #(actual-true (set (map :id (:entities %)))) sentences))
+
+
+(evaluation/cluster-sentences actual-true-sentences)
+
+(defn make-seeds
+  [e1 e2]
+  (clojure.set/intersection
+    (set (sentence/sentences-with-ann sentences e1))
+    (set (sentence/sentences-with-ann sentences e2))))
 
 (def matches (let [seeds (clojure.set/union
-                           (clojure.set/intersection
-                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21437"))
-                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_22305")))
-                           (clojure.set/intersection
-                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21583"))
-                             (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21881")))
-                           (clojure.set/intersection
-                             (set (sentence/sentences-with-ann sentences"CRAFT_aggregate_ontology_Instance_21543"))
-                             (set (sentence/sentences-with-ann sentences"CRAFT_aggregate_ontology_Instance_21887"))))
+                           (make-seeds "CRAFT_aggregate_ontology_Instance_21471"
+                                       "CRAFT_aggregate_ontology_Instance_21917")
+                           (make-seeds "CRAFT_aggregate_ontology_Instance_21999"
+                                       "CRAFT_aggregate_ontology_Instance_21895")
+                           (make-seeds "CRAFT_aggregate_ontology_Instance_21583"
+                                       "CRAFT_aggregate_ontology_Instance_21881")
+                           (make-seeds "CRAFT_aggregate_ontology_Instance_21437"
+                                       "CRAFT_aggregate_ontology_Instance_22305"))
                    seed-thresh 0.95
                    context-thresh 0.9
-                   cluster-thresh 0.95
-                   min-support 2
+                   cluster-thresh 0.99
+                   min-support 4
                    params {:seed             (first seeds)
                            :seed-thresh      seed-thresh
                            :context-thresh   context-thresh
-                           :seed-match-fn    #(and (concepts-match? %1 %2)
-                                                   (< seed-thresh (context-vector-cosine-sim %1 %2)))
-                           :context-match-fn #(< context-thresh (context-vector-cosine-sim %1 %2))
-                           :cluster-merge-fn add-to-pattern
-                           :cluster-match-fn #(let [score (context-vector-cosine-sim %1 %2)]
+                           :seed-match-fn    #(and (re/concepts-match? %1 %2)
+                                                   (< seed-thresh (re/context-vector-cosine-sim %1 %2)))
+                           :context-match-fn #(< context-thresh (re/context-vector-cosine-sim %1 %2))
+                           :cluster-merge-fn re/add-to-pattern
+                           :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
                                                 (and (< (or %3 cluster-thresh) score)
                                                      score))
                            :min-support      min-support}
-                   matches (->> (cluster-bootstrap-extract-relations seeds sentences params)
+                   matches (->> (re/cluster-bootstrap-extract-relations seeds sentences params)
                                 (map #(merge % params)))]
                (t/info "Metrics" (c-metrics matches))
                matches))
@@ -108,9 +120,9 @@
 
 (t/info "Metrics" metrics)
 
-(evaluation/fn {:predicted-true (predicted-true matches)
-                :actual-true    actual-true
-                :all            all-triples})
+(math/false-neg {:predicted-true (predicted-true matches)
+                 :actual-true    actual-true
+                 :all            all-triples})
 
 (comment
   (evaluation/format-matches model matches)
