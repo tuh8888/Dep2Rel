@@ -6,14 +6,4 @@
            github-tuh8888/hpl-utl                 {:git/url "git@github.com:tuh8888/hpl-util.git"
                                                    :sha     "17b59d2ae8bb15cf21b8ccb4c4a605fc5b18871f"}
            edu.ucdenver.ccp/knowtator             {:mvn/version "2.1.6"}
-           org.clojurenlp/core                    {:mvn/version "3.7.0"}}
- :aliases {:rebl {:extra-deps {org.clojure/clojure         {:mvn/version "1.10.0"}
-                               org.clojure/core.async      {:mvn/version "0.4.490"}
-                               com.cognitect/REBL          {:mvn/version "0.9.149"}
-                               org.openjfx/javafx-fxml     {:mvn/version "11.0.1"}
-                               org.openjfx/javafx-controls {:mvn/version "11.0.1"}
-                               org.openjfx/javafx-swing    {:mvn/version "11.0.1"}
-                               org.openjfx/javafx-base     {:mvn/version "11.0.1"}
-                               org.openjfx/javafx-web      {:mvn/version "11.0.1"}}
-
-                  :main-opts  ["-m" "cognitect.rebl"]}}}
+           org.clojurenlp/core                    {:mvn/version "3.7.0"}}}
