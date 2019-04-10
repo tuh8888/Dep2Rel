@@ -42,15 +42,10 @@
     <orderEntry type="library" name="Deps: org.clojure/tools.analyzer:0.6.9" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/tools.analyzer.jvm:0.7.2" level="project" />
     <orderEntry type="library" name="Deps: org.jcuda/jcuda-natives$linux-x86_64:10.0.0" level="project" />
-    <orderEntry type="library" name="Deps: org.jetbrains.kotlin/kotlin-stdlib-common:1.2.71" level="project" />
-    <orderEntry type="library" name="Deps: org.jetbrains/annotations:13.0" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/core.async:0.4.490" level="project" />
     <orderEntry type="library" name="Deps: org.jocl/jocl:2.0.1" level="project" />
     <orderEntry type="library" name="Deps: org.jcuda/jcuda:10.0.0" level="project" />
     <orderEntry type="library" name="Deps: org.jcuda/jcublas-natives$linux-x86_64:10.0.0" level="project" />
-    <orderEntry type="library" name="Deps: org.mapdb/elsa:3.0.0-M5" level="project" />
-    <orderEntry type="library" name="Deps: org.jetbrains.kotlin/kotlin-stdlib:1.2.71" level="project" />
-    <orderEntry type="library" name="Deps: net.jcip/jcip-annotations:1.0" level="project" />
     <orderEntry type="library" name="Deps: io.aviso/pretty:0.1.33" level="project" />
     <orderEntry type="library" name="Deps: uncomplicate/fluokitten:0.9.1" level="project" />
     <orderEntry type="library" name="Deps: uncomplicate/clojurecl:0.10.6" level="project" />
@@ -60,15 +55,8 @@
     <orderEntry type="library" name="Deps: org.jcuda/jcublas:10.0.0" level="project" />
     <orderEntry type="library" name="Deps: org.jocl/jocl-blast:1.5.0" level="project" />
     <orderEntry type="library" name="Deps: uncomplicate/neanderthal-native:0.21.0" level="project" />
-    <orderEntry type="library" name="Deps: org.mapdb/mapdb:3.0.7" level="project" />
-    <orderEntry type="library" name="Deps: org.eclipse.collections/eclipse-collections-api:7.1.1" level="project" />
-    <orderEntry type="library" name="Deps: org.eclipse.collections/eclipse-collections-forkjoin:7.1.1" level="project" />
-    <orderEntry type="library" name="Deps: org.eclipse.collections/eclipse-collections:7.1.1" level="project" />
     <orderEntry type="library" name="Deps: com.taoensso/timbre:4.10.0" level="project" />
-    <orderEntry type="library" name="Deps: com.climate/claypoole:1.1.4" level="project" />
     <orderEntry type="library" name="Deps: uncomplicate/neanderthal:0.22.0" level="project" />
-    <orderEntry type="library" name="Deps: spicerack:0.1.6" level="project" />
-    <orderEntry type="library" name="Deps: github-tuh8888/kabob-mops:dc457f" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/google-closure-library-third-party:0.0-20151016-61277aea" level="project" />
     <orderEntry type="library" name="Deps: org.codehaus.woodstox/stax2-api:3.1.1" level="project" />
     <orderEntry type="library" name="Deps: com.google.javascript/closure-compiler:v20151015" level="project" />
