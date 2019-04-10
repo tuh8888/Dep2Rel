@@ -3,7 +3,8 @@
             [clojure.string :as str]
             [ubergraph.alg]
             [graph]
-            [word2vec]))
+            [word2vec]
+            [taoensso.timbre :as t]))
 
 (defrecord Sentence [concepts entities context context-vector])
 
@@ -61,6 +62,7 @@
   [model]
   (reduce
     (fn [model [id ann]]
+      (t/info id)
       (let [tok (annotation->entity model ann)
             sent (tok-sent model tok)]
         (-> model
@@ -74,23 +76,27 @@
   (reduce
     (fn [model [sent sentence-entities]]
       (update model :sentences into
-              (keep
-                (fn [[e1 e2 :as entities]]
-                  (when-not (= (:tok e1)
-                               (:tok e2))
-                    (let [concepts (map :concept entities)
-                          context (-> (graph/undirected-graph sent)
-                                      (ubergraph.alg/shortest-path
-                                        (-> e1 :tok :id)
-                                        (-> e2 :tok :id))
-                                      (ubergraph.alg/nodes-in-path))
-                          context-vector (when-let [vectors (->> context
-                                                                 (map #(get (:structure-annotations model) %))
-                                                                 (keep :VEC)
-                                                                 (seq))]
-                                           (apply math/unit-vec-sum vectors))]
-                      (->Sentence concepts entities context context-vector))))
-                (combo/combinations sentence-entities 2))))
+              (keep identity
+                    (pmap
+                      (fn [[e1 e2 :as entities]]
+                        (when-not (= (:tok e1)
+                                     (:tok e2))
+                          (t/info (:id e1))
+                          (let [concepts (->> entities
+                                              (map :concept)
+                                              (map set))
+                                context (-> (graph/undirected-graph sent)
+                                            (ubergraph.alg/shortest-path
+                                              (-> e1 :tok :id)
+                                              (-> e2 :tok :id))
+                                            (ubergraph.alg/nodes-in-path))
+                                context-vector (when-let [vectors (->> context
+                                                                       (map #(get (:structure-annotations model) %))
+                                                                       (keep :VEC)
+                                                                       (seq))]
+                                                 (apply math/unit-vec-sum vectors))]
+                            (->Sentence concepts entities context context-vector))))
+                      (combo/combinations sentence-entities 2)))))
     model
     (->> model
          :concept-annotations
@@ -111,18 +117,12 @@
 
 (defn make-sentences
   [model]
-  (->> model
-       (util/map-kv
-         (fn [doc]
-           (update doc :structure-annotations
-                   (fn [structure-annotations]
-                     (util/map-kv assign-word-embedding
-                             structure-annotations)))))
-       (util/map-kv
-         (fn [doc]
-           (-> doc
-               annotations->entities
-               entities->sentences)))))
+  (-> model
+      (update :structure-annotations
+              #(zipmap (keys %)
+                       (pmap assign-word-embedding (vals %))))
+      annotations->entities
+      entities->sentences))
 
 (defn sentences-with-ann
   [sentences id]

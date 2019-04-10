@@ -48,12 +48,7 @@
   (map (fn [match]
          (let [[e1 e2 :as entities] (:entities match)
 
-               doc (some (fn [[id doc]]
-                           (when
-                             (contains? (:concept-annotations doc)
-                                        (:id e1))
-                             id))
-                         model)
+               doc (:doc e1)
                sent (->> (:sent e1)
                          :node-map
                          keys

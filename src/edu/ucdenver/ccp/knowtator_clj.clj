@@ -80,18 +80,41 @@
 
 (defn simple-model
   [v]
-  (let [text-sources (map bean (:textSources (bean (model v))))]
-    (zipmap (map :id text-sources)
-            (map (fn [text-source]
-                   {:structure-annotations (simple-collection (:structureAnnotations text-source)
-                                                              simple-concept-annotation)
-                    :concept-annotations   (simple-collection (:conceptAnnotations text-source)
-                                                              simple-concept-annotation)
-                    :concept-graphs        (simple-collection (:graphSpaces text-source)
-                                                              simple-graph-space)
-                    :structure-graphs      (simple-collection (:structureGraphSpaces text-source)
-                                                              simple-graph-space)})
-                 text-sources))))
+  (let [text-sources (map bean (:textSources (bean (model v))))
+        text-sources (zipmap (map :id text-sources)
+                             text-sources)]
+    {:structure-annotations (apply merge
+                                   (map
+                                     (fn [[id doc]]
+                                       (util/map-kv
+                                         #(assoc % :doc id)
+                                         (simple-collection (:structureAnnotations doc)
+                                                            simple-concept-annotation)))
+                                     text-sources))
+     :concept-annotations   (apply merge
+                                   (map
+                                     (fn [[id doc]]
+                                       (util/map-kv
+                                         #(assoc % :doc id)
+                                         (simple-collection (:conceptAnnotations doc)
+                                                            simple-concept-annotation)))
+                                     text-sources))
+     :concept-graphs        (apply merge
+                                   (map
+                                     (fn [[id doc]]
+                                       (util/map-kv
+                                         #(assoc % :doc id)
+                                         (simple-collection (:graphSpaces doc)
+                                                            simple-graph-space)))
+                                     text-sources))
+     :structure-graphs      (apply merge
+                                   (map
+                                     (fn [[id doc]]
+                                       (util/map-kv
+                                         #(assoc % :doc id)
+                                         (simple-collection (:structureGraphSpaces doc)
+                                                            simple-graph-space)))
+                                     text-sources))}))
 
 (defn selected-annotation
   [v]
@@ -114,8 +137,7 @@
 (defn triples-for-property
   [model property]
   (->> model
-       (vals)
-       (map :concept-graphs)
-       (mapcat vals)
+       :concept-graphs
+       vals
        (mapcat #(ubergraph.core/find-edges % {:value property}))
        (keep identity)))
