@@ -5,12 +5,13 @@
             [util :refer [unit-vec-sum cosine-sim find-matches]]
             [clojure.set :refer [subset? intersection]]
             [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]
-            [clojure.set :as set1]))
+            [clojure.set :as set1])
+  (:import (edu.ucdenver.ccp.nlp.sentence Sentence)))
 
-(defrecord Pattern [concepts context-vector support])
+(defrecord Pattern [context-vector support])
 
 (defn add-to-pattern
-  [p s]
+  [^Pattern p ^Sentence s]
   (map->Pattern {:concepts       (into (set (:concepts p)) (:concepts s))
                  :context-vector (if (:context-vector p)
                                    (when-let [vectors (keep :context-vector [p s])]

@@ -36,29 +36,10 @@
   (.getAbsolutePath
     (io/file word-vector-dir "bio-word-vectors-clj.vec")))
 
-(defn assign-word-embedding
-  [annotation]
-  (assoc annotation :VEC (word-embedding
-                           (str/lower-case
-                             (-> annotation
-                                 :spans
-                                 vals
-                                 first
-                                 :text)))))
+
 
 (def model (with-word2vec word2vec-db
-             (let [model (k/simple-model annotations)]
-              (->> (keys model)
-                   (reduce
-                     (fn [model doc]
-                       (reduce
-                         (fn [model ann]
-                           (update-in model [doc :structure-annotations ann]
-                                      assign-word-embedding))
-                         model
-                         (keys (get-in model [doc :structure-annotations]))))
-                     model)
-                   (sentence/make-sentences)))))
+             (sentence/make-sentences (k/simple-model annotations))))
 
 (def sentences (mapcat :sentences (vals model)))
 

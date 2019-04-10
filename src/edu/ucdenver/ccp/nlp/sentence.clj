@@ -1,11 +1,8 @@
 (ns edu.ucdenver.ccp.nlp.sentence
-  (:require [uncomplicate.neanderthal.core :refer [xpy]]
-            [util :refer [unit-vec-sum]]
-            [clojure.math.combinatorics :as combo]
-            [ubergraph.alg :as uber-alg]
-            [clojure.set :refer [difference union intersection]]))
+  (:require [clojure.math.combinatorics :as combo]
+            [clojure.string :as str]))
 
-(defrecord Sentence [entities context context-vector])
+(defrecord Sentence [concepts entities context context-vector])
 
 
 ;(defn walk-dep
@@ -85,7 +82,8 @@
                 (fn [[e1 e2 :as entities]]
                   (when-not (= (:tok e1)
                                (:tok e2))
-                    (let [context (-> (undirected-graph sent)
+                    (let [concepts (map :concept entities)
+                          context (-> (undirected-graph sent)
                                       (ubergraph.alg/shortest-path
                                         (-> e1 :tok :id)
                                         (-> e2 :tok :id))
@@ -94,8 +92,8 @@
                                                                  (map #(get (:structure-annotations model) %))
                                                                  (keep :VEC)
                                                                  (seq))]
-                                           (apply unit-vec-sum vectors))]
-                      (->Sentence entities context context-vector))))
+                                           (apply math/unit-vec-sum vectors))]
+                      (->Sentence concepts entities context context-vector))))
                 (combo/combinations sentence-entities 2))))
     model
     (->> model
@@ -104,16 +102,34 @@
          (group-by :sent)
          (remove (comp nil? first)))))
 
+(defn assign-word-embedding
+  [annotation]
+  (assoc annotation
+    :VEC (word2vec/word-embedding
+           (str/lower-case
+             (-> annotation
+                 :spans
+                 vals
+                 first
+                 :text)))))
+
+
+
 (defn make-sentences
   [model]
-  (reduce
-    (fn [model doc-id]
-      (update model doc-id
-              #(-> %
-                   annotations->entities
-                   entities->sentences)))
-    model
-    (keys model)))
+  (->> model
+       (util/map-kv
+         (fn [doc]
+           (update doc :structure-annotations
+                   (fn [structure-annotations]
+                     (util/map-kv assign-word-embedding
+                             structure-annotations)))))
+       (util/map-kv
+         (fn [doc]
+           (-> doc
+               annotations->entities
+               entities->sentences))))
+  )
 
 (defn sentences-with-ann
   [sentences id]
