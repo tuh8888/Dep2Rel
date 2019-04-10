@@ -14,40 +14,59 @@
        (into {})))
 
 (defn pprint-sent
-  [sent]
-  (apply str (interpose " " (map #(get % :FORM) sent))))
+  [model sent]
+  (let [structure-annotations (->> model
+                                   vals
+                                   (mapcat :structure-annotations)
+                                   (into {}))]
+    (->> sent
+         (map #(get structure-annotations %))
+         (map (comp first vals :spans))
+         (sort-by :start)
+         (map :text)
+         (interpose " ")
+         (apply str))))
 
-(defn pprint-context
-  [context]
-  (pprint-sent
-    (loop [tok (or (some #(and (= -1 (:HEAD %))
-                               %) context)
-                   (first context))
-           path [tok]
-           rest-context (disj context tok)]
-      (if (seq rest-context)
-        (let [next-tok (some #(and (= (dec (:ID tok)) (:HEAD %))
-                                   %)
-                             rest-context)
-              next-tok (if next-tok next-tok (first rest-context))]
-          (recur next-tok (conj path tok) (disj rest-context next-tok)))
-        path))))
+;(defn pprint-context
+;  [context]
+;  (pprint-sent
+;    (loop [tok (or (some #(and (= -1 (:HEAD %))
+;                               %) context)
+;                   (first context))
+;           path [tok]
+;           rest-context (disj context tok)]
+;      (if (seq rest-context)
+;        (let [next-tok (some #(and (= (dec (:ID tok)) (:HEAD %))
+;                                   %)
+;                             rest-context)
+;              next-tok (if next-tok next-tok (first rest-context))]
+;          (recur next-tok (conj path tok) (disj rest-context next-tok)))
+;        path))))
 
 (defn format-matches
-  [matches]
+  [model matches]
   (map (fn [match]
-         (let [doc (:doc match)
-               sent (:sent match)
-               context (->> (:context match)
-                            (pprint-sent))
-               entities (sort-by :concept (:entities match))
+         (let [[e1 e2 :as entities] (:entities match)
+
+               doc (some (fn [[id doc]]
+                           (when
+                             (contains? (:concept-annotations doc)
+                                        (:id e1))
+                             id))
+                         model)
+               sent (->> (:sent e1)
+                         :node-map
+                         keys
+                         (pprint-sent model))
+               context (->> match
+                            :context
+                            (pprint-sent model))
                [e1-concept e2-concept] (->> entities
+                                            (sort-by :concept)
                                             (map :concept)
                                             (map #(.getShortForm (.getIRI %))))
                [e1-ann e2-ann] (map :id (map :ann entities))
-               [e1-tok e2-tok] (map :tok entities)
-               [e1-tok e2-tok] (map :FORM [e1-tok e2-tok])
-               source-sent (pprint-sent sent)
+               [e1-tok e2-tok] (map (comp :text first vals :spans :tok) entities)
                seed (->> (get-in match [:seed :entities])
                          (map :concept)
                          (map #(.getShortForm (.getIRI %)))
@@ -61,38 +80,40 @@
             :e2-concept e2-concept
             :e2-tok     e2-tok
             :seed       (apply str seed)
-            :sentence   (str "\"" source-sent "\"")
+            :sentence   (str "\"" sent "\"")
             }))
        matches))
 
 (defn to-csv
-  [f matches]
-  (let [formatted (format-matches matches)
+  [f model matches]
+  (let [formatted (format-matches model matches)
         cols [:doc :e1-concept :e1-tok :e2-concept :e2-tok :seed :sentence]
         csv-form (str (apply str (interpose "," cols)) "\n" (apply str (map #(str (apply str (interpose "," ((apply juxt cols) %))) "\n") formatted)))]
     (spit f csv-form)))
 
 (defn matched-triples
-  [match annotations property]
-  (let [triples (k/triples-for-property annotations property)]
-    (filter (fn [triple]
-              (let [source (->> triple
-                                (:source)
-                                (bean))
-                    source-ann (->> source
-                                    (:conceptAnnotation)
-                                    (bean)
-                                    (:id))
-                    target (->> triple
-                                (:target)
-                                (bean))
-                    target-ann (->> target
-                                    (:conceptAnnotation)
-                                    (bean)
-                                    (:id))
-                    triple-anns #{source-ann target-ann}]
-                (= triple-anns (set (map :id (map :ann (:entities match)))))))
-            triples)))
+  [match model triples]
+  )
+
+(defn calc-metrics
+  [predicted-true actual-true all]
+  (let [predicted-false (clojure.set/difference all predicted-true)
+        actual-false (clojure.set/difference all actual-true)
+        tp (count (clojure.set/intersection predicted-true actual-true))
+        tn (count (clojure.set/intersection predicted-false actual-false))
+        fp (count (clojure.set/intersection predicted-true actual-false))
+        fn (count (clojure.set/intersection predicted-false actual-true))
+        precision (float (/ tp (+ tp fp)))
+        recall (float (/ tp (+ tp fn)))
+        f1 (float (/ (* 2 precision recall)
+                     (+ precision recall)))]
+    {:tp        tp
+     :tn        tn
+     :fn        fn
+     :fp        fp
+     :precision precision
+     :recall    recall
+     :f1        f1}))
 
 (defn parameter-walk
   [annotations property seeds sentences & [{:keys [seed-thresh-min seed-thresh-max seed-thresh-step

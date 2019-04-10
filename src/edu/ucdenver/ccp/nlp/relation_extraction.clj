@@ -1,21 +1,18 @@
 (ns edu.ucdenver.ccp.nlp.relation-extraction
-  (:require [uncomplicate.neanderthal.native :refer [dv]]
-            [uncomplicate.neanderthal.core :refer [xpy]]
-            [taoensso.timbre :as t]
-            [util :refer [unit-vec-sum cosine-sim find-matches]]
+  (:require [taoensso.timbre :as t]
+            [math]
+            [util]
             [clojure.set :refer [subset? intersection]]
-            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]
-            [clojure.set :as set1])
-  (:import (edu.ucdenver.ccp.nlp.sentence Sentence)))
+            [edu.ucdenver.ccp.clustering :refer [single-pass-cluster]]))
 
 (defrecord Pattern [context-vector support])
 
 (defn add-to-pattern
-  [^Pattern p ^Sentence s]
+  [p s]
   (map->Pattern {:concepts       (into (set (:concepts p)) (:concepts s))
                  :context-vector (if (:context-vector p)
-                                   (when-let [vectors (keep :context-vector [p s])]
-                                     (apply unit-vec-sum vectors))
+                                   (when-let [vectors (seq (keep :context-vector [p s]))]
+                                     (apply math/unit-vec-sum vectors))
                                    (:context-vector s))
                  :support        (conj (set (:support p)) s)}))
 
@@ -25,7 +22,7 @@
     (fn [sample-concept-set]
       (some
         (fn [seed-concept-set]
-          (set1/subset? sample-concept-set seed-concept-set))
+          (clojure.set/subset? sample-concept-set seed-concept-set))
         (set (:concepts seed))))
     (set (:concepts sample))))
 
@@ -34,7 +31,7 @@
   (let [vec1 (:context-vector s1)
         vec2 (:context-vector s2)]
     (if (and vec1 vec2)
-      (cosine-sim vec1 vec2)
+      (math/cosine-sim vec1 vec2)
       0)))
 
 (defn naive-extract-relations
@@ -42,25 +39,25 @@
   These are then used to find other sentences with similar contexts but potentially
   different concepts."
   [seeds sentences & [{:keys [seed-match-fn context-match-fn]}]]
-  (let [seed-matches (find-matches sentences seeds seed-match-fn)]
+  (let [seed-matches (util/find-matches sentences seeds seed-match-fn)]
     (t/info "Seeds:" (count seed-matches))
-    (into seeds (find-matches sentences seed-matches context-match-fn))))
+    (into seeds (util/find-matches sentences seed-matches context-match-fn))))
 
 (defn cluster-extract-relations
   [seeds sentences & [{:keys [seed-match-fn context-match-fn min-support] :as params}]]
-  (let [seeds (into seeds (find-matches sentences seeds seed-match-fn))
+  (let [seeds (into seeds (util/find-matches sentences seeds seed-match-fn))
         patterns (single-pass-cluster seeds #{} params)
         patterns (filter #(<= min-support (count (:support %))) patterns)]
     (t/info "Seeds" (count seeds))
     (t/info "Patterns" (count patterns))
-    (into seeds (find-matches sentences patterns context-match-fn))))
+    (into seeds (util/find-matches sentences patterns context-match-fn))))
 
 (defn bootstrap
   [seeds sentences update-fn]
   (loop [matches (set seeds)
          samples sentences]
     (let [new-matches (set (update-fn matches samples))
-          num-new-matches (count (set1/difference new-matches matches))]
+          num-new-matches (count (clojure.set/difference new-matches matches))]
       (t/info "New matches" num-new-matches)
       (if (= num-new-matches 0)
         matches

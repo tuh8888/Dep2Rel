@@ -1,6 +1,9 @@
 (ns edu.ucdenver.ccp.nlp.sentence
   (:require [clojure.math.combinatorics :as combo]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [ubergraph.alg]
+            [graph]
+            [word2vec]))
 
 (defrecord Sentence [concepts entities context context-vector])
 
@@ -66,13 +69,6 @@
     model
     (get model :concept-annotations)))
 
-(defn undirected-graph
-  [g]
-  (apply ubergraph.core/multigraph
-         (map #(vector (loom.graph/src %)
-                       (loom.graph/dest %))
-              (loom.graph/edges g))))
-
 (defn entities->sentences
   [model]
   (reduce
@@ -83,7 +79,7 @@
                   (when-not (= (:tok e1)
                                (:tok e2))
                     (let [concepts (map :concept entities)
-                          context (-> (undirected-graph sent)
+                          context (-> (graph/undirected-graph sent)
                                       (ubergraph.alg/shortest-path
                                         (-> e1 :tok :id)
                                         (-> e2 :tok :id))
@@ -113,8 +109,6 @@
                  first
                  :text)))))
 
-
-
 (defn make-sentences
   [model]
   (->> model
@@ -128,8 +122,7 @@
          (fn [doc]
            (-> doc
                annotations->entities
-               entities->sentences))))
-  )
+               entities->sentences)))))
 
 (defn sentences-with-ann
   [sentences id]

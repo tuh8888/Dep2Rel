@@ -108,16 +108,14 @@
   [^OWLReasoner r owlClass]
   (-> r
       (.getSubClasses owlClass false)
-      (.getFlattened)))
+      (.getFlattened)
+      (set)))
 
 (defn triples-for-property
-  [annotations property]
-  (->> (simple-model annotations)
+  [model property]
+  (->> model
        (vals)
-       (mapcat :graphSpaces)
-       (mapcat :triples)
-       (filter #(= (-> %
-                       ^OWLObjectProperty (:property)
-                       (.getIRI)
-                       (.getShortForm))
-                   property))))
+       (map :concept-graphs)
+       (mapcat vals)
+       (mapcat #(ubergraph.core/find-edges % {:value property}))
+       (keep identity)))

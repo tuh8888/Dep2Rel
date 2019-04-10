@@ -2,9 +2,7 @@
   (:require [clojure.string :as s]
             [clojure.java.io :as io]
             [edu.ucdenver.ccp.conll :as conll]
-            [org.clojurenlp.core :as corenlp]
-            [word2vec :as word2vec]
-            [clojure.string :as str])
+            [org.clojurenlp.core :as corenlp])
   (:import (java.io File)
            (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
            (edu.ucdenver.ccp.knowtator.model.object TextSource ConceptAnnotation Span GraphSpace AnnotationNode Quantifier RelationAnnotation)))
@@ -115,7 +113,7 @@
   (mapv
     (fn [{lemma k :as tok}]
       (assign-embedding tok
-                        (str/lower-case lemma)
+                        (s/lower-case lemma)
                         word2vec/word-embedding))
     (try
       (conll/read-conll reference true f)
