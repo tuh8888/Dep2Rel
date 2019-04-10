@@ -1,11 +1,18 @@
 <component name="ProjectDictionaryState">
   <dictionary name="tuh8888">
     <words>
+      <w>biocreative</w>
+      <w>clojurenlp</w>
       <w>conll</w>
       <w>conllu</w>
+      <w>corenlp</w>
+      <w>deprel</w>
       <w>knowtator</w>
+      <w>sentenize</w>
       <w>taoensso</w>
       <w>ucdenver</w>
+      <w>upos</w>
+      <w>xpos</w>
     </words>
   </dictionary>
 </component>

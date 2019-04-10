@@ -9,7 +9,7 @@
             [util :refer [cosine-sim]]
             [clojure.set :as set1]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
-            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]
+            [word2vec :refer [with-word2vec word-embedding]]
             [clojure.string :as str])
   (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))
 (t/set-level! :debug)
@@ -38,7 +38,7 @@
 
 (defn assign-word-embedding
   [annotation]
-  (assoc annotation :VEC (word2vec/word-embedding
+  (assoc annotation :VEC (word-embedding
                            (str/lower-case
                              (-> annotation
                                  :spans
@@ -46,7 +46,7 @@
                                  first
                                  :text)))))
 
-(def model (word2vec/with-word2vec word2vec-db
+(def model (with-word2vec word2vec-db
              (let [model (k/simple-model annotations)]
               (->> (keys model)
                    (reduce

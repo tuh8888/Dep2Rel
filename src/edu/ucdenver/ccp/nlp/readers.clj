@@ -1,10 +1,9 @@
 (ns edu.ucdenver.ccp.nlp.readers
   (:require [clojure.string :as s]
-            [edu.ucdenver.ccp.nlp.sentence :as sentence]
-            [edu.ucdenver.ccp.nlp.word2vec :as word2vec]
             [clojure.java.io :as io]
             [edu.ucdenver.ccp.conll :as conll]
             [org.clojurenlp.core :as corenlp]
+            [word2vec :as word2vec]
             [clojure.string :as str])
   (:import (java.io File)
            (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
