@@ -10,12 +10,16 @@
       <w>conllu</w>
       <w>corenlp</w>
       <w>deprel</w>
+      <w>hermi</w>
       <w>knowtator</w>
       <w>multigraph</w>
       <w>openjfx</w>
+      <w>owlapi</w>
       <w>rebl</w>
+      <w>semanticweb</w>
       <w>sentenize</w>
       <w>taoensso</w>
+      <w>uber</w>
       <w>ubergraph</w>
       <w>ucdenver</w>
       <w>upos</w>

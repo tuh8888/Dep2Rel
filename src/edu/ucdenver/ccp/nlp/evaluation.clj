@@ -1,6 +1,6 @@
 (ns edu.ucdenver.ccp.nlp.evaluation
-  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all]
-            [edu.ucdenver.ccp.knowtator-clj :as k]))
+  (:require [edu.ucdenver.ccp.nlp.relation-extraction :refer :all])
+  (:import (org.semanticweb.owlapi.model OWLObject OWLClass HasIRI)))
 
 (defn count-seed-matches
   [matches]
@@ -27,26 +27,10 @@
          (interpose " ")
          (apply str))))
 
-;(defn pprint-context
-;  [context]
-;  (pprint-sent
-;    (loop [tok (or (some #(and (= -1 (:HEAD %))
-;                               %) context)
-;                   (first context))
-;           path [tok]
-;           rest-context (disj context tok)]
-;      (if (seq rest-context)
-;        (let [next-tok (some #(and (= (dec (:ID tok)) (:HEAD %))
-;                                   %)
-;                             rest-context)
-;              next-tok (if next-tok next-tok (first rest-context))]
-;          (recur next-tok (conj path tok) (disj rest-context next-tok)))
-;        path))))
-
 (defn format-matches
   [model matches]
   (map (fn [match]
-         (let [[e1 e2 :as entities] (:entities match)
+         (let [[e1 _ :as entities] (:entities match)
 
                doc (:doc e1)
                sent (->> (:sent e1)
@@ -59,12 +43,11 @@
                [e1-concept e2-concept] (->> entities
                                             (sort-by :concept)
                                             (map :concept)
-                                            (map #(.getShortForm (.getIRI %))))
-               [e1-ann e2-ann] (map :id (map :ann entities))
+                                            (map #(.getShortForm (.getIRI ^HasIRI %))))
                [e1-tok e2-tok] (map (comp :text first vals :spans :tok) entities)
                seed (->> (get-in match [:seed :entities])
                          (map :concept)
-                         (map #(.getShortForm (.getIRI %)))
+                         (map #(.getShortForm (.getIRI ^HasIRI %)))
                          (interpose ", "))]
            {:doc        doc
             ;;:e1-ann        e1-ann
@@ -79,16 +62,29 @@
             }))
        matches))
 
-(defn to-csv
+(defn ->csv
   [f model matches]
   (let [formatted (format-matches model matches)
         cols [:doc :e1-concept :e1-tok :e2-concept :e2-tok :seed :sentence]
         csv-form (str (apply str (interpose "," cols)) "\n" (apply str (map #(str (apply str (interpose "," ((apply juxt cols) %))) "\n") formatted)))]
     (spit f csv-form)))
 
-(defn matched-triples
-  [match model triples]
-  )
+(defn sent->triple
+  [match]
+  (set (map :id (:entities match))))
+
+(defn edge->triple
+  [model edge]
+  (let [concept-annotations (:concept-annotations model)
+        source (->> edge
+                    :src
+                    (get concept-annotations)
+                    :id)
+        target (->> edge
+                    :dest
+                    (get concept-annotations)
+                    :id)]
+    #{source target}))
 
 (defn calc-metrics
   [predicted-true actual-true all]

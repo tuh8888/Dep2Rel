@@ -4,7 +4,6 @@
            (javax.swing JFrame)
            (org.semanticweb.HermiT ReasonerFactory)
            (org.semanticweb.owlapi.reasoner OWLReasoner)
-           (org.semanticweb.owlapi.model OWLObjectProperty OWLObject OWLOntologyManager)
            (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))
 
 (defn display
@@ -134,7 +133,7 @@
       (.getFlattened)
       (set)))
 
-(defn triples-for-property
+(defn edges-for-property
   [model property]
   (->> model
        :concept-graphs
