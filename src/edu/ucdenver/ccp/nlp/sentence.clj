@@ -5,12 +5,13 @@
             [graph]
             [math]
             [word2vec]
-            [taoensso.timbre :as t]))
+            [taoensso.timbre :as log]))
 
 (defrecord Sentence [concepts entities context context-vector])
 
-(defn annotation->entity
+(defn annotation-tok-id
   [model ann]
+  (log/info (:id ann))
   (let [concept-start (-> ann :spans vals first :start)
         concept-end (-> ann :spans vals first :end)]
     (some
@@ -19,57 +20,52 @@
               tok-end (-> tok :spans vals first :end)]
           (when (or (<= tok-start concept-start concept-end tok-end)
                     (<= concept-start tok-start tok-end concept-end))
-            tok)))
-      (vals (:structure-annotations model)))))
+            (:id tok))))
+      (filter #(= (:doc %) (:doc ann)) (vals (:structure-annotations model))))))
 
-(defn tok-sent
-  [model tok]
-  (first
-    (filter #(get-in % [:node-map (:id tok)])
-            (vals (:structure-graphs model)))))
+(defn tok-sent-id
+  [model tok-id]
+  (some
+    (fn [[id sent]]
+      (when (get-in sent [:node-map tok-id])
+        id))
+    (:structure-graphs model)))
 
-(defn annotations->entities
-  [model]
-  (reduce
-    (fn [model [id ann]]
-      (t/info id)
-      (let [tok (annotation->entity model ann)
-            sent (tok-sent model tok)]
-        (-> model
-            (assoc-in [:concept-annotations id :tok] tok)
-            (assoc-in [:concept-annotations id :sent] sent))))
-    model
-    (get model :concept-annotations)))
+(defn dependency-path
+  [undirected-sent tok1 tok2]
+  (-> undirected-sent
+      (ubergraph.alg/shortest-path tok1 tok2)
+      (ubergraph.alg/nodes-in-path)))
 
-(defn entities->sentences
-  [model]
-  (reduce
-    (fn [model [sent sentence-entities]]
-      (update model :sentences into
-              (keep identity
-                    (pmap
-                      (fn [[e1 e2 :as entities]]
-                        (when-not (= (:tok e1)
-                                     (:tok e2))
-                          (t/info (:id e1))
-                          (let [concepts (->> entities
-                                              (map :concept)
-                                              (map hash-set))
-                                context (-> (graph/undirected-graph sent)
-                                            (ubergraph.alg/shortest-path
-                                              (-> e1 :tok :id)
-                                              (-> e2 :tok :id))
-                                            (ubergraph.alg/nodes-in-path))
-                                context-vector (when-let [vectors (->> context
-                                                                       (map #(get (:structure-annotations model) %))
-                                                                       (keep :VEC)
-                                                                       (seq))]
-                                                 (apply math/unit-vec-sum vectors))]
-                            (->Sentence concepts entities context context-vector))))
-                      (combo/combinations sentence-entities 2)))))
-    model
-    (->> model
-         :concept-annotations
+(defn dependency-embedding
+  [dependency-path structure-annotations]
+  (when-let [vectors (->> dependency-path
+                          (keep #(get-in structure-annotations [% :VEC]))
+                          (seq))]
+    (apply math/unit-vec-sum vectors)))
+
+(defn sentence-entities
+  [{:keys [structure-annotations structure-graphs]} sent, entities]
+  (let [undirected-sent (graph/undirected-graph (get structure-graphs sent))]
+    (keep
+      (fn [[{tok1 :tok c1 :concept id1 :id}
+            {tok2 :tok c2 :concept id2 :id}]]
+        (when-not (= tok1 tok2)
+          (log/info id1)
+          (let [concepts (conj #{} #{c1} #{c2})
+                context (dependency-path undirected-sent tok1 tok2)
+                context-vector (dependency-embedding context structure-annotations)
+                entities #{id1 id2}]
+            (->Sentence concepts entities context context-vector))))
+      (combo/combinations entities 2))))
+
+(defn concept-annotations->sentences
+  [{:keys [concept-annotations] :as model}]
+  (mapcat
+    (fn [[sent entities]]
+      (log/info sent)
+      (sentence-entities model sent entities))
+    (->> concept-annotations
          vals
          (group-by :sent)
          (remove (comp nil? first)))))
@@ -85,21 +81,12 @@
                  first
                  :text)))))
 
-(defn make-sentences
-  [model]
-  (-> model
-      (update :structure-annotations
-              #(zipmap (keys %)
-                       (pmap assign-word-embedding (vals %))))
-      annotations->entities
-      entities->sentences))
-
 (defn sentences-with-ann
   [sentences id]
   (filter
     (fn [s]
       (some
         (fn [e]
-          (= id (:id e)))
+          (= id e))
         (:entities s)))
     sentences))

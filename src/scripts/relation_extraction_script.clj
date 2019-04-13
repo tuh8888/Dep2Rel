@@ -16,7 +16,7 @@
   (io/file home-dir "craft-versions" "concepts+assertions1" "CRAFT_assertions.knowtator"))
 
 #_(def annotations-file
-  (io/file home-dir "craft-versions" "concepts+assertions64" "CRAFT_assertions.knowtator"))
+    (io/file home-dir "craft-versions" "concepts+assertions64" "CRAFT_assertions.knowtator"))
 
 (def annotations (k/view annotations-file))
 
@@ -28,11 +28,23 @@
   (.getAbsolutePath
     (io/file word-vector-dir "bio-word-vectors-clj.vec")))
 
-(def model
-  (word2vec/with-word2vec word2vec-db
-    (sentence/make-sentences (k/simple-model annotations))))
+(def model (k/simple-model annotations))
 
-;(spit "/tmp/model.edn" (with-out-str (pr model)))
+(def structures-annotations-with-embeddings
+  (zipmap (keys (:structure-annotations model))
+          (word2vec/with-word2vec word2vec-db
+            (doall
+              (pmap sentence/assign-word-embedding
+                   (vals (:structure-annotations model)))))))
+
+(def concepts-with-toks
+  (zipmap (keys (:concept-annotations model))
+          (pmap
+            #(let [tok-id (sentence/annotation-tok-id model %)
+                   sent-id (sentence/tok-sent-id model tok-id)]
+               (assoc % :tok tok-id
+                        :sent sent-id))
+            (vals (:concept-annotations model)))))
 
 (def reasoner (k/reasoner annotations))
 
@@ -42,18 +54,25 @@
       (t/info c)
       (k/get-owl-descendants reasoner c))))
 
-(def sentences (->> model
-                    :sentences
-                    (map
-                      #(update % :concepts
-                               (fn [concepts]
-                                 (map
-                                   (fn [concept-set]
-                                     (into concept-set (mem-descs (first concept-set))))
-                                   concepts))))
-                    (doall)))
+(def model (assoc model
+                   :concept-annotations concepts-with-toks
+                   :structure-annotations structures-annotations-with-embeddings))
 
+
+(def sentences (->>
+                 (sentence/concept-annotations->sentences model)
+                 (map
+                   #(update % :concepts
+                            (fn [concepts]
+                              (map
+                                (fn [concept-set]
+                                  (into concept-set (mem-descs (first concept-set))))
+                                concepts))))))
+(first sentences)
 (t/info "Num sentences:" (count sentences))
+
+
+(def model (assoc model :sentences sentences))
 
 
 ;(k/display annotations)
@@ -62,8 +81,9 @@
 ;; Mutation located in gene
 (def property (.get (.getOwlObjectPropertyById ^KnowtatorModel (k/model annotations) "exists_at_or_derives_from")))
 
-(def actual-true (set (map #(evaluation/edge->triple model %)
+(def actual-true (set (map evaluation/edge->triple
                            (k/edges-for-property model property))))
+
 (def all-triples (set (map evaluation/sent->triple sentences)))
 (defn predicted-true
   [matches]
@@ -75,11 +95,9 @@
                       :actual-true    actual-true
                       :all            all-triples}))
 
-
-(def actual-true-sentences (filter #(actual-true (set (map :id (:entities %)))) sentences))
-
-
-(evaluation/cluster-sentences actual-true-sentences)
+(comment
+  (def actual-true-sentences (filter #(actual-true (set (:entities %))) sentences))
+  (evaluation/cluster-sentences actual-true-sentences))
 
 (defn make-seeds
   [e1 e2]
@@ -90,16 +108,16 @@
 (def matches (let [seeds (clojure.set/union
                            (make-seeds "CRAFT_aggregate_ontology_Instance_21471"
                                        "CRAFT_aggregate_ontology_Instance_21917")
-                           (make-seeds "CRAFT_aggregate_ontology_Instance_21999"
-                                       "CRAFT_aggregate_ontology_Instance_21895")
-                           (make-seeds "CRAFT_aggregate_ontology_Instance_21583"
-                                       "CRAFT_aggregate_ontology_Instance_21881")
-                           (make-seeds "CRAFT_aggregate_ontology_Instance_21437"
-                                       "CRAFT_aggregate_ontology_Instance_22305"))
+                           #_(make-seeds "CRAFT_aggregate_ontology_Instance_21999"
+                                         "CRAFT_aggregate_ontology_Instance_21895")
+                           #_(make-seeds "CRAFT_aggregate_ontology_Instance_21583"
+                                         "CRAFT_aggregate_ontology_Instance_21881")
+                           #_(make-seeds "CRAFT_aggregate_ontology_Instance_21437"
+                                         "CRAFT_aggregate_ontology_Instance_22305"))
                    seed-thresh 0.95
-                   context-thresh 0.9
-                   cluster-thresh 0.99
-                   min-support 4
+                   context-thresh 0.95
+                   cluster-thresh 0.95
+                   min-support 1
                    params {:seed             (first seeds)
                            :seed-thresh      seed-thresh
                            :context-thresh   context-thresh
@@ -120,9 +138,9 @@
 
 (t/info "Metrics" metrics)
 
-(math/false-neg {:predicted-true (predicted-true matches)
-                 :actual-true    actual-true
-                 :all            all-triples})
+(def params {:predicted-true (predicted-true matches)
+             :actual-true    actual-true
+             :all            all-triples})
 
 (comment
   (evaluation/format-matches model matches)

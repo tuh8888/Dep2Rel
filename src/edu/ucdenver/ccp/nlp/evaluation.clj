@@ -70,20 +70,11 @@
 
 (defn sent->triple
   [match]
-  (set (map :id (:entities match))))
+  (set (:entities match)))
 
 (defn edge->triple
-  [model edge]
-  (let [concept-annotations (:concept-annotations model)
-        source (->> edge
-                    :src
-                    (get concept-annotations)
-                    :id)
-        target (->> edge
-                    :dest
-                    (get concept-annotations)
-                    :id)]
-    #{source target}))
+  [edge]
+  #{(:src edge) (:dest edge)})
 
 (defn cluster-sentences
   [sentences]
