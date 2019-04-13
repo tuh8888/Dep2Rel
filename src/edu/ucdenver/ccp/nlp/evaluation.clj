@@ -1,6 +1,7 @@
 (ns edu.ucdenver.ccp.nlp.evaluation
   (:require [cluster-tools]
-            [edu.ucdenver.ccp.nlp.relation-extraction :as re])
+            [edu.ucdenver.ccp.nlp.relation-extraction :as re]
+            [edu.ucdenver.ccp.nlp.sentence :as sentence])
   (:import (org.semanticweb.owlapi.model HasIRI)))
 
 (defn count-seed-matches
@@ -79,19 +80,26 @@
 (defn cluster-sentences
   [sentences]
   (map
-    #(map (fn [x] (map :id x)) %)
-    (map
-      #(map :entities %)
-      (map :support
-           (filter
-             #(when (< 1 (count (:support %)))
-                %)
-             (cluster-tools/single-pass-cluster sentences #{}
-                                          {:cluster-merge-fn re/add-to-pattern
-                                           :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                                (and (< (or %3 0.9) score)
-                                                                     score))}))))))
+    #(map :entities %)
+    (map :support
+         (filter
+           #(when (< 1 (count (:support %)))
+              %)
+           (cluster-tools/single-pass-cluster sentences #{}
+                                              {:cluster-merge-fn re/add-to-pattern
+                                               :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                                    (and (< (or %3 0.75) score)
+                                                                         score))})))))
 
+(defn make-seeds
+  [sentences e1 e2]
+  (clojure.set/intersection
+    (set (sentence/sentences-with-ann sentences e1))
+    (set (sentence/sentences-with-ann sentences e2))))
+
+(defn predicted-true
+  [matches]
+  (set (map sent->triple matches)))
 
 ;
 ;(defn parameter-walk
