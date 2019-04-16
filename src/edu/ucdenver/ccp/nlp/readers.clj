@@ -2,7 +2,8 @@
   (:require [clojure.string :as s]
             [clojure.java.io :as io]
             [edu.ucdenver.ccp.conll :as conll]
-            [org.clojurenlp.core :as corenlp])
+            [org.clojurenlp.core :as corenlp]
+            [word2vec])
   (:import (java.io File)
            (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
            (edu.ucdenver.ccp.knowtator.model.object TextSource ConceptAnnotation Span GraphSpace AnnotationNode Quantifier RelationAnnotation)))

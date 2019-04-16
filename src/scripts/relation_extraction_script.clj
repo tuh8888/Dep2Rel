@@ -2,12 +2,12 @@
   (:require [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [clojure.java.io :as io]
             [edu.ucdenver.ccp.knowtator-clj :as k]
-            [taoensso.timbre :as t]
+            [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation])
   (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))
 
-(t/set-level! :debug)
+(log/set-level! :debug)
 
 (def home-dir
   (io/file "/" "media" "tuh8888" "Seagate Expansion Drive" "data"))
@@ -51,7 +51,7 @@
 (def mem-descs
   (memoize
     (fn [c]
-      (t/info c)
+      (log/info c)
       (k/get-owl-descendants reasoner c))))
 
 (def model (assoc model
@@ -68,8 +68,8 @@
                                 (fn [concept-set]
                                   (into concept-set (mem-descs (first concept-set))))
                                 concepts))))))
-(first sentences)
-(t/info "Num sentences:" (count sentences))
+
+(log/info "Num sentences:" (count sentences))
 
 
 (def model (assoc model :sentences sentences))
@@ -108,9 +108,9 @@
                                "CRAFT_aggregate_ontology_Instance_21365"
                                "CRAFT_aggregate_ontology_Instance_22495"))
                      seed-thresh 0.95
-                     context-thresh 0.75
-                     cluster-thresh 0.5
-                     min-support 3
+                     context-thresh 0.95
+                     cluster-thresh 0.7
+                     min-support 10
                      params {:seed             (first seeds)
                              :seed-thresh      seed-thresh
                              :context-thresh   context-thresh
@@ -124,14 +124,14 @@
                              :min-support      min-support}
                      matches (->> (re/cluster-bootstrap-extract-relations seeds sentences params)
                                   (map #(merge % params)))]
-                 (t/info "Metrics" (c-metrics matches))
+                 (log/info "Metrics" (c-metrics matches))
                  matches)))
 
 (def metrics (c-metrics matches))
 
-(t/info "Metrics" metrics)
+(log/info "Metrics" metrics)
 
-(def params {:predicted-true (predicted-true matches)
+(def params {:predicted-true (evaluation/predicted-true matches)
              :actual-true    actual-true
              :all            all-triples})
 
