@@ -3,7 +3,8 @@
             [clojure.java.io :as io]
             [edu.ucdenver.ccp.conll :as conll]
             [org.clojurenlp.core :as corenlp]
-            [word2vec])
+            [word2vec]
+            [taoensso.timbre :as log])
   (:import (java.io File)
            (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
            (edu.ucdenver.ccp.knowtator.model.object TextSource ConceptAnnotation Span GraphSpace AnnotationNode Quantifier RelationAnnotation)))
@@ -40,6 +41,7 @@
        (map #(s/split % #"\t"))
        (map
          (fn [[doc id _ property source target]]
+           (log/info id)
            (let [text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
                  graph-space (GraphSpace. text-source nil)
                  source (second (s/split source #":"))
@@ -57,6 +59,7 @@
                                          0
                                          0
                                          graph-space)]
+             (.removeModelListener annotations text-source)
              (.addCellToGraph graph-space source)
              (.addCellToGraph graph-space target)
              (.addTriple graph-space
@@ -70,7 +73,8 @@
                          false
                          "")
              (.setValue ^RelationAnnotation (first (filter #(= (.getId %) id) (.getRelationAnnotations graph-space)))
-                        property))))))
+                        property)
+             (.addModelListener annotations text-source))))))
 
 (defn biocreative-read-entities
   [^KnowtatorModel annotations f]

@@ -4,7 +4,8 @@
             [clojure.string :as s]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [edu.ucdenver.ccp.nlp.evaluation :as evaluation])
   (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
            (edu.ucdenver.ccp.knowtator.model.object GraphSpace TextSource ConceptAnnotation Span AnnotationNode Quantifier)))
 
@@ -25,51 +26,57 @@
 
 (def annotations (k/view training-dir))
 
-(def references-dir (io/file training-dir "Articles"))
-(def articles
-  (rdr/article-names-in-dir references-dir "txt"))
+(def relations-file (io/file training-dir "chemprot_training_relations.tsv"))
+(rdr/biocreative-read-relations (k/model annotations) relations-file)
+(.save (k/model annotations))
 
-(def references (rdr/read-references articles references-dir))
+(comment
+  ;; Read from conll files
+  (def references-dir (io/file training-dir "Articles"))
+  (def articles
+    (rdr/article-names-in-dir references-dir "txt"))
 
-(def dependency-dir (io/file training-dir "chemprot_training_sentences"))
-(def dependency (rdr/read-dependency word2vec-db articles references dependency-dir :ext "conll" :tok-key :FORM))
+  (def references (rdr/read-references articles references-dir))
 
-(do
-  (doall
-    (map
-     (fn [[doc-id doc]]
-       (let [text-source ^TextSource (.get (.get (.getTextSources annotations) doc-id))]
-         (.removeModelListener annotations text-source)
-         (doall
-           (map
-            (fn [[sent-idx sent]]
-              (let [graph-space (GraphSpace. text-source (str "Sentence " sent-idx))]
-                (.add (.getStructureGraphSpaces text-source) graph-space)
-                (let [nodes (mapv
-                              (fn [tok]
-                                (let [ann (ConceptAnnotation. text-source nil nil (.getDefaultProfile annotations) (:DEPREL tok) "")
-                                      span (Span. ann nil (:START tok) (:END tok))
-                                      ann-node (AnnotationNode. nil ann 20 20 graph-space)]
-                                  (.add ann span)
-                                  (.add (.getStructureAnnotations text-source) ann)
-                                  (.addCellToGraph graph-space ann-node)
-                                  [ann-node tok]))
-                              sent)]
-                  (doall
-                    (map
-                     (fn [[source tok]]
-                       (let [target-idx (:HEAD tok)]
-                         (cond (<= 0 target-idx) (let [target (first (get nodes target-idx))
-                                                       property nil]
-                                                   (.addTriple graph-space source target nil (.getDefaultProfile annotations)
-                                                               property Quantifier/some "", false, ""))
-                               (not (= "ROOT" (:DEPREL tok))) (throw (Throwable. "Excluding root"))
-                               :else nil)))
-                     nodes)))))
-            (group-by :SENT doc)))
-         (.addModelListener annotations text-source)))
-     dependency))
-  nil)
+  (def dependency-dir (io/file training-dir "chemprot_training_sentences"))
+  (def dependency (rdr/read-dependency word2vec-db articles references dependency-dir :ext "conll" :tok-key :FORM))
+
+  (do
+    (doall
+      (map
+        (fn [[doc-id doc]]
+          (let [text-source ^TextSource (.get (.get (.getTextSources annotations) doc-id))]
+            (.removeModelListener annotations text-source)
+            (doall
+              (map
+                (fn [[sent-idx sent]]
+                  (let [graph-space (GraphSpace. text-source (str "Sentence " sent-idx))]
+                    (.add (.getStructureGraphSpaces text-source) graph-space)
+                    (let [nodes (mapv
+                                  (fn [tok]
+                                    (let [ann (ConceptAnnotation. text-source nil nil (.getDefaultProfile annotations) (:DEPREL tok) "")
+                                          span (Span. ann nil (:START tok) (:END tok))
+                                          ann-node (AnnotationNode. nil ann 20 20 graph-space)]
+                                      (.add ann span)
+                                      (.add (.getStructureAnnotations text-source) ann)
+                                      (.addCellToGraph graph-space ann-node)
+                                      [ann-node tok]))
+                                  sent)]
+                      (doall
+                        (map
+                          (fn [[source tok]]
+                            (let [target-idx (:HEAD tok)]
+                              (cond (<= 0 target-idx) (let [target (first (get nodes target-idx))
+                                                            property nil]
+                                                        (.addTriple graph-space source target nil (.getDefaultProfile annotations)
+                                                                    property Quantifier/some "", false, ""))
+                                    (not (= "ROOT" (:DEPREL tok))) (throw (Throwable. "Excluding root"))
+                                    :else nil)))
+                          nodes)))))
+                (group-by :SENT doc)))
+            (.addModelListener annotations text-source)))
+        dependency))
+    nil))
 
 (def model (k/simple-model annotations))
 
@@ -101,18 +108,24 @@
              :concept-annotations concepts-with-toks
              :structure-annotations structures-annotations-with-embeddings))
 
-
-(def sentences (->>
-                 (sentence/concept-annotations->sentences model)
-                 (map
-                   #(update % :concepts
-                            (fn [concepts]
-                              (map
-                                (fn [concept-set]
-                                  (into concept-set (mem-descs (first concept-set))))
-                                concepts))))))
-
+(def sentences (sentence/concept-annotations->sentences model))
 (log/info "Num sentences:" (count sentences))
+
+(def property)
+
+(def actual-true (set (map evaluation/edge->triple
+                           (k/edges-for-property model property))))
+
+(def all-triples (set (map evaluation/sent->triple sentences)))
+
+
+
+(defn c-metrics
+  [matches]
+  (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
+                      :actual-true    actual-true
+                      :all            all-triples}))
+
 
 (comment
   (def sentences (rdr/read-sentences annotations dependency articles)))

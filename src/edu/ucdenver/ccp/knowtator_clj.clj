@@ -96,7 +96,8 @@
                                        (util/map-kv
                                          #(assoc % :doc id)
                                          (simple-collection (:conceptAnnotations doc)
-                                                            simple-concept-annotation)))
+                                                            simple-concept-annotation
+                                                            :key-fn #(str id (:id %)))))
                                      text-sources))
      :concept-graphs        (apply merge
                                    (map
