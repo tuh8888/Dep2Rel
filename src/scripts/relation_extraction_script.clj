@@ -125,15 +125,15 @@
                      matches (->> (re/cluster-bootstrap-extract-relations seeds sentences params)
                                   (map #(merge % params)))]
                  (log/info "Metrics" (c-metrics matches))
-                 matches)))
+                 matches))
 
-(def metrics (c-metrics matches))
+  (def metrics (c-metrics matches))
 
-(log/info "Metrics" metrics)
+  (log/info "Metrics" metrics)
 
-(def params {:predicted-true (evaluation/predicted-true matches)
-             :actual-true    actual-true
-             :all            all-triples})
+  (def params {:predicted-true (evaluation/predicted-true matches)
+               :actual-true    actual-true
+               :all            all-triples}))
 
 (comment
   (evaluation/format-matches model matches)

@@ -60,6 +60,7 @@
                                          0
                                          graph-space)]
              (.removeModelListener annotations text-source)
+             (.add text-source graph-space)
              (.addCellToGraph graph-space source)
              (.addCellToGraph graph-space target)
              (.addTriple graph-space
@@ -112,7 +113,6 @@
   [m v embedding-fn]
   (assoc m :VEC (embedding-fn v)))
 
-
 (defn conll-with-embeddings
   [k reference f]
   (mapv
@@ -126,6 +126,7 @@
         (println f)
         (throw e)))))
 
+
 (defn read-dependency
   [word2vec-db articles references dependency-dir & {:keys [ext tok-key] :or {tok-key :LEMMA}}]
   (word2vec/with-word2vec word2vec-db
@@ -138,5 +139,54 @@
                  (pmap
                    (partial conll-with-embeddings tok-key)
                    references)))))
+
+(defn biocreative-read-dependency
+  [annotations dir word2vec-db]
+  (let [
+        references-dir (io/file dir "Articles")
+        articles
+        (article-names-in-dir references-dir "txt")
+
+        references (read-references articles references-dir)
+
+        dependency-dir (io/file dir "chemprot_training_sentences")
+        dependency (read-dependency word2vec-db articles references dependency-dir :ext "conll" :tok-key :FORM)]
+
+    (do
+      (doall
+        (map
+          (fn [[doc-id doc]]
+            (let [text-source ^TextSource (.get (.get (.getTextSources annotations) doc-id))]
+              (.removeModelListener annotations text-source)
+              (doall
+                (map
+                  (fn [[sent-idx sent]]
+                    (let [graph-space (GraphSpace. text-source (str "Sentence " sent-idx))]
+                      (.add (.getStructureGraphSpaces text-source) graph-space)
+                      (let [nodes (mapv
+                                    (fn [tok]
+                                      (let [ann (ConceptAnnotation. text-source nil nil (.getDefaultProfile annotations) (:DEPREL tok) "")
+                                            span (Span. ann nil (:START tok) (:END tok))
+                                            ann-node (AnnotationNode. nil ann 20 20 graph-space)]
+                                        (.add ann span)
+                                        (.add (.getStructureAnnotations text-source) ann)
+                                        (.addCellToGraph graph-space ann-node)
+                                        [ann-node tok]))
+                                    sent)]
+                        (doall
+                          (map
+                            (fn [[source tok]]
+                              (let [target-idx (:HEAD tok)]
+                                (cond (<= 0 target-idx) (let [target (first (get nodes target-idx))
+                                                              property nil]
+                                                          (.addTriple graph-space source target nil (.getDefaultProfile annotations)
+                                                                      property Quantifier/some "", false, ""))
+                                      (not (= "ROOT" (:DEPREL tok))) (throw (Throwable. "Excluding root"))
+                                      :else nil)))
+                            nodes)))))
+                  (group-by :SENT doc)))
+              (.addModelListener annotations text-source)))
+          dependency))
+      nil)))
 
 

@@ -65,8 +65,9 @@
 
 (defn simple-triple
   [triple]
-  (let [source (-> triple :source bean :conceptAnnotation bean :id)
-        target (-> triple :target bean :conceptAnnotation bean :id)
+  (let [doc-id (-> triple :textSource (bean) :id)
+        source (->> triple :source (bean) :conceptAnnotation (bean) :id (str doc-id "-"))
+        target (->> triple :target (bean) :conceptAnnotation (bean) :id (str doc-id "-"))
         value {:value (or (:property triple) (:value triple))}]
     [source target value]))
 
@@ -97,7 +98,7 @@
                                          #(assoc % :doc id)
                                          (simple-collection (:conceptAnnotations doc)
                                                             simple-concept-annotation
-                                                            :key-fn #(str id (:id %)))))
+                                                            :key-fn #(str id "-" (:id %)))))
                                      text-sources))
      :concept-graphs        (apply merge
                                    (map
@@ -106,7 +107,7 @@
                                          #(assoc % :doc id)
                                          (simple-collection (:graphSpaces doc)
                                                             simple-graph-space
-                                                            :key-fn #(str id (:id %)))))
+                                                            :key-fn #(str id "-" (:id %)))))
                                      text-sources))
      :structure-graphs      (apply merge
                                    (map
@@ -115,7 +116,7 @@
                                          #(assoc % :doc id)
                                          (simple-collection (:structureGraphSpaces doc)
                                                             simple-graph-space
-                                                            :key-fn #(str id (:id %)))))
+                                                            :key-fn #(str id "-" (:id %)))))
                                      text-sources))}))
 
 (defn selected-annotation

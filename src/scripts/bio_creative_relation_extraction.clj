@@ -1,13 +1,11 @@
 (ns scripts.bio-creative-relation-extraction
   (:require [clojure.java.io :as io]
             [edu.ucdenver.ccp.nlp.readers :as rdr]
-            [clojure.string :as s]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation])
-  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
-           (edu.ucdenver.ccp.knowtator.model.object GraphSpace TextSource ConceptAnnotation Span AnnotationNode Quantifier)))
+  (:import (edu.ucdenver.ccp.knowtator.model.object GraphSpace TextSource ConceptAnnotation Span AnnotationNode Quantifier)))
 
 (def home-dir
   (io/file "/" "media" "tuh8888" "Seagate Expansion Drive" "data"))
@@ -28,96 +26,47 @@
 
 (def relations-file (io/file training-dir "chemprot_training_relations.tsv"))
 (rdr/biocreative-read-relations (k/model annotations) relations-file)
-(.save (k/model annotations))
+
+
+(comment
+  (def abstracts-f (io/file training-dir "chemprot_training_abstracts.tsv"))
+  (rdr/biocreative-read-abstracts (k/model annotations) abstracts-f)
+
+  (def entities-f (io/file training-dir "chemprot_training_entities.tsv"))
+  (rdr/biocreative-read-entities (k/model annotations) entities-f)
+
+  (def relations-f (io/file training-dir "chemprot_training_relations.tsv"))
+  (rdr/biocreative-read-relations (k/model annotations) relations-f)
+  (.save (k/model annotations)))
 
 (comment
   ;; Read from conll files
-  (def references-dir (io/file training-dir "Articles"))
-  (def articles
-    (rdr/article-names-in-dir references-dir "txt"))
-
-  (def references (rdr/read-references articles references-dir))
-
-  (def dependency-dir (io/file training-dir "chemprot_training_sentences"))
-  (def dependency (rdr/read-dependency word2vec-db articles references dependency-dir :ext "conll" :tok-key :FORM))
-
-  (do
-    (doall
-      (map
-        (fn [[doc-id doc]]
-          (let [text-source ^TextSource (.get (.get (.getTextSources annotations) doc-id))]
-            (.removeModelListener annotations text-source)
-            (doall
-              (map
-                (fn [[sent-idx sent]]
-                  (let [graph-space (GraphSpace. text-source (str "Sentence " sent-idx))]
-                    (.add (.getStructureGraphSpaces text-source) graph-space)
-                    (let [nodes (mapv
-                                  (fn [tok]
-                                    (let [ann (ConceptAnnotation. text-source nil nil (.getDefaultProfile annotations) (:DEPREL tok) "")
-                                          span (Span. ann nil (:START tok) (:END tok))
-                                          ann-node (AnnotationNode. nil ann 20 20 graph-space)]
-                                      (.add ann span)
-                                      (.add (.getStructureAnnotations text-source) ann)
-                                      (.addCellToGraph graph-space ann-node)
-                                      [ann-node tok]))
-                                  sent)]
-                      (doall
-                        (map
-                          (fn [[source tok]]
-                            (let [target-idx (:HEAD tok)]
-                              (cond (<= 0 target-idx) (let [target (first (get nodes target-idx))
-                                                            property nil]
-                                                        (.addTriple graph-space source target nil (.getDefaultProfile annotations)
-                                                                    property Quantifier/some "", false, ""))
-                                    (not (= "ROOT" (:DEPREL tok))) (throw (Throwable. "Excluding root"))
-                                    :else nil)))
-                          nodes)))))
-                (group-by :SENT doc)))
-            (.addModelListener annotations text-source)))
-        dependency))
-    nil))
+  (rdr/biocreative-read-dependency annotations training-dir word2vec-db))
 
 (def model (k/simple-model annotations))
 
-(def structures-annotations-with-embeddings
-  (zipmap (keys (:structure-annotations model))
-          (word2vec/with-word2vec word2vec-db
-            (doall
-              (pmap sentence/assign-word-embedding
-                    (vals (:structure-annotations model)))))))
+(def structures-annotations-with-embeddings (word2vec/with-word2vec word2vec-db
+                                              (sentence/structures-annotations-with-embeddings model)))
 
-(def concepts-with-toks
-  (zipmap (keys (:concept-annotations model))
-          (pmap
-            #(let [tok-id (sentence/annotation-tok-id model %)
-                   sent-id (sentence/tok-sent-id model tok-id)]
-               (assoc % :tok tok-id
-                        :sent sent-id))
-            (vals (:concept-annotations model)))))
-
-(def reasoner (k/reasoner annotations))
-
-(def mem-descs
-  (memoize
-    (fn [c]
-      (log/info c)
-      (k/get-owl-descendants reasoner c))))
+(def concept-annotations-with-toks (sentence/concept-annotations-with-toks model))
 
 (def model (assoc model
-             :concept-annotations concepts-with-toks
+             :concept-annotations concept-annotations-with-toks
              :structure-annotations structures-annotations-with-embeddings))
 
 (def sentences (sentence/concept-annotations->sentences model))
 (log/info "Num sentences:" (count sentences))
 
-(def property)
+(def property "INHIBITOR")
 
 (def actual-true (set (map evaluation/edge->triple
                            (k/edges-for-property model property))))
 
 (def all-triples (set (map evaluation/sent->triple sentences)))
 
+(log/info "Num actual true:" (count actual-true))
+
+(first actual-true)
 
 
 (defn c-metrics
@@ -126,19 +75,35 @@
                       :actual-true    actual-true
                       :all            all-triples}))
 
-
 (comment
-  (def sentences (rdr/read-sentences annotations dependency articles)))
+  (def matches (let [seeds (clojure.set/union
+                             (evaluation/make-seeds sentences
+                               "CRAFT_aggregate_ontology_Instance_21437"
+                               "CRAFT_aggregate_ontology_Instance_22305")
+                             (evaluation/make-seeds sentences
+                               "CRAFT_aggregate_ontology_Instance_21365"
+                               "CRAFT_aggregate_ontology_Instance_22495"))
+                     seed-thresh 0.95
+                     context-thresh 0.95
+                     cluster-thresh 0.7
+                     min-support 10
+                     params {:seed             (first seeds)
+                             :seed-thresh      seed-thresh
+                             :context-thresh   context-thresh
+                             :seed-match-fn    #(and (re/concepts-match? %1 %2)
+                                                     (< seed-thresh (re/context-vector-cosine-sim %1 %2)))
+                             :context-match-fn #(< context-thresh (re/context-vector-cosine-sim %1 %2))
+                             :cluster-merge-fn re/add-to-pattern
+                             :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                  (and (< (or %3 cluster-thresh) score)
+                                                       score))
+                             :min-support      min-support}
+                     matches (->> (re/cluster-bootstrap-extract-relations seeds sentences params)
+                                  (map #(merge % params)))]
+                 (log/info "Metrics" (c-metrics matches))
+                 matches)))
 
-(comment
-  (def abstracts-f (io/file training-dir "chemprot_training_abstracts.tsv"))
-  (rdr/biocreative-read-abstracts annotations abstracts-f)
 
-  (def entities-f (io/file training-dir "chemprot_training_entities.tsv"))
-  (rdr/biocreative-read-entities annotations entities-f)
-
-  (def relations-f (io/file training-dir "chemprot_training_relations.tsv"))
-  (rdr/biocreative-read-relations annotations relations-f))
 
 
 

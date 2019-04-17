@@ -90,3 +90,20 @@
           (= id e))
         (:entities s)))
     sentences))
+
+(defn concept-annotations-with-toks
+  [model]
+  (zipmap (keys (:concept-annotations model))
+          (pmap
+            #(let [tok-id (annotation-tok-id model %)
+                   sent-id (tok-sent-id model tok-id)]
+               (assoc % :tok tok-id
+                        :sent sent-id))
+            (vals (:concept-annotations model)))))
+
+(defn structures-annotations-with-embeddings
+  [model]
+  (zipmap (keys (:structure-annotations model))
+          (doall
+            (pmap assign-word-embedding
+                  (vals (:structure-annotations model))))))
