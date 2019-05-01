@@ -3,6 +3,7 @@
             [edu.ucdenver.ccp.nlp.readers :as rdr]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
+            [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation])
   (:import (edu.ucdenver.ccp.knowtator.model.object GraphSpace TextSource ConceptAnnotation Span AnnotationNode Quantifier)))
@@ -78,9 +79,8 @@
 (comment
   (def matches (let [seeds (clojure.set/union
                              (evaluation/make-seeds sentences
-                               "CRAFT_aggregate_ontology_Instance_21437"
-                               "CRAFT_aggregate_ontology_Instance_22305")
-                             (evaluation/make-seeds sentences
+                               "17429625-T19" "17429625-T32")
+                             #_(evaluation/make-seeds sentences
                                "CRAFT_aggregate_ontology_Instance_21365"
                                "CRAFT_aggregate_ontology_Instance_22495"))
                      seed-thresh 0.95
