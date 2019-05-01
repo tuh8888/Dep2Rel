@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: Local edu.ucdenver.ccp/knowtator (knowtator-2.1.6.jar)">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/knowtator-2.1.6.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
