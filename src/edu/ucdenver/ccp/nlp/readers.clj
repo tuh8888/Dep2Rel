@@ -14,18 +14,20 @@
   (let [lines (->> (io/reader f)
                    (line-seq)
                    (map #(s/split % #"\t")))]
-    (map
-      (fn [[id title abstract]]
-        (let [article-f (io/file (.getArticlesLocation annotations) (str id ".txt"))]
-          (spit article-f (str title "\n" abstract))
-          (let [text-sources (.getTextSources annotations)
-                text-source (TextSource. annotations
-                                         (io/file (.getAnnotationsLocation annotations)
-                                                  (str id ".xml"))
-                                         (.getName article-f))]
-            (.add text-sources
-                  text-source))))
-      lines)))
+    (doall
+      (map
+       (fn [[id title abstract]]
+         (let [article-f (io/file (.getArticlesLocation annotations) (str id ".txt"))]
+           (spit article-f (str title "\n" abstract))
+           (let [text-sources (.getTextSources annotations)
+                 text-source (TextSource. annotations
+                                          (io/file (.getAnnotationsLocation annotations)
+                                                   (str id ".xml"))
+                                          (.getName article-f))]
+             (.add text-sources
+                   text-source))))
+       lines))
+    (log/info "Done")))
 
 (defn sentenize
   [^KnowtatorModel annotations]
@@ -46,14 +48,14 @@
                  graph-space (GraphSpace. text-source nil)
                  source (second (s/split source #":"))
 
-                 source (AnnotationNode. (str source "Node")
+                 source (AnnotationNode. (str "node_" source)
                                          (.get (.get (.getConceptAnnotations text-source)
                                                      source))
                                          0
                                          0
                                          graph-space)
                  target (second (s/split target #":"))
-                 target (AnnotationNode. (str target "Node")
+                 target (AnnotationNode. (str "node_" target)
                                          (.get (.get (.getConceptAnnotations text-source)
                                                      target))
                                          0
@@ -79,18 +81,23 @@
 
 (defn biocreative-read-entities
   [^KnowtatorModel annotations f]
-  (->> (io/reader f)
-       (line-seq)
-       (map #(s/split % #"\t"))
-       (map
-         (fn [[doc id concept start end _]]
-           (let [start (Integer/parseInt start)
-                 end (Integer/parseInt end)
-                 text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
-                 concept-annotation (ConceptAnnotation. text-source id nil (.getDefaultProfile annotations) concept nil)
-                 span (Span. concept-annotation nil start end)]
-             (.add ^ConceptAnnotation concept-annotation span)
-             (.add (.getConceptAnnotations text-source) concept-annotation))))))
+  (doall
+    (->> (io/reader f)
+        (line-seq)
+        (map #(s/split % #"\t"))
+        (map
+          (fn [[doc id concept start end _]]
+            (log/debug doc)
+            (let [start (Integer/parseInt start)
+                  end (Integer/parseInt end)
+                  text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
+                  concept-annotation (ConceptAnnotation. text-source id nil (.getDefaultProfile annotations) concept nil)
+                  span (Span. concept-annotation nil start end)]
+              (.removeModelListener annotations text-source)
+              (.add ^ConceptAnnotation concept-annotation span)
+              (.add (.getConceptAnnotations text-source) concept-annotation)
+              (.addModelListener annotations text-source))))))
+  (log/info "Done"))
 
 (defn article-names-in-dir
   [dir ext]

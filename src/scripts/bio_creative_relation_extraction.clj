@@ -8,7 +8,9 @@
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation])
   (:import (edu.ucdenver.ccp.knowtator.model.object GraphSpace TextSource ConceptAnnotation Span AnnotationNode Quantifier)))
 
-(def home-dir
+(def home-dir (io/file "/" "home" "harrison"))
+
+#_(def home-dir
   (io/file "/" "media" "tuh8888" "Seagate Expansion Drive" "data"))
 
 (def biocreative-dir
@@ -23,26 +25,24 @@
   (.getAbsolutePath
     (io/file word-vector-dir "bio-word-vectors-clj.vec")))
 
-(def annotations (k/view training-dir))
+(def annotations (k/model training-dir nil))
 
-(def relations-file (io/file training-dir "chemprot_training_relations.tsv"))
-(rdr/biocreative-read-relations (k/model annotations) relations-file)
+#_(def abstracts-f (io/file training-dir "chemprot_training_abstracts.tsv"))
+#_(rdr/biocreative-read-abstracts (k/model annotations) abstracts-f)
 
 
-(comment
-  (def abstracts-f (io/file training-dir "chemprot_training_abstracts.tsv"))
-  (rdr/biocreative-read-abstracts (k/model annotations) abstracts-f)
+#_(def entities-f (io/file training-dir "chemprot_training_entities.tsv"))
+#_(rdr/biocreative-read-entities (k/model annotations) entities-f)
 
-  (def entities-f (io/file training-dir "chemprot_training_entities.tsv"))
-  (rdr/biocreative-read-entities (k/model annotations) entities-f)
 
-  (def relations-f (io/file training-dir "chemprot_training_relations.tsv"))
-  (rdr/biocreative-read-relations (k/model annotations) relations-f)
-  (.save (k/model annotations)))
+#_(def relations-f (io/file training-dir "chemprot_training_relations.tsv"))
+#_(rdr/biocreative-read-relations (k/model annotations) relations-f)
+#_(.save (k/model annotations))
 
 (comment
   ;; Read from conll files
   (rdr/biocreative-read-dependency annotations training-dir word2vec-db))
+
 
 (def model (k/simple-model annotations))
 
