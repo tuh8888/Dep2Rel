@@ -149,8 +149,7 @@
 
 (defn biocreative-read-dependency
   [annotations dir word2vec-db]
-  (let [
-        references-dir (io/file dir "Articles")
+  (let [references-dir (io/file dir "Articles")
         articles
         (article-names-in-dir references-dir "txt")
 

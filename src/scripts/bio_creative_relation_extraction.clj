@@ -5,13 +5,12 @@
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
-            [edu.ucdenver.ccp.nlp.evaluation :as evaluation])
-  (:import (edu.ucdenver.ccp.knowtator.model.object GraphSpace TextSource ConceptAnnotation Span AnnotationNode Quantifier)))
+            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]))
 
 (def home-dir (io/file "/" "home" "harrison"))
 
 #_(def home-dir
-  (io/file "/" "media" "tuh8888" "Seagate Expansion Drive" "data"))
+  (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
 
 (def biocreative-dir
   (io/file home-dir "BioCreative" "BCVI-2017" "ChemProt_Corpus"))
@@ -54,7 +53,7 @@
 (def model (assoc model
              :concept-annotations concept-annotations-with-toks
              :structure-annotations structures-annotations-with-embeddings))
-
+(count (:structure-graphs model))
 (def sentences (sentence/concept-annotations->sentences model))
 (log/info "Num sentences:" (count sentences))
 
