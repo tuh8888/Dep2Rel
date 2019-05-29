@@ -66,11 +66,9 @@
 
 (defn simple-triple
   [triple]
-  (let [doc-id (-> triple :textSource (bean) :id)
-        source (->> triple :source (bean) :conceptAnnotation (bean) :id #_(str doc-id "-"))
-        target (->> triple :target (bean) :conceptAnnotation (bean) :id #_(str doc-id "-"))
-        value {:value (or (:property triple) (:propertyID triple) (:value triple))}]
-
+  (let [source (->> triple :source (bean) :conceptAnnotation (bean) :id)
+        target (->> triple :target (bean) :conceptAnnotation (bean) :id)
+        value {:value (or (:property triple) (:owlPropertyRendering triple) (:value triple))}]
     [source target value]))
 
 (defn simple-graph-space
@@ -99,8 +97,7 @@
                                        (util/map-kv
                                          #(assoc % :doc id)
                                          (simple-collection (:conceptAnnotations doc)
-                                                            simple-concept-annotation
-                                                            :key-fn #(str id "-" (:id %)))))
+                                                            simple-concept-annotation)))
                                      text-sources))
      :concept-graphs        (apply merge
                                    (map
@@ -108,8 +105,7 @@
                                        (util/map-kv
                                          #(assoc % :doc id)
                                          (simple-collection (:graphSpaces doc)
-                                                            simple-graph-space
-                                                            :key-fn #(str id "-" (:id %)))))
+                                                            simple-graph-space)))
                                      text-sources))
      :structure-graphs      (apply merge
                                    (map
@@ -117,8 +113,7 @@
                                        (util/map-kv
                                          #(assoc % :doc id)
                                          (simple-collection (:structureGraphSpaces doc)
-                                                            simple-graph-space
-                                                            :key-fn #(str id "-" (:id %)))))
+                                                            simple-graph-space)))
                                      text-sources))}))
 
 (defn selected-annotation

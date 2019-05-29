@@ -26,16 +26,14 @@
 
 (def annotations (k/model training-dir nil))
 
-#_(def abstracts-f (io/file training-dir "chemprot_training_abstracts.tsv"))
-#_(rdr/biocreative-read-abstracts (k/model annotations) abstracts-f)
+(def abstracts-f (io/file training-dir "chemprot_training_abstracts.tsv"))
+(rdr/biocreative-read-abstracts (k/model annotations) abstracts-f)
 
+(def entities-f (io/file training-dir "chemprot_training_entities.tsv"))
+(rdr/biocreative-read-entities (k/model annotations) entities-f)
 
-#_(def entities-f (io/file training-dir "chemprot_training_entities.tsv"))
-#_(rdr/biocreative-read-entities (k/model annotations) entities-f)
-
-
-#_(def relations-f (io/file training-dir "chemprot_training_relations.tsv"))
-#_(rdr/biocreative-read-relations (k/model annotations) relations-f)
+(def relations-f (io/file training-dir "chemprot_training_relations.tsv"))
+(rdr/biocreative-read-relations (k/model annotations) relations-f)
 #_(.save (k/model annotations))
 
 (comment
@@ -53,8 +51,7 @@
 (def model (assoc model1
              :concept-annotations concept-annotations-with-toks
              :structure-annotations structures-annotations-with-embeddings))
-(:node-map (first (vals (:structure-graphs model))))
-(first concept-annotations-with-toks)
+
 (def sentences (sentence/concept-annotations->sentences model))
 (log/info "Num sentences:" (count sentences))
 
@@ -63,13 +60,20 @@
 (def actual-true (set (map evaluation/edge->triple
                            (k/edges-for-property model property))))
 
+(ubergraph.core/find-edges (first (vals (:concept-graphs model))) {:value property})
 (def all-triples (set (map evaluation/sent->triple sentences)))
 
 (log/info "Num actual true:" (count actual-true))
 
 (first actual-true)
+(first sentences)
 
-
+(get-in model [:concept-annotations "17429625-T32"])
+(get-in model [:structure-annotations "17429625-1291885"])
+(map #(get-in model [:structure-annotations %]) (keys (:node-map (get-in model [:structure-graphs "17429625-Sentence 0"]))))
+(sentence/tok-sent-id model "17429625-1291885")
+(sentence/sentences-with-ann sentences "17429625-T32")
+(count (get (group-by :sent (vals (:concept-annotations model))) nil))
 (defn c-metrics
   [matches]
   (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
