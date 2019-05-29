@@ -43,17 +43,18 @@
   (rdr/biocreative-read-dependency annotations training-dir word2vec-db))
 
 
-(def model (k/simple-model annotations))
+(def model1 (k/simple-model annotations))
 
 (def structures-annotations-with-embeddings (word2vec/with-word2vec word2vec-db
-                                              (sentence/structures-annotations-with-embeddings model)))
+                                              (sentence/structures-annotations-with-embeddings model1)))
 
-(def concept-annotations-with-toks (sentence/concept-annotations-with-toks model))
+(def concept-annotations-with-toks (sentence/concept-annotations-with-toks model1))
 
-(def model (assoc model
+(def model (assoc model1
              :concept-annotations concept-annotations-with-toks
              :structure-annotations structures-annotations-with-embeddings))
-(count (:structure-graphs model))
+(:node-map (first (vals (:structure-graphs model))))
+(first concept-annotations-with-toks)
 (def sentences (sentence/concept-annotations->sentences model))
 (log/info "Num sentences:" (count sentences))
 

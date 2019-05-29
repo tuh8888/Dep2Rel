@@ -66,8 +66,8 @@
 (defn simple-triple
   [triple]
   (let [doc-id (-> triple :textSource (bean) :id)
-        source (->> triple :source (bean) :conceptAnnotation (bean) :id (str doc-id "-"))
-        target (->> triple :target (bean) :conceptAnnotation (bean) :id (str doc-id "-"))
+        source (->> triple :source (bean) :conceptAnnotation (bean) :id #_(str doc-id "-"))
+        target (->> triple :target (bean) :conceptAnnotation (bean) :id #_(str doc-id "-"))
         value {:value (or (:property triple) (:value triple))}]
     [source target value]))
 
