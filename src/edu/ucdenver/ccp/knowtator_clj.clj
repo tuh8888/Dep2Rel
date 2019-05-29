@@ -1,10 +1,12 @@
 (ns edu.ucdenver.ccp.knowtator-clj
-  (:require [ubergraph.core :as uber])
+  (:require [ubergraph.core :as uber]
+            [taoensso.timbre :as log])
   (:import (edu.ucdenver.ccp.knowtator.view KnowtatorView)
            (javax.swing JFrame)
            (org.semanticweb.HermiT ReasonerFactory)
            (org.semanticweb.owlapi.reasoner OWLReasoner)
-           (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))
+           (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
+           (edu.ucdenver.ccp.knowtator.model.object RelationAnnotation)))
 
 (defn display
   [v]
@@ -62,13 +64,13 @@
                 bean
                 :id)})
 
-
 (defn simple-triple
   [triple]
   (let [doc-id (-> triple :textSource (bean) :id)
         source (->> triple :source (bean) :conceptAnnotation (bean) :id #_(str doc-id "-"))
         target (->> triple :target (bean) :conceptAnnotation (bean) :id #_(str doc-id "-"))
-        value {:value (or (:property triple) (:value triple))}]
+        value {:value (or (:property triple) (:propertyID triple) (:value triple))}]
+
     [source target value]))
 
 (defn simple-graph-space

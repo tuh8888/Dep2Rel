@@ -81,7 +81,7 @@
                                (first))]
                #_(.setValue ^RelationAnnotation triple
                           property)
-               (log/info (.getValue triple)))
+               (log/info (.getValue triple) (.getNumberOfGraphSpaces text-source)))
              (.addModelListener annotations text-source))))))
 
 (defn biocreative-read-entities
