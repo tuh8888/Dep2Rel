@@ -7,7 +7,7 @@
             [taoensso.timbre :as log])
   (:import (java.io File)
            (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
-           (edu.ucdenver.ccp.knowtator.model.object TextSource ConceptAnnotation Span GraphSpace AnnotationNode Quantifier RelationAnnotation)))
+           (edu.ucdenver.ccp.knowtator.model.object TextSource ConceptAnnotation Span GraphSpace AnnotationNode Quantifier)))
 
 (defn biocreative-read-abstracts
   [^KnowtatorModel annotations f]
@@ -43,7 +43,6 @@
        (map #(s/split % #"\t"))
        (map
          (fn [[doc id _ property source target]]
-           (log/info id)
            (let [text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
                  graph-space (GraphSpace. text-source nil)
                  source (second (s/split source #":"))
@@ -71,12 +70,18 @@
                          id
                          (.getDefaultProfile annotations)
                          nil
+                         property
                          (Quantifier/some)
                          ""
                          false
                          "")
-             (.setValue ^RelationAnnotation (first (filter #(= (.getId %) id) (.getRelationAnnotations graph-space)))
-                        property)
+             (let [triple (->> graph-space
+                               (.getRelationAnnotations)
+                               (filter #(= (.getId %) id))
+                               (first))]
+               #_(.setValue ^RelationAnnotation triple
+                          property)
+               (log/info (.getValue triple)))
              (.addModelListener annotations text-source))))))
 
 (defn biocreative-read-entities
@@ -186,7 +191,7 @@
                                 (cond (<= 0 target-idx) (let [target (first (get nodes target-idx))
                                                               property nil]
                                                           (.addTriple graph-space source target nil (.getDefaultProfile annotations)
-                                                                      property Quantifier/some "", false, ""))
+                                                                      property property Quantifier/some "", false, ""))
                                       (not (= "ROOT" (:DEPREL tok))) (throw (Throwable. "Excluding root"))
                                       :else nil)))
                             nodes)))))
