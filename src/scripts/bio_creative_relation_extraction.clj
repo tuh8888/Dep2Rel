@@ -42,7 +42,7 @@
 
 
 (def model1 (k/simple-model annotations))
-
+(count (get model1 :structure-annotations))
 (def structures-annotations-with-embeddings (word2vec/with-word2vec word2vec-db
                                               (sentence/structures-annotations-with-embeddings model1)))
 
