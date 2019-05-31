@@ -75,6 +75,7 @@
                          ""
                          false
                          "")
+             (log/info property)
              (.addModelListener annotations text-source))))))
 
 (defn biocreative-read-entities

@@ -43,6 +43,9 @@
 
 (def model1 (k/simple-model annotations))
 (count (get model1 :structure-annotations))
+
+;; seems that if rdr/biocreative-read-relations isn't loaded properly, no concept graphs will be loaded.
+(count (get model1 :concept-graphs))
 (def structures-annotations-with-embeddings (word2vec/with-word2vec word2vec-db
                                               (sentence/structures-annotations-with-embeddings model1)))
 
@@ -87,7 +90,7 @@
                              #_(evaluation/make-seeds sentences
                                "CRAFT_aggregate_ontology_Instance_21365"
                                "CRAFT_aggregate_ontology_Instance_22495"))
-                     seed-thresh 0.95
+                     seed-thresh 0.9
                      context-thresh 0.95
                      cluster-thresh 0.7
                      min-support 10
