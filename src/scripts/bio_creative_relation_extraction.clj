@@ -63,7 +63,7 @@
                      actual-true (set (->> property
                                            (k/edges-for-property model)
                                            (map evaluation/edge->triple)
-                                           (filtepr (fn [t] (some #(= t (:entities %)) sentences)))))
+                                           (filter (fn [t] (some #(= t (:entities %)) sentences)))))
                      all-triples (set (map evaluation/sent->triple sentences))
 
                      seeds (clojure.set/union
