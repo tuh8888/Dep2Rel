@@ -10,7 +10,7 @@
 (def home-dir (io/file "/" "home" "harrison"))
 
 #_(def home-dir
-  (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
+    (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
 
 (def biocreative-dir
   (io/file home-dir "BioCreative" "BCVI-2017" "ChemProt_Corpus"))
@@ -42,10 +42,7 @@
 
 
 (def model1 (k/simple-model annotations))
-(count (get model1 :structure-annotations))
 
-;; seems that if rdr/biocreative-read-relations isn't loaded properly, no concept graphs will be loaded.
-(count (get model1 :concept-graphs))
 (def structures-annotations-with-embeddings (word2vec/with-word2vec word2vec-db
                                               (sentence/structures-annotations-with-embeddings model1)))
 
@@ -58,42 +55,24 @@
 (def sentences (sentence/concept-annotations->sentences model))
 (log/info "Num sentences:" (count sentences))
 
-(def property "INHIBITOR")
-
-(def actual-true (set (map evaluation/edge->triple
-                           (k/edges-for-property model property))))
-
-(ubergraph.core/find-edges (first (vals (:concept-graphs model))) {:value property})
-(def all-triples (set (map evaluation/sent->triple sentences)))
-
-(log/info "Num actual true:" (count actual-true))
-
-(first actual-true)
-(first sentences)
-
-(get-in model [:concept-annotations "17429625-T32"])
-(get-in model [:structure-annotations "17429625-1291885"])
-(map #(get-in model [:structure-annotations %]) (keys (:node-map (get-in model [:structure-graphs "17429625-Sentence 0"]))))
-(sentence/tok-sent-id model "17429625-1291885")
-(sentence/sentences-with-ann sentences "17429625-T32")
-(count (get (group-by :sent (vals (:concept-annotations model))) nil))
-(defn c-metrics
-  [matches]
-  (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
-                      :actual-true    actual-true
-                      :all            all-triples}))
 
 (comment
-  (def matches (let [seeds (clojure.set/union
-                             (evaluation/make-seeds sentences
-                               "17429625-T19" "17429625-T32")
-                             #_(evaluation/make-seeds sentences
-                               "CRAFT_aggregate_ontology_Instance_21365"
-                               "CRAFT_aggregate_ontology_Instance_22495"))
-                     seed-thresh 0.9
-                     context-thresh 0.95
-                     cluster-thresh 0.7
-                     min-support 10
+  (def matches (let [property "INHIBITOR"
+
+                     sentences (filter #(<= (count (:context %)) 2) sentences)
+                     actual-true (set (->> property
+                                           (k/edges-for-property model)
+                                           (map evaluation/edge->triple)
+                                           (filtepr (fn [t] (some #(= t (:entities %)) sentences)))))
+                     all-triples (set (map evaluation/sent->triple sentences))
+
+                     seeds (clojure.set/union
+                             (apply evaluation/make-seeds sentences (first actual-true))
+                             (apply evaluation/make-seeds sentences (second actual-true)))
+                     seed-thresh 0.85
+                     context-thresh 0.85
+                     cluster-thresh 0.75
+                     min-support 2
                      params {:seed             (first seeds)
                              :seed-thresh      seed-thresh
                              :context-thresh   context-thresh
@@ -107,7 +86,9 @@
                              :min-support      min-support}
                      matches (->> (re/cluster-bootstrap-extract-relations seeds sentences params)
                                   (map #(merge % params)))]
-                 (log/info "Metrics" (c-metrics matches))
+                 (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
+                                                          :actual-true    actual-true
+                                                          :all            all-triples}))
                  matches)))
 
 
