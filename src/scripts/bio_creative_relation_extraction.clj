@@ -59,7 +59,7 @@
 (comment
   (def matches (let [property "INHIBITOR"
 
-                     sentences (filter #(<= (count (:context %)) 2) sentences)
+                     ;sentences (filter #(<= (count (:context %)) 2) sentences)
                      actual-true (set (->> property
                                            (k/edges-for-property model)
                                            (map evaluation/edge->triple)
@@ -70,9 +70,9 @@
                              (apply evaluation/make-seeds sentences (first actual-true))
                              (apply evaluation/make-seeds sentences (second actual-true)))
                      seed-thresh 0.85
-                     context-thresh 0.85
-                     cluster-thresh 0.75
-                     min-support 2
+                     context-thresh 0.9
+                     cluster-thresh 0.95
+                     min-support 1
                      params {:seed             (first seeds)
                              :seed-thresh      seed-thresh
                              :context-thresh   context-thresh
