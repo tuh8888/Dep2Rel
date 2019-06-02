@@ -6,9 +6,10 @@
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
-            [incanter.stats :as stats]
-            [incanter.core :as incanter]
-            [incanter.charts :as charts]))
+    ;[incanter.stats :as stats]
+    ;[incanter.core :as incanter]
+    ;[incanter.charts :as charts]
+            ))
 
 (def home-dir (io/file "/" "home" "harrison"))
 
@@ -29,14 +30,14 @@
 
 (def annotations (k/model training-dir nil))
 
-(def abstracts-f (io/file training-dir "chemprot_training_abstracts.tsv"))
-(rdr/biocreative-read-abstracts (k/model annotations) abstracts-f)
-
-(def entities-f (io/file training-dir "chemprot_training_entities.tsv"))
-(rdr/biocreative-read-entities (k/model annotations) entities-f)
-
-(def relations-f (io/file training-dir "chemprot_training_relations.tsv"))
-(rdr/biocreative-read-relations (k/model annotations) relations-f)
+;(def abstracts-f (io/file training-dir "chemprot_training_abstracts.tsv"))
+;(rdr/biocreative-read-abstracts (k/model annotations) abstracts-f)
+;
+;(def entities-f (io/file training-dir "chemprot_training_entities.tsv"))
+;(rdr/biocreative-read-entities (k/model annotations) entities-f)
+;
+;(def relations-f (io/file training-dir "chemprot_training_relations.tsv"))
+;(rdr/biocreative-read-relations (k/model annotations) relations-f)
 #_(.save (k/model annotations))
 
 (comment
@@ -59,13 +60,15 @@
 (log/info "Num sentences:" (count sentences))
 
 
-(let [x (range -3 3 0.1)]
-  (incanter/view (charts/dynamic-scatter-plot [cluster-similarity-score-threshold (range 0 1 0.01)]
-                                              [x (cluster-tools/single-pass-cluster sentences #{}
-                                                                                    {:cluster-merge-fn re/add-to-pattern
-                                                                                     :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                                                                          (and (< (or %3 cluster-similarity-score-threshold) score)
-                                                                                                               score))})])))
+#_(let [x (range -3 3 0.1)]
+    (incanter/view
+      (charts/dynamic-scatter-plot
+        [cluster-similarity-score-threshold (range 0 1 0.01)]
+        [x (cluster-tools/single-pass-cluster sentences #{}
+                                              {:cluster-merge-fn re/add-to-pattern
+                                               :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                                    (and (< (or %3 cluster-similarity-score-threshold) score)
+                                                                         score))})])))
 
 (comment
   (def matches (let [property "INHIBITOR"
