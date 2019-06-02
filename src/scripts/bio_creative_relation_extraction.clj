@@ -5,7 +5,10 @@
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
-            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]))
+            [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
+            [incanter.stats :as stats]
+            [incanter.core :as incanter]
+            [incanter.charts :as charts]))
 
 (def home-dir (io/file "/" "home" "harrison"))
 
@@ -55,6 +58,14 @@
 (def sentences (sentence/concept-annotations->sentences model))
 (log/info "Num sentences:" (count sentences))
 
+
+(let [x (range -3 3 0.1)]
+  (incanter/view (charts/dynamic-scatter-plot [cluster-similarity-score-threshold (range 0 1 0.01)]
+                                              [x (cluster-tools/single-pass-cluster sentences #{}
+                                                                                    {:cluster-merge-fn re/add-to-pattern
+                                                                                     :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                                                                          (and (< (or %3 cluster-similarity-score-threshold) score)
+                                                                                                               score))})])))
 
 (comment
   (def matches (let [property "INHIBITOR"
