@@ -36,6 +36,6 @@
                              [:patterns :filtering]
                              [:sentences :filtering]
                              [:filtering :matches]
-                             [:matches :seeds]))
+                             [:matches :seeds {:label :bootstrapping :color :red}]))
 
 (uber/viz-graph algorithm {:save {:filename "resources/algorithm.png" :format :png}})
