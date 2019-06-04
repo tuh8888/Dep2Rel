@@ -31,10 +31,11 @@
 
 (defn sentenize
   [^KnowtatorModel annotations]
-  (into {}
-        (map
-          #(vector (.getId %) (corenlp/sentenize (.getContent %)))
-          (.getTextSources annotations))))
+  (let [text-sources (.getTextSources annotations)]
+    (zipmap (map #(.getId %) text-sources)
+            (->> text-sources
+                 (map #(.getContent %))
+                 (map #(corenlp/sentenize %))))))
 
 (defn biocreative-read-relations
   [^KnowtatorModel annotations f]

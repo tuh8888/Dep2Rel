@@ -135,9 +135,7 @@
       (set)))
 
 (defn edges-for-property
-  [model property]
-  (->> model
-       :concept-graphs
-       vals
+  [graphs property]
+  (->> graphs
        (mapcat #(ubergraph.core/find-edges % {:value property}))
        (keep identity)))

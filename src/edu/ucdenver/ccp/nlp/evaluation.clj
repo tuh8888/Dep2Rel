@@ -1,8 +1,8 @@
 (ns edu.ucdenver.ccp.nlp.evaluation
   (:require [cluster-tools]
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
-            [edu.ucdenver.ccp.nlp.sentence :as sentence])
-  (:import (org.semanticweb.owlapi.model HasIRI)))
+            [edu.ucdenver.ccp.nlp.sentence :as sentence]
+            [edu.ucdenver.ccp.knowtator-clj :as k]))
 
 (defn count-seed-matches
   [matches]
@@ -17,26 +17,22 @@
 
 (defn pprint-sent
   [model sent]
-  (let [structure-annotations (->> model
-                                   vals
-                                   (mapcat :structure-annotations)
-                                   (into {}))]
-    (->> sent
-         (map #(get structure-annotations %))
-         (map (comp first vals :spans))
-         (sort-by :start)
-         (map :text)
-         (interpose " ")
-         (apply str))))
+
+  (->> sent
+       (map #(get-in model [:structure-annotations %]))
+       (map (comp first vals :spans))
+       (sort-by :start)
+       (map :text)
+       (interpose " ")
+       (apply str)))
 
 (defn format-matches
   [model matches]
   (map (fn [match]
-         (let [[e1 _ :as entities] (:entities match)
+         (let [[e1 _ :as entities] (map #(get-in model [:concept-annotations %]) (:entities match))
 
                doc (:doc e1)
-               sent (->> (:sent e1)
-                         :node-map
+               sent (->> (get-in model [:structure-graphs (:sent e1) :node-map])
                          keys
                          (pprint-sent model))
                context (->> match
@@ -45,11 +41,14 @@
                [e1-concept e2-concept] (->> entities
                                             (sort-by :concept)
                                             (map :concept)
-                                            (map #(.getShortForm (.getIRI ^HasIRI %))))
-               [e1-tok e2-tok] (map (comp :text first vals :spans :tok) entities)
-               seed (->> (get-in match [:seed :entities])
-                         (map :concept)
-                         (map #(.getShortForm (.getIRI ^HasIRI %)))
+                                            (map str))
+               [e1-tok e2-tok] (->> entities
+                                    (map :tok)
+                                    (map #(get-in model [:structure-annotations %]))
+                                    (map (comp :text first vals :spans)))
+               seed (->> (get match :seed)
+                         :concepts
+                         (mapcat identity)
                          (interpose ", "))]
            {:doc        doc
             :context    context
@@ -100,6 +99,34 @@
 (defn predicted-true
   [matches]
   (set (map sent->triple matches)))
+
+(defn actual-true
+  [model property]
+  (->> property
+       (k/edges-for-property (vals (:concept-graphs model)))
+       (map edge->triple)
+       (set)))
+
+(defn all-triples
+  [model]
+  (->> model
+       :sentences
+       (map sent->triple)
+       (set)))
+
+(defn potential-seeds
+  [sentences actual-true]
+  (filter (fn [t] (some #(= t (:entities %)) sentences)) actual-true))
+
+(defn make-all-seeds
+  [model property sentences]
+  (->> (actual-true model property)
+       (potential-seeds sentences)
+       (mapcat #(apply make-seeds sentences %))))
+
+(defn context-filt
+  [dep-filt coll]
+  (filter #(<= (count (:context %)) dep-filt) coll))
 
 ;
 ;(defn parameter-walk
