@@ -85,35 +85,31 @@
 
 
 
-(defn cluster-extract-relations-persistent-patterns
-  [seeds sentences patterns & [{:keys [context-match-fn pattern-update-fn] :as params}]]
-  (let [patterns (-> seeds
-                     (cluster-tools/single-pass-cluster patterns params)
-                     (pattern-update-fn)
-                     (set))
-        matches (-> sentences
-                    (util/find-matches patterns context-match-fn)
-                    (set))]
-    (t/debug "Patterns" (count patterns))
-    (t/debug "Matches" (count matches))
-    [matches patterns]))
+(defn cluster-patterns
+  [seeds samples patterns & [{:keys [pattern-update-fn] :as params}]]
+  (-> samples
+      (cluster-tools/single-pass-cluster patterns params)
+      (pattern-update-fn seeds)
+      (set)))
 
 (defn bootstrap-persistent-patterns
-  [seeds sentences update-fn]
+  [seeds sentences pattern-fn & [{:keys [context-match-fn]}]]
   (log/info "Seeds" (count seeds))
   (loop [matches #{}
-         new-matches (set seeds)
+         samples (set seeds)
          sentences sentences
          patterns #{}]
-    (let [[new-matches patterns] (update-fn new-matches sentences patterns)]
+    (t/debug "Patterns" (count patterns))
+    (t/debug "Matches" (count matches))
+    (let [patterns (pattern-fn samples patterns)
+          new-matches (util/find-matches sentences patterns context-match-fn)]
       (if (empty? new-matches)
         [matches patterns]
-        (recur (into matches new-matches) new-matches (remove new-matches sentences) patterns)))))
+        (recur (into matches new-matches) new-matches (remove (set new-matches) sentences) patterns)))))
 
 (defn cluster-bootstrap-extract-relations-persistent-patterns
   [seeds sentences & [params]]
-  (let [update-fn #(cluster-extract-relations-persistent-patterns %1 %2 %3 params)]
-        (bootstrap-persistent-patterns seeds sentences update-fn)))
+  (bootstrap-persistent-patterns seeds sentences #(cluster-patterns seeds %1 %2 params) params))
 
 #_(defn naive-bootstrap-extract-relations
     [seeds sentences & [params]]
