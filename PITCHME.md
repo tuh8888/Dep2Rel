@@ -6,7 +6,7 @@
 
 **Institution:** University of Colorado, Anschutz Medical Campus
 
----?color=#E58537
+---
 @title[Background]
 
 @snap[north span-100]
@@ -14,7 +14,7 @@
 @snapend
 
 @snap[west span-50]
-@ul[spaced text-white](false)
+@ul[spaced](false)
 - Relation extraction lets us go beyond just using mentions in text
 - Previous approaches
   - Regular expressions and patterns
