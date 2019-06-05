@@ -14,7 +14,7 @@
        (map :concepts)
        (some #(= concepts %))))
 
-(defn init-bootstrap
+#_(defn init-bootstrap
   [re-fn model & [{:keys [seed-fn] :as params}]]
   (let [seeds (seed-fn model)
         model (update model :sentences #(remove seeds %))
@@ -56,7 +56,7 @@
   different concepts."
   [seeds sentences & [{:keys [seed-match-fn context-match-fn]}]]
   (let [seed-matches (util/find-matches sentences seeds seed-match-fn)]
-    (t/info "Seeds:" (count seed-matches))
+    (t/debug "Seeds:" (count seed-matches))
     (into seeds (util/find-matches sentences seed-matches context-match-fn))))
 
 (defn cluster-extract-relations
@@ -64,8 +64,8 @@
   (let [patterns (-> seeds
                      (cluster-tools/single-pass-cluster #{} params)
                      (pattern-update-fn))]
-    (t/info "Seeds" (count seeds))
-    (t/info "Patterns" (count patterns))
+    (t/debug "Seeds" (count seeds))
+    (t/debug "Patterns" (count patterns))
     (into seeds (util/find-matches sentences patterns context-match-fn))))
 
 (defn bootstrap
@@ -74,7 +74,7 @@
          sentences sentences]
     (let [new-matches (set (update-fn matches sentences))
           num-new-matches (count (clojure.set/difference new-matches matches))]
-      (t/info "New matches" num-new-matches)
+      (t/debug "New matches" num-new-matches)
       (if (= num-new-matches 0)
         matches
         (recur new-matches (remove new-matches sentences))))))
@@ -94,8 +94,8 @@
         matches (-> sentences
                     (util/find-matches patterns context-match-fn)
                     (set))]
-    (t/info "Patterns" (count patterns))
-    (t/info "Matches" (count matches))
+    (t/debug "Patterns" (count patterns))
+    (t/debug "Matches" (count matches))
     [matches patterns]))
 
 (defn bootstrap-persistent-patterns
