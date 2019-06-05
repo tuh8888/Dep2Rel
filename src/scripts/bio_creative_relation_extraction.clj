@@ -84,25 +84,38 @@
 
 ;;; RELATION EXTRACTION
 
-(def matches (let [num-seeds 100
+(defn sent-pattern-concepts-match?
+  [{:keys [concepts]} {:keys [support]}]
+  (->> support
+       (map :concepts)
+       (some #(= concepts %))))
+
+(def matches (let [num-seeds (-> (evaluation/actual-true model property)
+                                 (count)
+                                 (* 0.01))
                    sentences (evaluation/context-filt dep-filt (:sentences model))
-                   seeds (take num-seeds (evaluation/make-all-seeds model property sentences))
+                   seeds (set (take num-seeds (evaluation/make-all-seeds model property sentences)))
+                   model (assoc model :sentences (remove seeds sentences))
                    ;seed-thresh 0.85
-                   context-thresh 0.9
-                   cluster-thresh 0.75
-                   min-support 10
+                   context-thresh 0.95
+                   cluster-thresh 0.95
+                   min-support 1
                    params {:seed             (first seeds)
                            ;:seed-thresh      seed-thresh
                            :context-thresh   context-thresh
                            ;:seed-match-fn    #(and (re/concepts-match? %1 %2)
                            ;                        (< seed-thresh (re/context-vector-cosine-sim %1 %2)))
-                           :context-match-fn #(< context-thresh (re/context-vector-cosine-sim %1 %2))
+                           #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
+                           :context-match-fn (fn [s p]
+                                               (and (sent-pattern-concepts-match? s p)
+                                                    (< context-thresh (re/context-vector-cosine-sim s p))))
                            :cluster-merge-fn re/add-to-pattern
                            :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
                                                 (and (< (or %3 cluster-thresh) score)
                                                      score))
                            :min-support      min-support}
-                   matches (->> (re/cluster-bootstrap-extract-relations seeds sentences params)
+                   matches (->> (re/cluster-bootstrap-extract-relations seeds (:sentences model) params)
+                                (remove seeds)
                                 (map #(merge % params)))]
                (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
                                                         :actual-true    (evaluation/actual-true model property)
