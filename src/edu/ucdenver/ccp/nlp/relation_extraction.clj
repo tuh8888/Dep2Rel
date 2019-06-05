@@ -86,10 +86,11 @@
 
 
 (defn init-bootstrap-persistent-patterns
-  [re-fn model & [{:keys [seed-fn] :as params}]]
-  (let [seeds (seed-fn model)
+  [re-fn model & [{:keys [sentence-filter-fn seed-fn] :as params}]]
+  (let [sentences (sentence-filter-fn (:sentences model))
+        seeds (seed-fn model sentences)
         model (update model :sentences #(remove seeds %))
-        [matches patterns] (re-fn seeds (:sentences model) params)
+        [matches patterns] (re-fn seeds sentences params)
         matches (->> matches
                      (remove seeds)
                      (map #(merge % params)))]

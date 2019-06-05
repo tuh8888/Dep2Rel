@@ -5,9 +5,9 @@
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
-            [incanter.stats :as stats]
-            [incanter.core :as incanter]
-            [incanter.charts :as charts]))
+            #_[incanter.stats :as stats]
+            #_[incanter.core :as incanter]
+            #_[incanter.charts :as charts]))
 
 (def home-dir (io/file "/" "home" "harrison"))
 #_(def home-dir (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
@@ -50,9 +50,9 @@
 
              (assoc model :sentences sentences)))
 
-(get-in model [:structure-annotations (sentence/annotation-tok-id model (get (:concept-annotations model) "23402364-T37"))])
-(get-in model [:structure-annotations "23402364-859768"])
-(map #(:text (first (vals (get-in model [:structure-annotations % :spans])))) (keys (get-in model [:structure-graphs "23402364-Sentence 1" :node-map])))
+#_(get-in model [:structure-annotations (sentence/annotation-tok-id model (get (:concept-annotations model) "23402364-T37"))])
+#_(get-in model [:structure-annotations "23402364-859768"])
+#_(map #(:text (first (vals (get-in model [:structure-annotations % :spans])))) (keys (get-in model [:structure-graphs "23402364-Sentence 1" :node-map])))
 (log/info "Num sentences:" (count (:sentences model)))
 
 (def property "INHIBITOR")
@@ -100,14 +100,14 @@
 
 ;;; RELATION EXTRACTION
 
-(def matches (let [context-path-length-cap 10
+#_(def matches (let [context-path-length-cap 10
                    sentences (->> model
                                   :sentences
                                   #_(evaluation/context-path-filter context-path-length-cap))
                    seed-frac 0.2
-                   context-thresh 0.9
-                   cluster-thresh 0.75
-                   min-support 10
+                   context-thresh 0.95
+                   cluster-thresh 0.95
+                   min-support 1
                    params {:seed-fn           #(evaluation/frac-seeds % sentences property seed-frac)
                            #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
                            :context-match-fn  (fn [s p]
@@ -125,4 +125,8 @@
                                                         :all            (evaluation/all-triples model)}))
                matches))
 
-(evaluation/format-matches model matches)
+#_(evaluation/format-matches model matches)
+
+#_(evaluation/parameter-walk property model)
+(def parameter-walk (evaluation/parameter-walk property model))
+(spit (io/file training-dir "results" "results.edn") parameter-walk)

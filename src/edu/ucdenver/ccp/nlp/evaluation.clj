@@ -2,7 +2,9 @@
   (:require [cluster-tools]
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
-            [edu.ucdenver.ccp.knowtator-clj :as k]))
+            [edu.ucdenver.ccp.knowtator-clj :as k]
+            [taoensso.timbre :as log]
+            [com.climate.claypoole :as cp]))
 
 (defn count-seed-matches
   [matches]
@@ -135,49 +137,60 @@
                       (* frac))]
     (set (take num-seeds (make-all-seeds model property sentences)))))
 
-;
-;(defn parameter-walk
-;  [seeds sentences & [{:keys [seed-thresh-min seed-thresh-max seed-thresh-step
-;                                                   cluster-thresh-min cluster-thresh-max cluster-thresh-step
-;                                                   context-thresh-min context-thresh-max context-thresh-step
-;                                                   min-support-min min-support-max min-support-step]
-;                                            :or   {seed-thresh-min     0.5
-;                                                   seed-thresh-max     0.99
-;                                                   seed-thresh-step    0.1
-;
-;                                                   cluster-thresh-min  0.5
-;                                                   cluster-thresh-max  0.99
-;                                                   cluster-thresh-step 0.1
-;
-;                                                   context-thresh-min  0.5
-;                                                   context-thresh-max  0.99
-;                                                   context-thresh-step 0.1
-;
-;                                                   min-support-min     0.01
-;                                                   min-support-max     0.05
-;                                                   min-support-step    0.01}}]]
-;  (mapcat
-;    (fn [seed-thresh]
-;      (mapcat
-;        (fn [context-thresh]
-;          (mapcat
-;            (fn [cluster-thresh]
-;              (mapcat
-;                (fn [min-support]
-;                  (let [params {:seed             (first seeds)
-;                                :seed-thresh      seed-thresh
-;                                :context-thresh   context-thresh
-;                                :seed-match-fn    #(and (concepts-match? %1 %2)
-;                                                        (< seed-thresh (context-vector-cosine-sim %1 %2)))
-;                                :context-match-fn #(< context-thresh (context-vector-cosine-sim %1 %2))
-;                                :cluster-merge-fn add-to-pattern
-;                                :cluster-match-fn #(let [score (context-vector-cosine-sim %1 %2)]
-;                                                     (and (< (or %3 cluster-thresh) score)
-;                                                          score))
-;                                :min-support      min-support}]
-;                    (->> (cluster-bootstrap-extract-relations seeds sentences params)
-;                         (map #(merge % params)))))
-;                (range min-support-min min-support-max min-support-step)))
-;            (range cluster-thresh-min cluster-thresh-max cluster-thresh-step)))
-;        (range context-thresh-min context-thresh-max context-thresh-step)))
-;    (range seed-thresh-min seed-thresh-max seed-thresh-step)))
+
+(defn parameter-walk
+  [property model & [{:keys [cluster-thresh-min cluster-thresh-max cluster-thresh-step
+                             context-thresh-min context-thresh-max context-thresh-step
+                             min-support-min min-support-max min-support-step
+                             context-path-length-cap-min context-path-length-cap-max context-path-length-cap-step
+                             seed-frac-min seed-frac-max seed-frac-step]
+                      :or   {cluster-thresh-min           0.5
+                             cluster-thresh-max           0.95
+                             cluster-thresh-step          0.1
+
+                             context-thresh-min           0.85
+                             context-thresh-max           0.99
+                             context-thresh-step          0.02
+
+                             min-support-min              1
+                             min-support-max              30
+                             min-support-step             5
+
+                             context-path-length-cap-min  2
+                             context-path-length-cap-max  35
+                             context-path-length-cap-step 5
+
+                             seed-frac-min                0.05
+                             seed-frac-max                0.85
+                             seed-frac-step               0.2}}]]
+  (for [context-path-length-cap [35] #_[2 3 4 5 10 20 35] #_(range context-path-length-cap-min context-path-length-cap-max context-path-length-cap-step) context-thresh [0.75 0.85 0.9 0.925 0.95 0.975] #_(range context-thresh-min context-thresh-max context-thresh-step)
+        context-thresh [0.95] #_ [0.975 0.95 0.925 0.9 0.85]
+        cluster-thresh [0.95] #_[0.95 0.9 0.8 0.7 0.6 0.5] #_(range cluster-thresh-min cluster-thresh-max cluster-thresh-step)
+        min-support [1] #_[1 3 5 10 20 30] #_(range min-support-min min-support-max min-support-step)
+        seed-frac [0.05] #_[0.05 0.25 0.45 0.65 0.75] #_(range seed-frac-min seed-frac-max seed-frac-step)]
+    (let [params {:sentence-filter-fn #(context-path-filter context-path-length-cap %)
+                  :seed-fn            #(frac-seeds %1 %2 property seed-frac)
+                  #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
+                  :context-match-fn   (fn [s p]
+                                        (and (re/sent-pattern-concepts-match? s p)
+                                             (< context-thresh (re/context-vector-cosine-sim s p))))
+                  :cluster-merge-fn   re/add-to-pattern
+                  :cluster-match-fn   #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                         (and (< (or %3 cluster-thresh) score)
+                                              score))
+                  :pattern-filter-fn  #(filter (fn [p] (<= min-support (count (:support p)))) %)
+                  :pattern-update-fn  #(filter (fn [p] (<= min-support (count (:support p)))) %)}
+          [model matches patterns] (re/init-bootstrap-persistent-patterns re/cluster-bootstrap-extract-relations-persistent-patterns model params)
+          metrics (-> (try
+                        (math/calc-metrics {:predicted-true (predicted-true matches)
+                                            :actual-true    (actual-true model property)
+                                            :all            (all-triples model)})
+
+                        (catch ArithmeticException _ {}))
+                      (assoc :context-path-length-cap context-path-length-cap
+                             :context-thresh context-thresh
+                             :cluster-thresh cluster-thresh
+                             :min-support min-support
+                             :seed-frac seed-frac))]
+      (log/info "Metrics:" metrics)
+      metrics)))
