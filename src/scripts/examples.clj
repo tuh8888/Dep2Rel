@@ -25,8 +25,9 @@
                        [(get x 2) (get x 17) {:label :punct}])))
 
 (uber/viz-graph g {:bgcolor :transparent
-                   :save {:filename "resources/dep_example.svg"
-                          :format :svg}})
+                   :scale 4
+                   :save {:filename "resources/dep_example.jpg"
+                          :format :jpg}})
 
 (def output-color :blue)
 (def input-color :green)
