@@ -9,12 +9,12 @@
 ---
 @title[Background]
 
-@snap[north span-100]
+@snap[north-west span-100]
 ## Background
 @snapend
 
 @snap[west span-50]
-@ul[spaced](false)
+@ul[](false)
 - Relation extraction lets us go beyond just using mentions in text
 - Previous approaches
   - Regular expressions and patterns
@@ -43,7 +43,7 @@
 @snapend
 
 @snap[east span-50]
-![](resources/algorithm.png)
+@img[](resources/algorithm.png)
 @snapend
 
 ---
