@@ -65,13 +65,14 @@
 
 ;;; CLUSTERING ;;;
 
-(-> (evaluation/make-all-seeds model property (:sentences model))
-    (cluster-tools/single-pass-cluster #{}
-                                       {:cluster-merge-fn re/add-to-pattern
-                                        :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                             (and (< (or %3 0.75) score)
-                                                                  score))})
-    (count))
+(comment
+  (-> (evaluation/make-all-seeds model property (:sentences model))
+      (cluster-tools/single-pass-cluster #{}
+                                         {:cluster-merge-fn re/add-to-pattern
+                                          :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                               (and (< (or %3 0.75) score)
+                                                                    score))})
+      (count)))
 #_(let [x (range -3 3 0.1)]
     (incanter/view
       (charts/dynamic-scatter-plot
