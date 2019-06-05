@@ -43,7 +43,7 @@
 @snapend
 
 @snap[east span-50]
-@img[](resources/algorithm.png)
+@img[](resources/algorithm.svg)
 @snapend
 
 ---
