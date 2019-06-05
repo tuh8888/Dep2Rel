@@ -1,6 +1,5 @@
 (ns scripts.bio-creative-relation-extraction
   (:require [clojure.java.io :as io]
-            [edu.ucdenver.ccp.nlp.readers :as rdr]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
@@ -8,8 +7,7 @@
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
     #_[incanter.stats :as stats]
     #_[incanter.core :as incanter]
-    #_[incanter.charts :as charts]
-            [org.clojurenlp.core :as corenlp]))
+    #_[incanter.charts :as charts]))
 
 (def home-dir (io/file "/" "home" "harrison"))
 #_(def home-dir (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
@@ -58,7 +56,7 @@
 (log/info "Num sentences:" (count (:sentences model)))
 
 (def property "INHIBITOR")
-(def dep-filt 10)
+(def context-path-length-cap 10)
 
 ;; #{"12871155-T7" "12871155-T20"} has a ridiculously long context due to the number of tokens in 4-amino-6,7,8,9-tetrahydro-2,3-diphenyl-5H-cyclohepta[e]thieno[2,3-b]pyridine
 ;;(filter #(= 35 (count (:context %))) (make-all-seeds model property (:sentences model) 100))
@@ -85,39 +83,22 @@
 
 ;;; RELATION EXTRACTION
 
-(defn sent-pattern-concepts-match?
-  [{:keys [concepts]} {:keys [support]}]
-  (->> support
-       (map :concepts)
-       (some #(= concepts %))))
-
-(def matches (let [num-seeds (-> (evaluation/actual-true model property)
-                                 (count)
-                                 (* 0.01))
-                   sentences (evaluation/context-filt dep-filt (:sentences model))
-                   seeds (set (take num-seeds (evaluation/make-all-seeds model property sentences)))
-                   model (assoc model :sentences (remove seeds sentences))
-                   ;seed-thresh 0.85
+(def matches (let [model (update model :sentences #(evaluation/context-path-filter context-path-length-cap %))
+                   seed-frac 0.01
                    context-thresh 0.95
                    cluster-thresh 0.95
                    min-support 1
-                   params {:seed             (first seeds)
-                           ;:seed-thresh      seed-thresh
-                           :context-thresh   context-thresh
-                           ;:seed-match-fn    #(and (re/concepts-match? %1 %2)
-                           ;                        (< seed-thresh (re/context-vector-cosine-sim %1 %2)))
+                   params {:seed-fn #(evaluation/frac-seeds % property seed-frac)
                            #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
                            :context-match-fn (fn [s p]
-                                               (and (sent-pattern-concepts-match? s p)
+                                               (and (re/sent-pattern-concepts-match? s p)
                                                     (< context-thresh (re/context-vector-cosine-sim s p))))
                            :cluster-merge-fn re/add-to-pattern
                            :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
                                                 (and (< (or %3 cluster-thresh) score)
                                                      score))
                            :min-support      min-support}
-                   matches (->> (re/cluster-bootstrap-extract-relations seeds (:sentences model) params)
-                                (remove seeds)
-                                (map #(merge % params)))]
+                   [model matches] (re/init-bootstrap re/cluster-bootstrap-extract-relations model params)]
                (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
                                                         :actual-true    (evaluation/actual-true model property)
                                                         :all            (evaluation/all-triples model)}))

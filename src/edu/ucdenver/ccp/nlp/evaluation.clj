@@ -124,9 +124,16 @@
        (potential-seeds sentences)
        (mapcat #(apply make-seeds sentences %))))
 
-(defn context-filt
+(defn context-path-filter
   [dep-filt coll]
   (filter #(<= (count (:context %)) dep-filt) coll))
+
+(defn frac-seeds
+  [model property frac]
+  (let [num-seeds (-> (actual-true model property)
+                      (count)
+                      (* frac))]
+    (set (take num-seeds (make-all-seeds model property (:sentences model))))))
 
 ;
 ;(defn parameter-walk

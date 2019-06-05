@@ -7,6 +7,21 @@
 
 (defrecord Pattern [context-vector support])
 
+(defn sent-pattern-concepts-match?
+  [{:keys [concepts]} {:keys [support]}]
+  (->> support
+       (map :concepts)
+       (some #(= concepts %))))
+
+(defn init-bootstrap
+  [re-fn model & [{:keys [seed-fn] :as params}]]
+  (let [seeds (seed-fn model)
+        model (update model :sentences #(remove seeds %))
+        matches (->> (re-fn seeds (:sentences model) params)
+                     (remove seeds)
+                     (map #(merge % params)))]
+    [model matches]))
+
 (defn add-to-pattern
   [p s]
   (map->Pattern {:concepts       (into (set (:concepts p)) (:concepts s))
@@ -44,7 +59,7 @@
     (into seeds (util/find-matches sentences seed-matches context-match-fn))))
 
 (defn cluster-extract-relations
-  [seeds sentences & [{:keys [seed-match-fn context-match-fn min-support] :as params}]]
+  [seeds sentences & [{:keys [context-match-fn min-support] :as params}]]
   (let [patterns (cluster-tools/single-pass-cluster seeds #{} params)
         patterns (filter #(<= min-support (count (:support %))) patterns)]
     (t/info "Seeds" (count seeds))
