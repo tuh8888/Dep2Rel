@@ -48,5 +48,5 @@
                              [:matches :seeds {:label :bootstrapping :color important-color}]))
 
 (uber/viz-graph algorithm {:bgcolor :transparent
-                           :save {:filename "resources/algorithm.png"
-                                  :format   :png}})
+                           :save {:filename "resources/algorithm.svgz"
+                                  :format   :svgz}})
