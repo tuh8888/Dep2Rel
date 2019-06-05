@@ -83,8 +83,9 @@
 ;;; RELATION EXTRACTION
 
 (def matches (let [context-path-length-cap 10
-                   sentences (evaluation/context-path-filter context-path-length-cap (:sentences model))
-                   seed-frac 0.01
+                   sentences (:sentences model)
+                   #_sentences #_(evaluation/context-path-filter context-path-length-cap sentences)
+                   seed-frac 0.1
                    context-thresh 0.95
                    cluster-thresh 0.95
                    min-support 1
@@ -97,8 +98,9 @@
                            :cluster-match-fn  #(let [score (re/context-vector-cosine-sim %1 %2)]
                                                  (and (< (or %3 cluster-thresh) score)
                                                       score))
-                           :pattern-filter-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)}
-                   [model matches] (re/init-bootstrap re/cluster-bootstrap-extract-relations model params)]
+                           :pattern-filter-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)
+                           :pattern-update-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)}
+                   [model [matches patterns]] (re/init-bootstrap re/cluster-bootstrap-extract-relations-persistent-patterns model params)]
                (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
                                                         :actual-true    (evaluation/actual-true model property)
                                                         :all            (evaluation/all-triples model)}))
