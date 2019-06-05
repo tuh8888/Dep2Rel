@@ -3,7 +3,8 @@
             [math]
             [util]
             [cluster-tools]
-            [clojure.set :refer [subset? intersection]]))
+            [clojure.set :refer [subset? intersection]]
+            [taoensso.timbre :as log]))
 
 (defrecord Pattern [context-vector support])
 
@@ -84,35 +85,48 @@
 
 
 
+(defn init-bootstrap-persistent-patterns
+  [re-fn model & [{:keys [seed-fn] :as params}]]
+  (let [seeds (seed-fn model)
+        model (update model :sentences #(remove seeds %))
+        [matches patterns] (re-fn seeds (:sentences model) params)
+        matches (->> matches
+                     (remove seeds)
+                     (map #(merge % params)))]
+    [model matches patterns]))
+
 (defn cluster-extract-relations-persistent-patterns
   [seeds sentences patterns & [{:keys [context-match-fn pattern-update-fn] :as params}]]
   (let [patterns (-> seeds
                      (cluster-tools/single-pass-cluster patterns params)
                      (pattern-update-fn)
-                     (set))]
+                     (set))
+        matches (-> sentences
+                    (util/find-matches patterns context-match-fn)
+                    (set))]
     (t/info "Patterns" (count patterns))
-    [(util/find-matches sentences patterns context-match-fn) patterns]))
+    (t/info "Matches" (count matches))
+    [matches patterns]))
 
 (defn bootstrap-persistent-patterns
   [seeds sentences update-fn]
-  (loop [matches (set seeds)
+  (log/info "Seeds" (count seeds))
+  (loop [matches #{}
          new-matches (set seeds)
          sentences sentences
          patterns #{}]
-      (t/info "New matches" (count new-matches))
-    (let [[new-matches patterns] (update-fn new-matches sentences patterns)
-          matches (into matches new-matches)]
+    (let [[new-matches patterns] (update-fn new-matches sentences patterns)]
       (if (empty? new-matches)
         [matches patterns]
-        (recur matches new-matches (remove (set new-matches) sentences) patterns)))))
+        (recur (into matches new-matches) new-matches (remove new-matches sentences) patterns)))))
 
 (defn cluster-bootstrap-extract-relations-persistent-patterns
   [seeds sentences & [params]]
   (bootstrap-persistent-patterns seeds sentences #(cluster-extract-relations-persistent-patterns %1 %2 %3 params)))
 
 #_(defn naive-bootstrap-extract-relations
-  [seeds sentences & [params]]
-  (bootstrap seeds sentences #(naive-extract-relations %1 %2 params)))
+    [seeds sentences & [params]]
+    (bootstrap seeds sentences #(naive-extract-relations %1 %2 params)))
 
 #_(defn extract-all-relations
     [seed-thresh cluster-thresh min-support sources]
