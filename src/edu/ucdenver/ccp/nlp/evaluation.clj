@@ -129,11 +129,11 @@
   (filter #(<= (count (:context %)) dep-filt) coll))
 
 (defn frac-seeds
-  [model property frac]
+  [model sentences property frac]
   (let [num-seeds (-> (actual-true model property)
                       (count)
                       (* frac))]
-    (set (take num-seeds (make-all-seeds model property (:sentences model))))))
+    (set (take num-seeds (make-all-seeds model property sentences)))))
 
 ;
 ;(defn parameter-walk

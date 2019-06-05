@@ -56,7 +56,6 @@
 (log/info "Num sentences:" (count (:sentences model)))
 
 (def property "INHIBITOR")
-(def context-path-length-cap 10)
 
 ;; #{"12871155-T7" "12871155-T20"} has a ridiculously long context due to the number of tokens in 4-amino-6,7,8,9-tetrahydro-2,3-diphenyl-5H-cyclohepta[e]thieno[2,3-b]pyridine
 ;;(filter #(= 35 (count (:context %))) (make-all-seeds model property (:sentences model) 100))
@@ -83,12 +82,13 @@
 
 ;;; RELATION EXTRACTION
 
-(def matches (let [model (update model :sentences #(evaluation/context-path-filter context-path-length-cap %))
+(def matches (let [context-path-length-cap 10
+                   sentences (evaluation/context-path-filter context-path-length-cap (:sentences model))
                    seed-frac 0.01
                    context-thresh 0.95
                    cluster-thresh 0.95
                    min-support 1
-                   params {:seed-fn           #(evaluation/frac-seeds % property seed-frac)
+                   params {:seed-fn           #(evaluation/frac-seeds % sentences property seed-frac)
                            #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
                            :context-match-fn  (fn [s p]
                                                 (and (re/sent-pattern-concepts-match? s p)

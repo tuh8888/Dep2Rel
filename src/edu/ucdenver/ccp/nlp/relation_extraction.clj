@@ -58,12 +58,11 @@
     (t/info "Seeds:" (count seed-matches))
     (into seeds (util/find-matches sentences seed-matches context-match-fn))))
 
-
-
 (defn cluster-extract-relations
   [seeds sentences & [{:keys [context-match-fn pattern-filter-fn] :as params}]]
-  (let [patterns (cluster-tools/single-pass-cluster seeds #{} params)
-        patterns (pattern-filter-fn patterns)]
+  (let [patterns (-> seeds
+                     (cluster-tools/single-pass-cluster #{} params)
+                     (pattern-filter-fn))]
     (t/info "Seeds" (count seeds))
     (t/info "Patterns" (count patterns))
     (into seeds (util/find-matches sentences patterns context-match-fn))))
@@ -79,7 +78,7 @@
         matches
         (recur new-matches (remove #(new-matches %) samples))))))
 
-(defn naive-bootstrap-extract-relations
+#_(defn naive-bootstrap-extract-relations
   [seeds sentences & [params]]
   (bootstrap seeds sentences #(naive-extract-relations %1 %2 params)))
 
