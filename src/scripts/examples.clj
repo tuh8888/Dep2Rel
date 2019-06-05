@@ -24,7 +24,9 @@
                        [(get x 13) (get x 16) {:label :conj}]
                        [(get x 2) (get x 17) {:label :punct}])))
 
-(uber/viz-graph g {:save {:filename "resources/dep_example.png" :format :png}})
+(uber/viz-graph g {:bgcolor :transparentp
+                   :save {:filename "resources/dep_example.png"
+                          :format :png}})
 
 (def output-color :blue)
 (def input-color :green)
