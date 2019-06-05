@@ -29,7 +29,7 @@
        (apply str)))
 
 (defn format-matches
-  [model matches]
+  [model matches patterns]
   (map (fn [match]
          (let [[e1 _ :as entities] (map #(get-in model [:concept-annotations %]) (:entities match))
 
@@ -64,8 +64,8 @@
        matches))
 
 (defn ->csv
-  [f model matches]
-  (let [formatted (format-matches model matches)
+  [f model matches patterns]
+  (let [formatted (format-matches model matches patterns)
         cols [:doc :e1-concept :e1-tok :e2-concept :e2-tok :seed :sentence]
         csv-form (str (apply str (interpose "," cols)) "\n" (apply str (map #(str (apply str (interpose "," ((apply juxt cols) %))) "\n") formatted)))]
     (spit f csv-form)))
@@ -87,10 +87,10 @@
            #(when (< 1 (count (:support %)))
               %)
            (cluster-tools/single-pass-cluster sentences #{}
-                                              {:cluster-merge-fn re/add-to-pattern
-                                               :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                                    (and (< (or %3 0.75) score)
-                                                                         score))})))))
+             {:cluster-merge-fn re/add-to-pattern
+              :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                   (and (< (or %3 0.75) score)
+                                        score))})))))
 
 (defn make-seeds
   [sentences e1 e2]
@@ -132,20 +132,21 @@
 
 (defn frac-seeds
   [model property frac]
-  (let [num-seeds (-> (actual-true model property)
+  (let [actual-true (actual-true model property)
+        num-seeds (-> actual-true
                       (count)
                       (* frac))
         seeds (set (take num-seeds (make-all-seeds model property)))
-        model (update model :sentences #(remove seeds %))]
+        model (update model :sentences #(remove seeds %))
+        model (assoc model :actual-true actual-true
+                           :all (all-triples model))]
     [model seeds]))
 
 
 (defn parameter-walk
   [property model & {:keys [context-path-length-cap context-thresh cluster-thresh min-support seed-frac]}]
   (for [seed-frac seed-frac]
-    (let [split-model (frac-seeds model property seed-frac)
-          metrics {:actual-true (actual-true (get-in split-model [0]) property)
-                   :all         (all-triples (get-in split-model [0]))}]
+    (let [split-model (frac-seeds model property seed-frac)]
       (for [context-path-length-cap context-path-length-cap
             context-thresh context-thresh
             cluster-thresh cluster-thresh
@@ -163,16 +164,14 @@
                                                      (<= min-support (count support)))
                                                    patterns))}
               [matches _] (re/cluster-bootstrap-extract-relations-persistent-patterns (get-in split-model [1]) sentences params)
-              metrics (-> metrics
-                          (assoc :predicted-true (predicted-true matches))
-                          #(try
-                            (math/calc-metrics %)
-                            (catch ArithmeticException _ %))
-
-                          (assoc :context-path-length-cap context-path-length-cap
-                                 :context-thresh context-thresh
-                                 :cluster-thresh cluster-thresh
-                                 :min-support min-support
-                                 :seed-frac seed-frac))]
+              model (assoc model :predicted-true (predicted-true matches))
+              metrics (let [metrics (try
+                                      (math/calc-metrics model)
+                                      (catch ArithmeticException _ {}))]
+                        (assoc metrics :context-path-length-cap context-path-length-cap
+                                       :context-thresh context-thresh
+                                       :cluster-thresh cluster-thresh
+                                       :min-support min-support
+                                       :seed-frac seed-frac))]
           (log/info "Metrics:" metrics)
           metrics)))))

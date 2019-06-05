@@ -83,17 +83,8 @@
   [seeds sentences & [params]]
   (bootstrap seeds sentences #(cluster-extract-relations %1 %2 params)))
 
-
-
-(defn cluster-patterns
-  [seeds samples patterns & [{:keys [pattern-update-fn] :as params}]]
-  (-> samples
-      (cluster-tools/single-pass-cluster patterns params)
-      (pattern-update-fn seeds)
-      (set)))
-
 (defn bootstrap-persistent-patterns
-  [seeds sentences pattern-fn & [{:keys [context-match-fn]}]]
+  [seeds sentences & [{:keys [context-match-fn make-pattern-fn pattern-update-fn]}]]
   (log/info "Seeds" (count seeds))
   (loop [matches #{}
          samples (set seeds)
@@ -101,7 +92,10 @@
          patterns #{}]
     (t/debug "Patterns" (count patterns))
     (t/debug "Matches" (count matches))
-    (let [patterns (pattern-fn samples patterns)
+    (let [patterns (-> samples
+                       (make-pattern-fn patterns)
+                       (pattern-update-fn seeds matches)
+                       (set))
           new-matches (util/find-matches sentences patterns context-match-fn)]
       (if (empty? new-matches)
         [matches patterns]
@@ -109,7 +103,7 @@
 
 (defn cluster-bootstrap-extract-relations-persistent-patterns
   [seeds sentences & [params]]
-  (bootstrap-persistent-patterns seeds sentences #(cluster-patterns seeds %1 %2 params) params))
+  (bootstrap-persistent-patterns seeds sentences  params))
 
 #_(defn naive-bootstrap-extract-relations
     [seeds sentences & [params]]
