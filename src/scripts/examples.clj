@@ -26,7 +26,14 @@
 
 (uber/viz-graph g {:save {:filename "resources/dep_example.png" :format :png}})
 
-(def algorithm (uber/digraph [:text-sources :dependency-annotations]
+(def output-color :blue)
+(def input-color :green)
+(def important-color :red)
+
+(def algorithm (uber/digraph [:text-sources {:color input-color}]
+                             [:patterns {:color output-color}]
+                             [:matches {:color output-color}]
+                             [:text-sources :dependency-annotations]
                              [:text-sources :concept-annotations]
                              [:concept-annotations :context-paths]
                              [:dependency-annotations :context-paths]
@@ -36,6 +43,6 @@
                              [:patterns :filtering]
                              [:sentences :filtering]
                              [:filtering :matches]
-                             [:matches :seeds {:label :bootstrapping :color :red}]))
+                             [:matches :seeds {:label :bootstrapping :color important-color}]))
 
 (uber/viz-graph algorithm {:save {:filename "resources/algorithm.png" :format :png}})
