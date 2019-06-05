@@ -23,7 +23,7 @@
 @ulend
 @snapend
 
-@snap[east span-50]
+@snap[east span-40]
 ![](resources/dep_example.png)
 @snapend
 
