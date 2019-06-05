@@ -142,34 +142,37 @@
 
 (defn parameter-walk
   [property model & {:keys [context-path-length-cap context-thresh cluster-thresh min-support seed-frac]}]
-  (for [context-path-length-cap context-path-length-cap
-        context-thresh context-thresh
-        cluster-thresh cluster-thresh
-        min-support min-support
-        seed-frac seed-frac]
-    (let [[model seeds] (frac-seeds model property seed-frac)
-          sentences (context-path-filter context-path-length-cap (:sentences model))
-          params {:context-match-fn  (fn [s p]
-                                       (and (re/sent-pattern-concepts-match? s p)
-                                            (< context-thresh (re/context-vector-cosine-sim s p))))
-                  :cluster-merge-fn  re/add-to-pattern
-                  :cluster-match-fn  #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                        (and (< (or %3 cluster-thresh) score)
-                                             score))
-                  :pattern-filter-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)
-                  :pattern-update-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)}
-          [matches _] (re/cluster-bootstrap-extract-relations-persistent-patterns seeds sentences params)
-          metrics (-> (try
-                        (math/calc-metrics {:predicted-true (predicted-true matches)
-                                            :actual-true    (actual-true model property)
-                                            :all            (all-triples model)})
+  (for [seed-frac seed-frac]
+    (let [split-model (frac-seeds model property seed-frac)
+          metrics {:actual-true (actual-true (get-in split-model [0]) property)
+                   :all         (all-triples (get-in split-model [0]))}]
+      (for [context-path-length-cap context-path-length-cap
+            context-thresh context-thresh
+            cluster-thresh cluster-thresh
+            min-support min-support]
+        (let [sentences (context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
+              params {:context-match-fn  (fn [s p]
+                                           (and (re/sent-pattern-concepts-match? s p)
+                                                (< context-thresh (re/context-vector-cosine-sim s p))))
+                      :cluster-merge-fn  re/add-to-pattern
+                      :cluster-match-fn  #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                            (and (< (or %3 cluster-thresh) score)
+                                                 score))
+                      :pattern-update-fn (fn [patterns _]
+                                           (filter (fn [{:keys [support]}]
+                                                     (<= min-support (count support)))
+                                                   patterns))}
+              [matches _] (re/cluster-bootstrap-extract-relations-persistent-patterns (get-in split-model [1]) sentences params)
+              metrics (-> metrics
+                          (assoc :predicted-true (predicted-true matches))
+                          #(try
+                            (math/calc-metrics %)
+                            (catch ArithmeticException _ %))
 
-                        (catch ArithmeticException _ {}))
-
-                      (assoc :context-path-length-cap context-path-length-cap
-                             :context-thresh context-thresh
-                             :cluster-thresh cluster-thresh
-                             :min-support min-support
-                             :seed-frac seed-frac))]
-      (log/info "Metrics:" metrics)
-      metrics)))
+                          (assoc :context-path-length-cap context-path-length-cap
+                                 :context-thresh context-thresh
+                                 :cluster-thresh cluster-thresh
+                                 :min-support min-support
+                                 :seed-frac seed-frac))]
+          (log/info "Metrics:" metrics)
+          metrics)))))

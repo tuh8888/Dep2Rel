@@ -99,14 +99,14 @@
                                       :title "PCA"))
 
 ;;; RELATION EXTRACTION
+(def split-model (let [seed-frac 0.4]
+                   (evaluation/frac-seeds model property seed-frac)))
 
 (def results (let [context-path-length-cap 100
-                   seed-frac 0.2
                    context-thresh 0.95
                    cluster-thresh 0.95
                    min-support 3
-                   [model seeds] (evaluation/frac-seeds model property seed-frac)
-                   sentences (evaluation/context-path-filter context-path-length-cap (:sentences model))
+                   sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
                    params {:context-match-fn  (fn [s p]
                                                 (and (re/sent-pattern-concepts-match? s p)
                                                      (< context-thresh (re/context-vector-cosine-sim s p))))
@@ -114,11 +114,14 @@
                            :cluster-match-fn  #(let [score (re/context-vector-cosine-sim %1 %2)]
                                                  (and (< (or %3 cluster-thresh) score)
                                                       score))
-                           :pattern-update-fn (fn [patterns _] (filter (fn [p] (<= min-support (count (:support p)))) patterns))}
-                   [matches patterns] (re/cluster-bootstrap-extract-relations-persistent-patterns seeds sentences params)]
+                           :pattern-update-fn (fn [patterns _]
+                                                (filter (fn [{:keys [support]}]
+                                                          (<= min-support (count support)))
+                                                        patterns))}
+                   [matches patterns] (re/cluster-bootstrap-extract-relations-persistent-patterns (get-in split-model [1]) sentences params)]
                (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
-                                                        :actual-true    (evaluation/actual-true model property)
-                                                        :all            (evaluation/all-triples model)}))
+                                                        :actual-true    (evaluation/actual-true (get-in split-model [0]) property)
+                                                        :all            (evaluation/all-triples (get-in split-model [0]))}))
                [matches patterns]))
 
 #_(evaluation/format-matches model matches)
