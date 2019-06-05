@@ -104,7 +104,7 @@
                    seed-frac 0.2
                    context-thresh 0.95
                    cluster-thresh 0.95
-                   min-support 1
+                   min-support 3
                    [model seeds] (evaluation/frac-seeds model property seed-frac)
                    sentences (evaluation/context-path-filter context-path-length-cap (:sentences model))
                    params {:context-match-fn  (fn [s p]
@@ -114,8 +114,7 @@
                            :cluster-match-fn  #(let [score (re/context-vector-cosine-sim %1 %2)]
                                                  (and (< (or %3 cluster-thresh) score)
                                                       score))
-                           :pattern-filter-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)
-                           :pattern-update-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)}
+                           :pattern-update-fn (fn [patterns _] (filter (fn [p] (<= min-support (count (:support p)))) patterns))}
                    [matches patterns] (re/cluster-bootstrap-extract-relations-persistent-patterns seeds sentences params)]
                (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
                                                         :actual-true    (evaluation/actual-true model property)
