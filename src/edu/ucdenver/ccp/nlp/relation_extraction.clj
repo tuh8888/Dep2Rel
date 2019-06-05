@@ -59,10 +59,10 @@
     (into seeds (util/find-matches sentences seed-matches context-match-fn))))
 
 (defn cluster-extract-relations
-  [seeds sentences & [{:keys [context-match-fn pattern-filter-fn] :as params}]]
+  [seeds sentences & [{:keys [context-match-fn pattern-update-fn] :as params}]]
   (let [patterns (-> seeds
                      (cluster-tools/single-pass-cluster #{} params)
-                     (pattern-filter-fn))]
+                     (pattern-update-fn))]
     (t/info "Seeds" (count seeds))
     (t/info "Patterns" (count patterns))
     (into seeds (util/find-matches sentences patterns context-match-fn))))
@@ -70,21 +70,49 @@
 (defn bootstrap
   [seeds sentences update-fn]
   (loop [matches (set seeds)
-         samples sentences]
-    (let [new-matches (set (update-fn matches samples))
+         sentences sentences]
+    (let [new-matches (set (update-fn matches sentences))
           num-new-matches (count (clojure.set/difference new-matches matches))]
       (t/info "New matches" num-new-matches)
       (if (= num-new-matches 0)
         matches
-        (recur new-matches (remove #(new-matches %) samples))))))
-
-#_(defn naive-bootstrap-extract-relations
-  [seeds sentences & [params]]
-  (bootstrap seeds sentences #(naive-extract-relations %1 %2 params)))
+        (recur new-matches (remove new-matches sentences))))))
 
 (defn cluster-bootstrap-extract-relations
   [seeds sentences & [params]]
   (bootstrap seeds sentences #(cluster-extract-relations %1 %2 params)))
+
+
+
+(defn cluster-extract-relations-persistent-patterns
+  [seeds sentences patterns & [{:keys [context-match-fn pattern-update-fn] :as params}]]
+  (let [patterns (-> seeds
+                     (cluster-tools/single-pass-cluster patterns params)
+                     (pattern-update-fn)
+                     (set))]
+    (t/info "Patterns" (count patterns))
+    [(util/find-matches sentences patterns context-match-fn) patterns]))
+
+(defn bootstrap-persistent-patterns
+  [seeds sentences update-fn]
+  (loop [matches (set seeds)
+         new-matches (set seeds)
+         sentences sentences
+         patterns #{}]
+      (t/info "New matches" (count new-matches))
+    (let [[new-matches patterns] (update-fn new-matches sentences patterns)
+          matches (into matches new-matches)]
+      (if (empty? new-matches)
+        [matches patterns]
+        (recur matches new-matches (remove (set new-matches) sentences) patterns)))))
+
+(defn cluster-bootstrap-extract-relations-persistent-patterns
+  [seeds sentences & [params]]
+  (bootstrap-persistent-patterns seeds sentences #(cluster-extract-relations-persistent-patterns %1 %2 %3 params)))
+
+#_(defn naive-bootstrap-extract-relations
+  [seeds sentences & [params]]
+  (bootstrap seeds sentences #(naive-extract-relations %1 %2 params)))
 
 #_(defn extract-all-relations
     [seed-thresh cluster-thresh min-support sources]
