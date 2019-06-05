@@ -13,15 +13,32 @@
   [model ann]
   (log/info (:id ann))
   (let [concept-start (-> ann :spans vals first :start)
-        concept-end (-> ann :spans vals first :end)]
-    (some
+        concept-end (-> ann :spans vals first :end)
+        doc-toks (filter #(= (:doc %) (:doc ann)) (vals (:structure-annotations model)))
+        first-tok-id (first doc-toks)]
+    (:id
+      (reduce
+        (fn [old-tok new-tok]
+          (let [new-tok-start (-> new-tok :spans vals first :start)
+                new-tok-end (-> new-tok :spans vals first :end)
+                old-tok-start (-> old-tok :spans vals first :start)
+                old-tok-end (-> old-tok :spans vals first :end)]
+            (cond (<= new-tok-start concept-start concept-end new-tok-end) new-tok
+                  (<= concept-start new-tok-start new-tok-end concept-end) new-tok
+                  (<= old-tok-start concept-start concept-end old-tok-end) old-tok
+                  (<= concept-start old-tok-start old-tok-end concept-end) old-tok
+                  (<= new-tok-start concept-start) new-tok
+                  (<= old-tok-start concept-start) old-tok
+                  :else old-tok)))
+        first-tok-id doc-toks))
+    #_(some
       (fn [tok]
         (let [tok-start (-> tok :spans vals first :start)
               tok-end (-> tok :spans vals first :end)]
           (when (or (<= tok-start concept-start concept-end tok-end)
                     (<= concept-start tok-start tok-end concept-end))
             (:id tok))))
-      (filter #(= (:doc %) (:doc ann)) (vals (:structure-annotations model))))))
+      doc-toks)))
 
 (defn tok-sent-id
   [model tok-id]

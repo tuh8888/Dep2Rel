@@ -52,13 +52,15 @@
 
              (assoc model :sentences sentences)))
 
-(get (:concept-annotations model) "23402364-T2")
+(get-in model [:structure-annotations (sentence/annotation-tok-id model (get (:concept-annotations model) "23402364-T37"))])
+(get-in model [:structure-annotations "23402364-859768"])
+(map #(:text (first (vals (get-in model [:structure-annotations % :spans])))) (keys (get-in model [:structure-graphs "23402364-Sentence 1" :node-map])))
 (log/info "Num sentences:" (count (:sentences model)))
 
 (def property "INHIBITOR")
 (def dep-filt 10)
 
-;; #{"12871155-T7" "12871155-T20"} have a rediculously long context due to the number of tokens in 4-amino-6,7,8,9-tetrahydro-2,3-diphenyl-5H-cyclohepta[e]thieno[2,3-b]pyridine
+;; #{"12871155-T7" "12871155-T20"} has a ridiculously long context due to the number of tokens in 4-amino-6,7,8,9-tetrahydro-2,3-diphenyl-5H-cyclohepta[e]thieno[2,3-b]pyridine
 ;;(filter #(= 35 (count (:context %))) (make-all-seeds model property (:sentences model) 100))
 
 ;;; CLUSTERING ;;;
@@ -82,8 +84,9 @@
 
 ;;; RELATION EXTRACTION
 
-(def matches (let [sentences (evaluation/context-filt dep-filt (:sentences model))
-                   seeds (take (evaluation/make-all-seeds model property sentences) 100)
+(def matches (let [num-seeds 100
+                   sentences (evaluation/context-filt dep-filt (:sentences model))
+                   seeds (take num-seeds (evaluation/make-all-seeds model property sentences))
                    ;seed-thresh 0.85
                    context-thresh 0.9
                    cluster-thresh 0.75
