@@ -163,7 +163,7 @@
                              seed-frac-min                0.05
                              seed-frac-max                0.85
                              seed-frac-step               0.2}}]]
-  (for [context-path-length-cap [35] #_[2 3 4 5 10 20 35] #_(range context-path-length-cap-min context-path-length-cap-max context-path-length-cap-step) context-thresh [0.75 0.85 0.9 0.925 0.95 0.975] #_(range context-thresh-min context-thresh-max context-thresh-step)
+  (for [context-path-length-cap [35] #_[2 3 4 5 10 20 35] #_(range context-path-length-cap-min context-path-length-cap-max context-path-length-cap-step)
         context-thresh [0.95] #_ [0.975 0.95 0.925 0.9 0.85]
         cluster-thresh [0.95] #_[0.95 0.9 0.8 0.7 0.6 0.5] #_(range cluster-thresh-min cluster-thresh-max cluster-thresh-step)
         min-support [1] #_[1 3 5 10 20 30] #_(range min-support-min min-support-max min-support-step)
@@ -180,7 +180,7 @@
                                               score))
                   :pattern-filter-fn  #(filter (fn [p] (<= min-support (count (:support p)))) %)
                   :pattern-update-fn  #(filter (fn [p] (<= min-support (count (:support p)))) %)}
-          [model matches patterns] (re/init-bootstrap-persistent-patterns re/cluster-bootstrap-extract-relations-persistent-patterns model params)
+          [model matches _] (re/init-bootstrap-persistent-patterns re/cluster-bootstrap-extract-relations-persistent-patterns model params)
           metrics (-> (try
                         (math/calc-metrics {:predicted-true (predicted-true matches)
                                             :actual-true    (actual-true model property)
