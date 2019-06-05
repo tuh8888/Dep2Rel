@@ -106,7 +106,7 @@
                                   #_(evaluation/context-path-filter context-path-length-cap))
                    seed-frac 0.2
                    context-thresh 0.95
-                   cluster-thresh 0.65
+                   cluster-thresh 0.75
                    min-support 1
                    params {:seed-fn           #(evaluation/frac-seeds % sentences property seed-frac)
                            #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
