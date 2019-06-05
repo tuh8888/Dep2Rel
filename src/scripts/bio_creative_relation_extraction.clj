@@ -100,30 +100,27 @@
 
 ;;; RELATION EXTRACTION
 
-#_(def matches (let [context-path-length-cap 10
-                     sentences (->> model
-                                    :sentences
-                                    #_(evaluation/context-path-filter context-path-length-cap))
-                     seed-frac 0.2
-                     context-thresh 0.95
-                     cluster-thresh 0.95
-                     min-support 1
-                     params {:seed-fn           #(evaluation/frac-seeds % sentences property seed-frac)
-                             #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
-                             :context-match-fn  (fn [s p]
-                                                  (and (re/sent-pattern-concepts-match? s p)
-                                                       (< context-thresh (re/context-vector-cosine-sim s p))))
-                             :cluster-merge-fn  re/add-to-pattern
-                             :cluster-match-fn  #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                   (and (< (or %3 cluster-thresh) score)
-                                                        score))
-                             :pattern-filter-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)
-                             :pattern-update-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)}
-                     [model matches patterns] (re/init-bootstrap-persistent-patterns re/cluster-bootstrap-extract-relations-persistent-patterns model params)]
-                 (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
-                                                          :actual-true    (evaluation/actual-true model property)
-                                                          :all            (evaluation/all-triples model)}))
-                 matches))
+(def results (let [context-path-length-cap 100
+                   seed-frac 0.2
+                   context-thresh 0.95
+                   cluster-thresh 0.95
+                   min-support 1
+                   [model seeds] (evaluation/frac-seeds model property seed-frac)
+                   sentences (evaluation/context-path-filter context-path-length-cap (:sentences model))
+                   params {:context-match-fn  (fn [s p]
+                                                (and (re/sent-pattern-concepts-match? s p)
+                                                     (< context-thresh (re/context-vector-cosine-sim s p))))
+                           :cluster-merge-fn  re/add-to-pattern
+                           :cluster-match-fn  #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                 (and (< (or %3 cluster-thresh) score)
+                                                      score))
+                           :pattern-filter-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)
+                           :pattern-update-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)}
+                   [matches patterns] (re/cluster-bootstrap-extract-relations-persistent-patterns seeds sentences params)]
+               (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
+                                                        :actual-true    (evaluation/actual-true model property)
+                                                        :all            (evaluation/all-triples model)}))
+               [matches patterns]))
 
 #_(evaluation/format-matches model matches)
 

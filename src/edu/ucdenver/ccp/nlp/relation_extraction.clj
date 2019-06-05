@@ -85,17 +85,6 @@
 
 
 
-(defn init-bootstrap-persistent-patterns
-  [re-fn model & [{:keys [sentence-filter-fn seed-fn] :as params}]]
-  (let [sentences (sentence-filter-fn (:sentences model))
-        seeds (seed-fn model sentences)
-        model (update model :sentences #(remove seeds %))
-        [matches patterns] (re-fn seeds sentences params)
-        matches (->> matches
-                     (remove seeds)
-                     (map #(merge % params)))]
-    [model matches patterns]))
-
 (defn cluster-extract-relations-persistent-patterns
   [seeds sentences patterns & [{:keys [context-match-fn pattern-update-fn] :as params}]]
   (let [patterns (-> seeds
@@ -123,7 +112,8 @@
 
 (defn cluster-bootstrap-extract-relations-persistent-patterns
   [seeds sentences & [params]]
-  (bootstrap-persistent-patterns seeds sentences #(cluster-extract-relations-persistent-patterns %1 %2 %3 params)))
+  (let [update-fn #(cluster-extract-relations-persistent-patterns %1 %2 %3 params)]
+        (bootstrap-persistent-patterns seeds sentences update-fn)))
 
 #_(defn naive-bootstrap-extract-relations
     [seeds sentences & [params]]
