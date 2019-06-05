@@ -24,7 +24,7 @@
 @snapend
 
 @snap[east span-40]
-![](resources/dep_example.svg)
+@img[](resources/dep_example.gif)
 @snapend
 
 ---
