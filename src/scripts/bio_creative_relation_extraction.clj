@@ -5,9 +5,9 @@
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
-            #_[incanter.stats :as stats]
-            #_[incanter.core :as incanter]
-            #_[incanter.charts :as charts]))
+    #_[incanter.stats :as stats]
+    #_[incanter.core :as incanter]
+    #_[incanter.charts :as charts]))
 
 (def home-dir (io/file "/" "home" "harrison"))
 #_(def home-dir (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
@@ -82,10 +82,10 @@
 
 ;;; PCA ;;;
 #_(def X (->> model :sentences
-            (map :context-vector)
-            (mapv seq)
-            (incanter/to-dataset)
-            (incanter/to-matrix)))
+              (map :context-vector)
+              (mapv seq)
+              (incanter/to-dataset)
+              (incanter/to-matrix)))
 #_(def pca (stats/principal-components X))
 
 #_(def components (:rotation pca))
@@ -94,39 +94,44 @@
 #_(def x1 (incanter/mmult X pc1))
 #_(def x2 (incanter/mmult X pc2))
 #_(incanter/view (charts/scatter-plot x1 x2
-                    :x-label "PC1"
-                    :y-label "PC2"
-                    :title "PCA"))
+                                      :x-label "PC1"
+                                      :y-label "PC2"
+                                      :title "PCA"))
 
 ;;; RELATION EXTRACTION
 
 #_(def matches (let [context-path-length-cap 10
-                   sentences (->> model
-                                  :sentences
-                                  #_(evaluation/context-path-filter context-path-length-cap))
-                   seed-frac 0.2
-                   context-thresh 0.95
-                   cluster-thresh 0.95
-                   min-support 1
-                   params {:seed-fn           #(evaluation/frac-seeds % sentences property seed-frac)
-                           #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
-                           :context-match-fn  (fn [s p]
-                                                (and (re/sent-pattern-concepts-match? s p)
-                                                     (< context-thresh (re/context-vector-cosine-sim s p))))
-                           :cluster-merge-fn  re/add-to-pattern
-                           :cluster-match-fn  #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                 (and (< (or %3 cluster-thresh) score)
-                                                      score))
-                           :pattern-filter-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)
-                           :pattern-update-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)}
-                   [model matches patterns] (re/init-bootstrap-persistent-patterns re/cluster-bootstrap-extract-relations-persistent-patterns model params)]
-               (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
-                                                        :actual-true    (evaluation/actual-true model property)
-                                                        :all            (evaluation/all-triples model)}))
-               matches))
+                     sentences (->> model
+                                    :sentences
+                                    #_(evaluation/context-path-filter context-path-length-cap))
+                     seed-frac 0.2
+                     context-thresh 0.95
+                     cluster-thresh 0.95
+                     min-support 1
+                     params {:seed-fn           #(evaluation/frac-seeds % sentences property seed-frac)
+                             #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
+                             :context-match-fn  (fn [s p]
+                                                  (and (re/sent-pattern-concepts-match? s p)
+                                                       (< context-thresh (re/context-vector-cosine-sim s p))))
+                             :cluster-merge-fn  re/add-to-pattern
+                             :cluster-match-fn  #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                   (and (< (or %3 cluster-thresh) score)
+                                                        score))
+                             :pattern-filter-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)
+                             :pattern-update-fn #(filter (fn [p] (<= min-support (count (:support p)))) %)}
+                     [model matches patterns] (re/init-bootstrap-persistent-patterns re/cluster-bootstrap-extract-relations-persistent-patterns model params)]
+                 (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
+                                                          :actual-true    (evaluation/actual-true model property)
+                                                          :all            (evaluation/all-triples model)}))
+                 matches))
 
 #_(evaluation/format-matches model matches)
 
 #_(evaluation/parameter-walk property model)
-(def parameter-walk (evaluation/parameter-walk property model))
+(def parameter-walk (evaluation/parameter-walk property model
+                                               :context-path-length-cap [100] #_[2 3 4 5 10 20 35]
+                                               :context-thresh [0.95] #_[0.975 0.95 0.925 0.9 0.85]
+                                               :cluster-thresh [0.95] #_[0.95 0.9 0.8 0.7 0.6 0.5]
+                                               :min-support [1] #_[1 3 5 10 20 30]
+                                               :seed-frac [0.05 0.25 0.45 0.65 0.75]))
 (spit (io/file training-dir "results" "results.edn") parameter-walk)

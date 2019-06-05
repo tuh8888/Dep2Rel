@@ -139,35 +139,12 @@
 
 
 (defn parameter-walk
-  [property model & [{:keys [cluster-thresh-min cluster-thresh-max cluster-thresh-step
-                             context-thresh-min context-thresh-max context-thresh-step
-                             min-support-min min-support-max min-support-step
-                             context-path-length-cap-min context-path-length-cap-max context-path-length-cap-step
-                             seed-frac-min seed-frac-max seed-frac-step]
-                      :or   {cluster-thresh-min           0.5
-                             cluster-thresh-max           0.95
-                             cluster-thresh-step          0.1
-
-                             context-thresh-min           0.85
-                             context-thresh-max           0.99
-                             context-thresh-step          0.02
-
-                             min-support-min              1
-                             min-support-max              30
-                             min-support-step             5
-
-                             context-path-length-cap-min  2
-                             context-path-length-cap-max  35
-                             context-path-length-cap-step 5
-
-                             seed-frac-min                0.05
-                             seed-frac-max                0.85
-                             seed-frac-step               0.2}}]]
-  (for [context-path-length-cap [35] #_[2 3 4 5 10 20 35] #_(range context-path-length-cap-min context-path-length-cap-max context-path-length-cap-step)
-        context-thresh [0.95] #_ [0.975 0.95 0.925 0.9 0.85]
-        cluster-thresh [0.95] #_[0.95 0.9 0.8 0.7 0.6 0.5] #_(range cluster-thresh-min cluster-thresh-max cluster-thresh-step)
-        min-support [1] #_[1 3 5 10 20 30] #_(range min-support-min min-support-max min-support-step)
-        seed-frac [0.05] #_[0.05 0.25 0.45 0.65 0.75] #_(range seed-frac-min seed-frac-max seed-frac-step)]
+  [property model & {:keys [context-path-length-cap context-thresh cluster-thresh min-support seed-frac]}]
+  (for [context-path-length-cap context-path-length-cap
+        context-thresh context-thresh
+        cluster-thresh cluster-thresh
+        min-support min-support
+        seed-frac seed-frac]
     (let [params {:sentence-filter-fn #(context-path-filter context-path-length-cap %)
                   :seed-fn            #(frac-seeds %1 %2 property seed-frac)
                   #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
