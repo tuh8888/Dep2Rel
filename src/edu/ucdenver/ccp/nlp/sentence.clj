@@ -27,8 +27,8 @@
                   (<= concept-start new-tok-start new-tok-end concept-end) new-tok
                   (<= old-tok-start concept-start concept-end old-tok-end) old-tok
                   (<= concept-start old-tok-start old-tok-end concept-end) old-tok
-                  (<= new-tok-start concept-start) new-tok
-                  (<= old-tok-start concept-start) old-tok
+                  (<= new-tok-start concept-start new-tok-end) new-tok
+                  (<= old-tok-start concept-start old-tok-end) old-tok
                   :else old-tok)))
         first-tok-id doc-toks))
     #_(some
