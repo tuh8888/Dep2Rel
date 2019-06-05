@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: com.googlecode.java-diff-utils/diffutils:1.2.1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/googlecode/java-diff-utils/diffutils/1.2.1/diffutils-1.2.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

@@ -7,9 +7,8 @@
                                                    :sha     "dc457f16a25b60a2984b3240c956e040d8303141"}
            edu.ucdenver.ccp/knowtator             {:local/root "lib/knowtator-2.1.6.jar"}
            org.clojurenlp/core                    {:mvn/version "3.7.0"}
-           ;incanter/incanter-charts               {:mvn/version "1.9.3"}
-           ;incanter/incanter-core                 {:mvn/version "1.9.3"}
-           }
+           incanter/incanter-charts               {:mvn/version "1.9.3"}
+           incanter/incanter-core                 {:mvn/version "1.9.3"}}
  :aliases {:depstar
            {:extra-deps
             {com.healthfinch/depstar {:git/url "https://github.com/healthfinch/depstar.git"

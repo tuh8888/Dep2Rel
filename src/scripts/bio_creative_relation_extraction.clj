@@ -5,9 +5,9 @@
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
-    #_[incanter.stats :as stats]
-    #_[incanter.core :as incanter]
-    #_[incanter.charts :as charts]))
+            [incanter.stats :as stats]
+            [incanter.core :as incanter]
+            [incanter.charts :as charts]))
 
 (def home-dir (io/file "/" "home" "harrison"))
 #_(def home-dir (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
@@ -80,15 +80,34 @@
                                                                     (and (< (or %3 cluster-similarity-score-threshold) score)
                                                                          score))})])))
 
+;;; PCA ;;;
+#_(def X (->> model :sentences
+            (map :context-vector)
+            (mapv seq)
+            (incanter/to-dataset)
+            (incanter/to-matrix)))
+#_(def pca (stats/principal-components X))
+
+#_(def components (:rotation pca))
+#_(def pc1 (incanter/sel components :cols 0))
+#_(def pc2 (incanter/sel components :cols 1))
+#_(def x1 (incanter/mmult X pc1))
+#_(def x2 (incanter/mmult X pc2))
+#_(incanter/view (charts/scatter-plot x1 x2
+                    :x-label "PC1"
+                    :y-label "PC2"
+                    :title "PCA"))
+
 ;;; RELATION EXTRACTION
 
 (def matches (let [context-path-length-cap 10
-                   sentences (:sentences model)
-                   #_sentences #_(evaluation/context-path-filter context-path-length-cap sentences)
+                   sentences (->> model
+                                  :sentences
+                                  #_(evaluation/context-path-filter context-path-length-cap))
                    seed-frac 0.2
                    context-thresh 0.95
-                   cluster-thresh 0.95
-                   min-support 3
+                   cluster-thresh 0.8
+                   min-support 10
                    params {:seed-fn           #(evaluation/frac-seeds % sentences property seed-frac)
                            #_:context-match-fn #_#(< context-thresh (re/context-vector-cosine-sim %1 %2))
                            :context-match-fn  (fn [s p]
