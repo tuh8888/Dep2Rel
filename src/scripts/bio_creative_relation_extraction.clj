@@ -81,8 +81,9 @@
 (defn make-model
   [v]
   (let [model (as-> (k/simple-model v) model
-                    (update model :structure-annotations sentence/structures-annotations-with-embeddings)
-                    (update model :concept-annotations sentence/concept-annotations-with-toks model)
+                    (update model :structure-annotations util/pmap-kv sentence/assign-word-embedding)
+                    (update model :structure-annotations util/pmap-kv sentence/assign-sent-id model)
+                    (update model :concept-annotations util/map-kv sentence/assign-tok model)
                     (assoc model :sentences (->> model
                                                  (sentence/concept-annotations->sentences)
                                                  (map #(assoc % :property (evaluation/sent-property model %))))))]
@@ -94,7 +95,7 @@
 (def testing-model (word2vec/with-word2vec word2vec-db
                      (make-model testing-knowtator-view)))
 
-#_(get-in training-model [:structure-annotations (sentence/annotation-tok-id training-model (get-in training-model [:concept-annotations "23402364-T37"]))])
+#_(get-in training-model [:structure-annotations (sentence/ann-tok training-model (get-in training-model [:concept-annotations "23402364-T37"]))])
 #_(get-in training-model [:structure-annotations "23402364-859768"])
 #_(map #(:text (first (vals (get-in training-model [:structure-annotations % :spans])))) (keys (get-in training-model [:structure-graphs "23402364-Sentence 1" :node-map])))
 ;; #{"12871155-T7" "12871155-T20"} has a ridiculously long context due to the number of tokens in 4-amino-6,7,8,9-tetrahydro-2,3-diphenyl-5H-cyclohepta[e]thieno[2,3-b]pyridine

@@ -1,58 +1,49 @@
 (ns edu.ucdenver.ccp.nlp.sentence
   (:require [clojure.math.combinatorics :as combo]
             [clojure.string :as str]
-            [ubergraph.alg]
-            [graph]
-            [math]
-            [word2vec]
+            [ubergraph.alg :as uber-alg]
+            [graph :as graph]
+            [math :as math]
+            [word2vec :as word2vec]
             [taoensso.timbre :as log]))
 
 (defrecord Sentence [concepts entities context context-vector])
 
-(defn annotation-tok-id
-  [model ann]
-  (log/info (:id ann))
-  (let [concept-start (-> ann :spans vals first :start)
-        concept-end (-> ann :spans vals first :end)
-        doc-toks (filter #(= (:doc %) (:doc ann)) (vals (:structure-annotations model)))
-        first-tok-id (first doc-toks)]
-    (:id
-      (reduce
-        (fn [old-tok new-tok]
-          (let [new-tok-start (-> new-tok :spans vals first :start)
-                new-tok-end (-> new-tok :spans vals first :end)
-                old-tok-start (-> old-tok :spans vals first :start)
-                old-tok-end (-> old-tok :spans vals first :end)]
-            (cond (<= new-tok-start concept-start concept-end new-tok-end) new-tok
-                  (<= concept-start new-tok-start new-tok-end concept-end) new-tok
-                  (<= old-tok-start concept-start concept-end old-tok-end) old-tok
-                  (<= concept-start old-tok-start old-tok-end concept-end) old-tok
-                  (<= new-tok-start concept-start new-tok-end) new-tok
-                  (<= old-tok-start concept-start old-tok-end) old-tok
-                  :else old-tok)))
-        first-tok-id doc-toks))
-    #_(some
-        (fn [tok]
-          (let [tok-start (-> tok :spans vals first :start)
-                tok-end (-> tok :spans vals first :end)]
-            (when (or (<= tok-start concept-start concept-end tok-end)
-                      (<= concept-start tok-start tok-end concept-end))
-              (:id tok))))
-        doc-toks)))
+(defn ann-tok
+  [model {[[_ {concept-start :start concept-end :end}]] :spans :keys [doc] :as ann}]
+  (let [tok-id (->> model
+                    :structure-annotations
+                    (vals)
+                    (filter #(= (:doc %) doc))
+                    (reduce
+                      (fn [{[[_ {old-tok-start :start old-tok-end :end}]] :spans :as old-tok}
+                           {[[_ {new-tok-start :start new-tok-end :end}]] :spans :as new-tok}]
+                        (cond (<= new-tok-start concept-start concept-end new-tok-end) new-tok
+                              (<= concept-start new-tok-start new-tok-end concept-end) new-tok
+                              (<= old-tok-start concept-start concept-end old-tok-end) old-tok
+                              (<= concept-start old-tok-start old-tok-end concept-end) old-tok
+                              (<= new-tok-start concept-start new-tok-end) new-tok
+                              (<= old-tok-start concept-start old-tok-end) old-tok
+                              :else old-tok))
+                      nil))]
+    (when-not tok-id (log/warn "No token found for" ann))
+    tok-id))
+
 
 (defn tok-sent-id
-  [model tok-id]
+  [{:keys [structure-graphs]} {:keys [id]}]
   (some
-    (fn [[id sent]]
-      (when (get-in sent [:node-map tok-id])
-        id))
-    (:structure-graphs model)))
+    (fn [[sent-id sent]]
+      (when (get-in sent [:node-map id])
+        sent-id))
+    structure-graphs))
+
 
 (defn dependency-path
   [undirected-sent tok1 tok2]
   (-> undirected-sent
-      (ubergraph.alg/shortest-path tok1 tok2)
-      (ubergraph.alg/nodes-in-path)))
+      (uber-alg/shortest-path tok1 tok2)
+      (uber-alg/nodes-in-path)))
 
 (defn dependency-embedding
   [dependency-path structure-annotations]
@@ -88,39 +79,25 @@
          (remove (comp nil? first)))))
 
 (defn assign-word-embedding
-  [annotation]
-  (assoc annotation
-    :VEC (word2vec/word-embedding
-           (str/lower-case
-             (-> annotation
-                 :spans
-                 vals
-                 first
-                 :text)))))
+  [{:as annotation [_ {:keys [text]}] :spans}]
+  (assoc annotation :VEC (-> text
+                             (str/lower-case)
+                             (word2vec/word-embedding))))
+
+(defn assign-sent-id
+  [model tok]
+  (assoc tok :sent tok-sent-id model tok))
 
 (defn sentences-with-ann
   [sentences id]
   (filter
-    (fn [s]
-      (some
-        (fn [e]
-          (= id e))
-        (:entities s)))
+    (fn [{:keys [entities]}]
+      (some #(= id %) entities))
     sentences))
 
-(defn concept-annotations-with-toks
-  [model concept-annotations]
-  (zipmap (keys concept-annotations)
-          (pmap
-            #(let [tok-id (annotation-tok-id model %)
-                   sent-id (tok-sent-id model tok-id)]
-               (assoc % :tok tok-id
-                        :sent sent-id))
-            (vals concept-annotations))))
+(defn assign-tok
+  [model ann]
+  (let [{:keys [sent id]} (ann-tok model ann)]
+    (assoc ann :tok id
+               :sent sent)))
 
-(defn structures-annotations-with-embeddings
-  [structure-annotations]
-  (zipmap (keys structure-annotations)
-          (doall
-            (pmap assign-word-embedding
-                  (vals structure-annotations)))))
