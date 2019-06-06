@@ -3,19 +3,7 @@
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
             [edu.ucdenver.ccp.knowtator-clj :as k]
-            [taoensso.timbre :as log]
-            [com.climate.claypoole :as cp]))
-
-(defn count-seed-matches
-  [matches]
-  (->> matches (group-by :seed)
-       (map
-         #(vector (->>
-                    (first %)
-                    (:entities)
-                    (map :concept))
-                  (count (second %))))
-       (into {})))
+            [taoensso.timbre :as log]))
 
 (defn pprint-sent
   [model sent]
@@ -29,7 +17,7 @@
        (apply str)))
 
 (defn format-matches
-  [model matches patterns]
+  [model matches _]
   (map (fn [match]
          (let [[e1 _ :as entities] (map #(get-in model [:concept-annotations %]) (:entities match))
 
@@ -127,8 +115,8 @@
        (mapcat #(apply make-seeds (model :sentences) %))))
 
 (defn context-path-filter
-  [dep-filt coll]
-  (filter #(<= (count (:context %)) dep-filt) coll))
+  [dep-filter coll]
+  (filter #(<= (count (:context %)) dep-filter) coll))
 
 (defn frac-seeds
   [model property frac]
@@ -164,7 +152,7 @@
                                                      (<= min-support (count support)))
                                                    patterns))}
               [matches _] (re/cluster-bootstrap-extract-relations-persistent-patterns (get-in split-model [1]) sentences params)
-              model (assoc model :predicted-true (predicted-true matches))
+              model (assoc (get-in split-model [0]) :predicted-true (predicted-true matches))
               metrics (let [metrics (try
                                       (math/calc-metrics model)
                                       (catch ArithmeticException _ {}))]
