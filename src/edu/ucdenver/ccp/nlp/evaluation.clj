@@ -3,7 +3,8 @@
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
             [edu.ucdenver.ccp.knowtator-clj :as k]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [incanter.core :as incanter]))
 
 (defn pprint-sent
   [model sent]
@@ -163,3 +164,50 @@
                                        :seed-frac seed-frac))]
           (log/info "Metrics:" metrics)
           metrics)))))
+
+(defn pca-2
+  [data]
+  (let [X (incanter/to-matrix data)
+        pca (stats/principal-components X)
+        components (:rotation pca)
+        pc1 (incanter/sel components :cols 0)
+        pc2 (incanter/sel components :cols 1)
+        x1 (incanter/mmult X pc1)
+        x2 (incanter/mmult X pc2)]
+    [x1 x2]))
+
+(defn triple->sent
+  [t sentences]
+  (->> sentences
+       (filter #(= t (evaluation/sent->triple %)))
+       (first)))
+(defn edge->sent
+  [g e sentences]
+  (let [t (edge->triple e)
+        property (:value (ubergraph.core/attrs g e))]
+    (assoc (triple->sent t sentences) :property property)))
+
+(defn flatten-context-vector
+  [s]
+  (let [v (vec (seq (:context-vector s)))]
+    (apply assoc s (interleave (range (count v)) v))))
+
+(defn sentences->dataset
+  [sentences]
+  (->> sentences
+       (filter #(identity (:context-vector %)))
+       (map flatten-context-vector)
+       (map #(dissoc % :context-vector :entities :concepts :context))
+       (vec)
+       (incanter/to-dataset)))
+
+(defn triples->dataset
+  [model]
+  (->> model
+       :concept-graphs
+       (vals)
+       (mapcat
+         (fn [g]
+           (map #(edge->sent g % (:sentences model))
+                (ubergraph.core/find-edges g {}))))
+       (sentences->dataset)))

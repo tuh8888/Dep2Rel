@@ -70,70 +70,68 @@
       (count)))
 
 ;;; PCA ;;;
-(defn show-pca
-  [coll]
-  (let [X (->> coll
-               (map :context-vector)
-               (filter identity)
-               (map seq)
-               (map #(take 2 %))
-               (map vec)
-               (vec)
-               (incanter/to-dataset)
-               (incanter/to-matrix))
-        pca (stats/principal-components X)
 
-        components (:rotation pca)
-        pc1 (incanter/sel components :cols 0)
-        pc2 (incanter/sel components :cols 1)
-        x1 (incanter/mmult X pc1)
-        x2 (incanter/mmult X pc2)]
-    (incanter/view (charts/scatter-plot x1 x2
-                                        :x-label "PC1"
-                                        :y-label "PC2"
-                                        :title "PCA"))))
+(def triples-dataset (evaluation/triples->dataset model))
+(def groups (incanter/sel triples-dataset :cols :property))
 
-(comment (show-pca (:sentences model))
-         (-> (:sentences model)
-             (cluster-tools/single-pass-cluster #{}
-               {:cluster-merge-fn re/add-to-pattern
-                :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                     (and (< (or %3 0.75) score)
-                                          score))})
-             (show-pca)))
+(def x (evaluation/pca-2 triples-dataset))
+(count (distinct groups))
+(incanter/view (charts/scatter-plot (get x 0) (get x 1)
+                                    :group-by groups
+                                    :legend true
+                                    :x-label "PC1"
+                                    :y-label "PC2"
+                                    :title "PCA"))
+
+(def sent-dataset (evaluation/sentences->dataset (:sentences model)))
+(def x2 (evaluation/pca-2 sent-dataset))
+(incanter/view (charts/scatter-plot (get x2 0) (get x2 1)
+                                    :legend true
+                                    :x-label "PC1"
+                                    :y-label "PC2"
+                                    :title "PCA"))
+
+(comment
+  (pca-2 (:sentences model))
+  (-> (:sentences model)
+      (cluster-tools/single-pass-cluster #{}
+        {:cluster-merge-fn re/add-to-pattern
+         :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                              (and (< (or %3 0.75) score)
+                                   score))})
+      (pca-2)))
 
 ;;; RELATION EXTRACTION
 (def split-model (let [seed-frac 0.2]
                    (evaluation/frac-seeds model property seed-frac)))
 
 (def results (let [context-path-length-cap 100
-                   context-thresh 0.94
+                   context-thresh 0.95
                    cluster-thresh 0.95
-                   min-match-support 10
+                   min-match-support 3
                    min-seed-support 3
-                   ;min-seed-matches 0
                    min-match-matches 0]
-               (letfn [(context-match [s p]
+               (letfn [(context-match-fn [s p]
                          (and (re/sent-pattern-concepts-match? s p)
                               (< context-thresh (re/context-vector-cosine-sim s p))))
-                       (make-pattern [samples clusters]
-                         (cluster-tools/single-pass-cluster samples clusters
-                           {:cluster-merge-fn re/add-to-pattern
-                            :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                 (and (< (or %3 cluster-thresh) score)
-                                                      score))}))
-                       (pattern-update [patterns seeds matches]
-                         (if (empty? matches)
-                           (remove #(> min-seed-support (count (:support %))) patterns)
-                           (->> patterns
-                                (remove #(> (+ min-match-support) (count (:support %))))
-                                #_(remove #(> min-seed-matches
-                                              (count (filter (fn [s] (context-match s %)) seeds))))
-                                (remove #(> min-match-matches
-                                            (count (filter (fn [s] (context-match s %)) matches)))))))]
-                 (let [params {:context-match-fn  context-match
-                               :make-pattern-fn   make-pattern
-                               :pattern-update-fn pattern-update}
+                       (pattern-update-fn [seeds new-matches matches patterns]
+                         (-> new-matches
+                             (cluster-tools/single-pass-cluster patterns
+                               {:cluster-merge-fn re/add-to-pattern
+                                :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                     (and (< (or %3 cluster-thresh) score)
+                                                          score))})
+                             (cond->>
+                               (and (< 0 min-seed-support)
+                                    (empty? new-matches)) (remove #(> min-seed-support (count (:support %))))
+                               (and (< 0 min-match-support)
+                                    (seq new-matches)) (remove #(> (+ min-match-support) (count (:support %))))
+                               (and (< 0 min-match-matches)
+                                    (seq new-matches)) (remove #(> min-match-matches
+                                                                   (count (filter (fn [s] (context-match-fn s %)) matches)))))
+                             (set)))]
+                 (let [params {:context-match-fn  context-match-fn
+                               :pattern-update-fn pattern-update-fn}
                        sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
                        [matches patterns] (re/bootstrap-persistent-patterns (get-in split-model [1]) sentences params)]
                    (log/info "Metrics:" (-> (get-in split-model [0])
