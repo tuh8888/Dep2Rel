@@ -4,7 +4,8 @@
             [edu.ucdenver.ccp.nlp.sentence :as sentence]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [taoensso.timbre :as log]
-            [incanter.core :as incanter]))
+            [incanter.core :as incanter]
+            [incanter.stats :as stats]))
 
 (defn pprint-sent
   [model sent]
@@ -133,26 +134,32 @@
 
 
 (defn parameter-walk
-  [property model & {:keys [context-path-length-cap context-thresh cluster-thresh min-support seed-frac]}]
+  [property model & {:keys [context-match-fn
+                            pattern-update-fn
+                            context-path-length-cap
+                            context-thresh
+                            cluster-thresh
+                            min-seed-support
+                            min-match-support
+                            min-match-matches
+                            seed-frac]}]
   (for [seed-frac seed-frac]
     (let [split-model (frac-seeds model property seed-frac)]
       (for [context-path-length-cap context-path-length-cap
             context-thresh context-thresh
             cluster-thresh cluster-thresh
-            min-support min-support]
+            min-support min-seed-support
+            min-match-support min-match-support
+            min-match-matches min-match-matches
+            context-match-fn (partial context-match-fn context-thresh)
+            pattern-update-fn (partial pattern-update-fn context-match-fn {:cluster-thresh cluster-thresh
+                                                                           :min-match-support min-match-support
+                                                                           :min-seed-support min-seed-support
+                                                                           :min-match-matches min-match-matches})]
         (let [sentences (context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
-              params {:context-match-fn  (fn [s p]
-                                           (and (re/sent-pattern-concepts-match? s p)
-                                                (< context-thresh (re/context-vector-cosine-sim s p))))
-                      :cluster-merge-fn  re/add-to-pattern
-                      :cluster-match-fn  #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                            (and (< (or %3 cluster-thresh) score)
-                                                 score))
-                      :pattern-update-fn (fn [patterns _]
-                                           (filter (fn [{:keys [support]}]
-                                                     (<= min-support (count support)))
-                                                   patterns))}
-              [matches _] (re/cluster-bootstrap-extract-relations-persistent-patterns (get-in split-model [1]) sentences params)
+              params {:context-match-fn  context-match-fn
+                      :pattern-update-fn pattern-update-fn}
+              [matches _] (re/bootstrap (get-in split-model [1]) sentences params)
               model (assoc (get-in split-model [0]) :predicted-true (predicted-true matches))
               metrics (let [metrics (try
                                       (math/calc-metrics model)
@@ -160,7 +167,7 @@
                         (assoc metrics :context-path-length-cap context-path-length-cap
                                        :context-thresh context-thresh
                                        :cluster-thresh cluster-thresh
-                                       :min-support min-support
+                                       :min-seed-support min-support
                                        :seed-frac seed-frac))]
           (log/info "Metrics:" metrics)
           metrics)))))
@@ -179,7 +186,7 @@
 (defn triple->sent
   [t sentences]
   (->> sentences
-       (filter #(= t (evaluation/sent->triple %)))
+       (filter #(= t (sent->triple %)))
        (first)))
 (defn edge->sent
   [g e sentences]

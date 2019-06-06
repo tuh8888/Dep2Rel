@@ -121,7 +121,7 @@
                              :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
                                                   (and (< (or %3 cluster-thresh) score)
                                                        score))
-                             :min-support      min-support}
+                             :min-seed-support min-support}
                      matches (->> (re/cluster-bootstrap-extract-relations seeds sentences params)
                                   (map #(merge % params)))]
                  (log/info "Metrics" (c-metrics matches))
@@ -152,7 +152,7 @@
   (count param-results)
   (let [f (io/file "." "params.csv")
         p p3
-        col-names [:seed-thresh :cluster-thresh :min-support :count :num-matches]
+        col-names [:seed-thresh :cluster-thresh :min-seed-support :count :num-matches]
         csv-form (str (apply str col-names) "\n"
                       (apply str
                              (map

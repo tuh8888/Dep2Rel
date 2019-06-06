@@ -102,42 +102,48 @@
       (pca-2)))
 
 ;;; RELATION EXTRACTION
+(defn concept-context-match
+  [{:keys [context-thresh]} s p]
+  (and (re/sent-pattern-concepts-match? s p)
+       (< context-thresh (re/context-vector-cosine-sim s p))))
+(defn pattern-update
+  [context-match-fn cluster-thresh min-seed-support min-match-support min-match-matches seeds new-matches matches patterns]
+  (-> new-matches
+      (cluster-tools/single-pass-cluster patterns
+        {:cluster-merge-fn re/add-to-pattern
+         :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                              (and (< (or %3 cluster-thresh) score)
+                                   score))})
+      (cond->>
+        (and (< 0 min-seed-support)
+             (empty? new-matches)) (remove #(> min-seed-support (count (:support %))))
+        (and (< 0 min-match-support)
+             (seq new-matches)) (remove #(> (+ min-match-support) (count (:support %))))
+        (and (< 0 min-match-matches)
+             (seq new-matches)) (remove #(> min-match-matches
+                                            (count (filter (fn [s] (context-match-fn s %)) matches)))))
+      (set)))
+
 (def split-model (let [seed-frac 0.2]
                    (evaluation/frac-seeds model property seed-frac)))
 
 (def results (let [context-path-length-cap 100
-                   context-thresh 0.95
-                   cluster-thresh 0.95
-                   min-match-support 3
-                   min-seed-support 3
-                   min-match-matches 0]
-               (letfn [(context-match-fn [s p]
-                         (and (re/sent-pattern-concepts-match? s p)
-                              (< context-thresh (re/context-vector-cosine-sim s p))))
-                       (pattern-update-fn [seeds new-matches matches patterns]
-                         (-> new-matches
-                             (cluster-tools/single-pass-cluster patterns
-                               {:cluster-merge-fn re/add-to-pattern
-                                :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                     (and (< (or %3 cluster-thresh) score)
-                                                          score))})
-                             (cond->>
-                               (and (< 0 min-seed-support)
-                                    (empty? new-matches)) (remove #(> min-seed-support (count (:support %))))
-                               (and (< 0 min-match-support)
-                                    (seq new-matches)) (remove #(> (+ min-match-support) (count (:support %))))
-                               (and (< 0 min-match-matches)
-                                    (seq new-matches)) (remove #(> min-match-matches
-                                                                   (count (filter (fn [s] (context-match-fn s %)) matches)))))
-                             (set)))]
-                 (let [params {:context-match-fn  context-match-fn
-                               :pattern-update-fn pattern-update-fn}
-                       sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
-                       [matches patterns] (re/bootstrap-persistent-patterns (get-in split-model [1]) sentences params)]
-                   (log/info "Metrics:" (-> (get-in split-model [0])
-                                            (assoc :predicted-true (evaluation/predicted-true matches))
-                                            (math/calc-metrics)))
-                   [matches patterns]))))
+
+                   context-match-fn (partial concept-context-match {:context-thresh 0.95})
+                   pattern-update-fn (partial pattern-update
+                                              context-match-fn
+                                              {:cluster-thresh 0.95
+                                               :min-match-support 3
+                                               :min-seed-support 3
+                                               :min-match-matches 0})]
+               (let [params {:context-match-fn  context-match-fn
+                             :pattern-update-fn pattern-update-fn}
+                     sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
+                     [matches patterns] (re/bootstrap (get-in split-model [1]) sentences params)]
+                 (log/info "Metrics:" (-> (get-in split-model [0])
+                                          (assoc :predicted-true (evaluation/predicted-true matches))
+                                          (math/calc-metrics)))
+                 [matches patterns])))
 
 (apply evaluation/format-matches model results)
 
@@ -147,6 +153,10 @@
                                                  :context-path-length-cap [100] #_[2 3 4 5 10 20 35]
                                                  :context-thresh [0.95] #_[0.975 0.95 0.925 0.9 0.85]
                                                  :cluster-thresh [0.95] #_[0.95 0.9 0.8 0.7 0.6 0.5]
-                                                 :min-support [0] #_[0 3 5 10 20 30]
-                                                 :seed-frac [0.05 0.25 0.45 0.65 0.75]))
+                                                 :min-seed-support [3] #_[0 3 5 10 20 30]
+                                                 :min-match-support [3]
+                                                 :min-match-matches [0]
+                                                 :seed-frac [0.05 0.25 0.45 0.65 0.75]
+                                                 :context-match-fn concept-context-match
+                                                 :pattern-update-fn pattern-update))
   (spit (io/file training-dir "results" "results.edn") parameter-walk))
