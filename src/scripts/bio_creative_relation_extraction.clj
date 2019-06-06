@@ -26,7 +26,7 @@
 (def word-vector-dir (io/file home-dir "WordVectors"))
 (def word2vec-db (.getAbsolutePath (io/file word-vector-dir "bio-word-vectors-clj.vec")))
 
-(def training-knowtator-view (k/view training-dir))
+#_(def training-knowtator-view (k/view training-dir))
 (def testing-knowtator-view (k/view testing-dir))
 
 #_(rdr/biocreative-read-abstracts (k/model training-knowtator-view) (io/file training-dir "chemprot_training_abstracts.tsv"))
@@ -48,6 +48,7 @@
 ;; Read from conll files
 ;#_(rdr/biocreative-read-dependency annotations training-dir word2vec-db)
 (.save (k/model training-knowtator-view))
+(.save (k/model testing-knowtator-view))
 
 
 (let [sentences-dir (->> "sentences"
