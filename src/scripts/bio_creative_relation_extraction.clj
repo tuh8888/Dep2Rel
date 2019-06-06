@@ -63,6 +63,7 @@
                            (apply str))
               sentence-f (io/file sent-dir (str id ".txt"))]
           (spit sentence-f content)))
+      (println "Run dependency parser, then continue")
       (read-line))
     (when (empty? (file-seq (io/file dir "Structures")))
       (let [conll-util (ConllUtil.)]
