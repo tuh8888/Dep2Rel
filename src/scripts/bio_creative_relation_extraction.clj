@@ -5,9 +5,9 @@
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
-    #_[incanter.stats :as stats]
-    #_[incanter.core :as incanter]
-    #_[incanter.charts :as charts]))
+            [incanter.stats :as stats]
+            [incanter.core :as incanter]
+            [incanter.charts :as charts]))
 
 (def home-dir (io/file "/" "home" "harrison"))
 #_(def home-dir (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
@@ -28,7 +28,7 @@
 ;          (io/file sentences-dir (str (name k) ".txt"))]
 ;      (spit sentence-f content))))
 
-(def annotations (k/model training-dir nil))
+(def annotations (k/view training-dir))
 
 #_(rdr/biocreative-read-abstracts (k/model annotations) (io/file training-dir "chemprot_training_abstracts.tsv"))
 #_(rdr/biocreative-read-entities (k/model annotations) (io/file training-dir "chemprot_training_entities.tsv"))
@@ -45,12 +45,10 @@
 
                  model (assoc model
                          :concept-annotations concept-annotations-with-toks
-                         :structure-annotations structures-annotations-with-embeddings)
-                 sentences (sentence/concept-annotations->sentences model)]
+                         :structure-annotations structures-annotations-with-embeddings)]
+             (assoc model :sentences (sentence/concept-annotations->sentences model))))
 
-             (assoc model :sentences sentences)))
-
-#_(get-in model [:structure-annotations (sentence/annotation-tok-id model (get (:concept-annotations model) "23402364-T37"))])
+#_(get-in model [:structure-annotations (sentence/annotation-tok-id model (get-in model [:concept-annotations "23402364-T37"]))])
 #_(get-in model [:structure-annotations "23402364-859768"])
 #_(map #(:text (first (vals (get-in model [:structure-annotations % :spans])))) (keys (get-in model [:structure-graphs "23402364-Sentence 1" :node-map])))
 (log/info "Num sentences:" (count (:sentences model)))
@@ -65,53 +63,63 @@
 (comment
   (-> (evaluation/make-all-seeds model property (:sentences model))
       (cluster-tools/single-pass-cluster #{}
-                                         {:cluster-merge-fn re/add-to-pattern
-                                          :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                               (and (< (or %3 0.75) score)
-                                                                    score))})
+        {:cluster-merge-fn re/add-to-pattern
+         :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                              (and (< (or %3 0.75) score)
+                                   score))})
       (count)))
-#_(let [x (range -3 3 0.1)]
+(let [x (range -3 3 0.1)]
     (incanter/view
       (charts/dynamic-scatter-plot
         [cluster-similarity-score-threshold (range 0 1 0.01)]
-        [x (cluster-tools/single-pass-cluster sentences #{}
-                                                        {:cluster-merge-fn re/add-to-pattern
-                                                         :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                                              (and (< (or %3 cluster-similarity-score-threshold) score)
-                                                                                   score))})])))
+        [x (cluster-tools/single-pass-cluster (:sentences model) #{}
+             {:cluster-merge-fn re/add-to-pattern
+              :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                   (and (< (or %3 cluster-similarity-score-threshold) score)
+                                        score))})])))
 
 ;;; PCA ;;;
-#_(def X (->> model :sentences
-              (map :context-vector)
-              (mapv seq)
-              (incanter/to-dataset)
-              (incanter/to-matrix)))
-#_(def pca (stats/principal-components X))
+(defn show-pca
+  [coll]
+  (let [X (->> coll
+               (map :context-vector)
+               (filter identity)
+               (map seq)
+               (map #(take 2 %))
+               (map vec)
+               (vec)
+               (incanter/to-dataset)
+               (incanter/to-matrix))
+        pca (stats/principal-components X)
 
-#_(def components (:rotation pca))
-#_(def pc1 (incanter/sel components :cols 0))
-#_(def pc2 (incanter/sel components :cols 1))
-#_(def x1 (incanter/mmult X pc1))
-#_(def x2 (incanter/mmult X pc2))
-#_(incanter/view (charts/scatter-plot x1 x2
-                                      :x-label "PC1"
-                                      :y-label "PC2"
-                                      :title "PCA"))
+        components (:rotation pca)
+        pc1 (incanter/sel components :cols 0)
+        pc2 (incanter/sel components :cols 1)
+        x1 (incanter/mmult X pc1)
+        x2 (incanter/mmult X pc2)]
+    (incanter/view (charts/scatter-plot x1 x2
+                                        :x-label "PC1"
+                                        :y-label "PC2"
+                                        :title "PCA"))))
+
+(comment (show-pca (:sentences model))
+         (-> (:sentences model)
+             (cluster-tools/single-pass-cluster #{}
+               {:cluster-merge-fn re/add-to-pattern
+                :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                     (and (< (or %3 0.75) score)
+                                          score))})
+             (show-pca)))
 
 ;;; RELATION EXTRACTION
 (def split-model (let [seed-frac 0.2]
                    (evaluation/frac-seeds model property seed-frac)))
 
-(-> (get-in split-model [0])
-    (assoc :predicted-true #{})
-    (math/false-neg)
-    (count))
-
 (def results (let [context-path-length-cap 100
-                   context-thresh 0.95
+                   context-thresh 0.94
                    cluster-thresh 0.95
                    min-match-support 10
-                   min-seed-support 0
+                   min-seed-support 3
                    min-seed-matches 0
                    min-match-matches 0
                    sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
@@ -143,7 +151,7 @@
                                                                                            (filter #(context-match-fn % p))
                                                                                            (count))))))))}
                    [matches patterns] (re/bootstrap-persistent-patterns (get-in split-model [1]) sentences params)]
-               (log/info "Metrics:" (-> model
+               (log/info "Metrics:" (-> (get-in split-model [0])
                                         (assoc :predicted-true (evaluation/predicted-true matches))
                                         (math/calc-metrics)))
                [matches patterns]))
