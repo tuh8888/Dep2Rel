@@ -5,7 +5,8 @@
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [taoensso.timbre :as log]
             [incanter.core :as incanter]
-            [incanter.stats :as stats]))
+            [incanter.stats :as stats]
+            [com.climate.claypoole :as cp]))
 
 (defn pprint-sent
   [model sent]
@@ -144,34 +145,34 @@
                             min-match-support
                             min-match-matches
                             seed-frac]}]
-  (for [seed-frac seed-frac
-        :let [split-model (frac-seeds model property seed-frac)]
-        context-path-length-cap context-path-length-cap
-        context-thresh context-thresh
-        cluster-thresh cluster-thresh
-        min-seed-support min-seed-support
-        min-match-support min-match-support
-        min-match-matches min-match-matches]
-    (let [params {:seed-frac seed-frac
-                  :context-path-length-cap context-path-length-cap
-                  :context-thresh    context-thresh
-                  :cluster-thresh    cluster-thresh
-                  :min-match-support min-match-support
-                  :min-seed-support  min-seed-support
-                  :min-match-matches min-match-matches}
-          sentences (context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
-          context-match-fn (partial context-match-fn params)
-          pattern-update-fn (partial pattern-update-fn context-match-fn params)
-          [matches _] (re/bootstrap (get-in split-model [1]) sentences {:context-match-fn  context-match-fn
-                                                                        :pattern-update-fn pattern-update-fn
-                                                                        :terminate? terminate?})
-          model (assoc (get-in split-model [0]) :predicted-true (predicted-true matches))
-          metrics (let [metrics (try
-                                  (math/calc-metrics model)
-                                  (catch ArithmeticException _ {}))]
-                    (merge metrics params))]
-      (log/info "Metrics:" metrics)
-      metrics)))
+  (cp/upfor (dec (cp/ncpus)) [seed-frac seed-frac
+                              :let [split-model (frac-seeds model property seed-frac)]
+                              context-path-length-cap context-path-length-cap
+                              context-thresh context-thresh
+                              cluster-thresh cluster-thresh
+                              min-seed-support min-seed-support
+                              min-match-support min-match-support
+                              min-match-matches min-match-matches]
+            (let [params {:seed-frac               seed-frac
+                          :context-path-length-cap context-path-length-cap
+                          :context-thresh          context-thresh
+                          :cluster-thresh          cluster-thresh
+                          :min-match-support       min-match-support
+                          :min-seed-support        min-seed-support
+                          :min-match-matches       min-match-matches}
+                  sentences (context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
+                  context-match-fn (partial context-match-fn params)
+                  pattern-update-fn (partial pattern-update-fn context-match-fn params)
+                  [matches _] (re/bootstrap (get-in split-model [1]) sentences {:context-match-fn  context-match-fn
+                                                                                :pattern-update-fn pattern-update-fn
+                                                                                :terminate?        terminate?})
+                  model (assoc (get-in split-model [0]) :predicted-true (predicted-true matches))
+                  metrics (let [metrics (try
+                                          (math/calc-metrics model)
+                                          (catch ArithmeticException _ {}))]
+                            (merge metrics params))]
+              (log/info "Metrics:" metrics)
+              metrics)))
 
 (defn pca-2
   [data]

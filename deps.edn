@@ -9,8 +9,8 @@
            org.clojurenlp/core                    {:mvn/version "3.7.0"}
            incanter/incanter-charts               {:mvn/version "1.9.3"}
            incanter/incanter-core                 {:mvn/version "1.9.3"}}
- :aliases {:depstar
-           {:extra-deps
-            {com.healthfinch/depstar {:git/url "https://github.com/healthfinch/depstar.git"
-                                      :sha     "4aa7b35189693feebc7d7e4a180b8af0326c9164"}}}}
+ :aliases {:depstar  {:extra-deps
+                      {com.healthfinch/depstar {:git/url "https://github.com/healthfinch/depstar.git"
+                                                :sha     "4aa7b35189693feebc7d7e4a180b8af0326c9164"}}}}
+
  }

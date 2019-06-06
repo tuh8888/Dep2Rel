@@ -130,7 +130,7 @@
   (cond (= 100 iteration) [matches patterns]
         (empty? new-matches) [matches patterns]
         (empty? sentences) [matches patterns]
-        (< 2000 (count new-matches)) [#{} #{}]
+        (< 3000 (count matches)) [#{} #{}]
         (empty? seeds) [#{} #{}]
         (empty? patterns) [matches patterns]))
 
@@ -161,15 +161,15 @@
 (def results (evaluation/parameter-walk property model
                                                :context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
                                                :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
-                                               :cluster-thresh [0.95] #_[0.95 0.9 0.8 0.7 0.6 0.5]
-                                               :min-seed-support [3] #_[0 3 5 10 20 30]
-                                               :min-match-support [0] #_[0 3 5 10 20 30]
-                                               :min-match-matches [0]
-                                               :seed-frac [0.2] #_[0.05 0.25 0.45 0.65 0.75]
+                                               :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
+                                               :min-seed-support #_[3] [0 5 25]
+                                               :min-match-support #_[0] [0 5 25]
+                                               :min-match-matches #_[0] [0 5 25]
+                                               :seed-frac #_[0.2] [0.05 0.25 0.5 0.75]
                                                :terminate? terminate?
                                                :context-match-fn concept-context-match
                                                :pattern-update-fn pattern-update))
 (def results-dataset (incanter/to-dataset results))
-
+(+ 1 1)
 (incanter/view results-dataset)
 (spit (io/file training-dir "results" "results.edn") results)
