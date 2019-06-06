@@ -68,15 +68,6 @@
                               (and (< (or %3 0.75) score)
                                    score))})
       (count)))
-(let [x (range -3 3 0.1)]
-    (incanter/view
-      (charts/dynamic-scatter-plot
-        [cluster-similarity-score-threshold (range 0 1 0.01)]
-        [x (cluster-tools/single-pass-cluster (:sentences model) #{}
-             {:cluster-merge-fn re/add-to-pattern
-              :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                   (and (< (or %3 cluster-similarity-score-threshold) score)
-                                        score))})])))
 
 ;;; PCA ;;;
 (defn show-pca
@@ -120,41 +111,35 @@
                    cluster-thresh 0.95
                    min-match-support 10
                    min-seed-support 3
-                   min-seed-matches 0
-                   min-match-matches 0
-                   sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
-                   context-match-fn (fn [s p]
-                                      (and (re/sent-pattern-concepts-match? s p)
-                                           (< context-thresh (re/context-vector-cosine-sim s p))))
-                   params {:context-match-fn  context-match-fn
-                           :make-pattern-fn   (fn [samples clusters]
-                                                (cluster-tools/single-pass-cluster samples clusters
-                                                  {:cluster-merge-fn re/add-to-pattern
-                                                   :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                                        (and (< (or %3 cluster-thresh) score)
-                                                                             score))}))
-                           :pattern-update-fn (fn [patterns seeds matches]
-
-                                                (if (empty? matches)
-                                                  (remove (fn [{:keys [support]}]
-                                                            (> min-seed-support (count support)))
-                                                          patterns)
-                                                  (->> patterns
-                                                       (remove (fn [{:keys [support]}]
-                                                                 (> (+ min-match-support) (count support))))
-                                                       #_(remove (fn [p]
-                                                                   (> min-seed-matches (->> seeds
-                                                                                            (filter #(context-match-fn % p))
-                                                                                            (count)))))
-                                                       (remove (fn [p]
-                                                                 (> min-match-matches (->> matches
-                                                                                           (filter #(context-match-fn % p))
-                                                                                           (count))))))))}
-                   [matches patterns] (re/bootstrap-persistent-patterns (get-in split-model [1]) sentences params)]
-               (log/info "Metrics:" (-> (get-in split-model [0])
-                                        (assoc :predicted-true (evaluation/predicted-true matches))
-                                        (math/calc-metrics)))
-               [matches patterns]))
+                   ;min-seed-matches 0
+                   min-match-matches 0]
+               (letfn [(context-match [s p]
+                         (and (re/sent-pattern-concepts-match? s p)
+                              (< context-thresh (re/context-vector-cosine-sim s p))))
+                       (make-pattern [samples clusters]
+                         (cluster-tools/single-pass-cluster samples clusters
+                           {:cluster-merge-fn re/add-to-pattern
+                            :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                 (and (< (or %3 cluster-thresh) score)
+                                                      score))}))
+                       (pattern-update [patterns seeds matches]
+                         (if (empty? matches)
+                           (remove #(> min-seed-support (count (:support %))) patterns)
+                           (->> patterns
+                                (remove #(> (+ min-match-support) (count (:support %))))
+                                #_(remove #(> min-seed-matches
+                                              (count (filter (fn [s] (context-match s %)) seeds))))
+                                (remove #(> min-match-matches
+                                            (count (filter (fn [s] (context-match s %)) matches)))))))]
+                 (let [params {:context-match-fn  context-match
+                               :make-pattern-fn   make-pattern
+                               :pattern-update-fn pattern-update}
+                       sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
+                       [matches patterns] (re/bootstrap-persistent-patterns (get-in split-model [1]) sentences params)]
+                   (log/info "Metrics:" (-> (get-in split-model [0])
+                                            (assoc :predicted-true (evaluation/predicted-true matches))
+                                            (math/calc-metrics)))
+                   [matches patterns]))))
 
 (apply evaluation/format-matches model results)
 
