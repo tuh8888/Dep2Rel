@@ -62,7 +62,7 @@
     (apply math/unit-vec-sum vectors)))
 
 (defn sentence-entities
-  [{:keys [structure-annotations structure-graphs]} sent, entities]
+  [{:keys [structure-annotations structure-graphs]} sent entities]
   (let [undirected-sent (graph/undirected-graph (get structure-graphs sent))]
     (keep
       (fn [[{tok1 :tok c1 :concept id1 :id}

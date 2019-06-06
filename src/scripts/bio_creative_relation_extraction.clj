@@ -44,8 +44,11 @@
 
                  model (assoc model
                          :concept-annotations concept-annotations-with-toks
-                         :structure-annotations structures-annotations-with-embeddings)]
-             (assoc model :sentences (sentence/concept-annotations->sentences model))))
+                         :structure-annotations structures-annotations-with-embeddings)
+                 sentences (->> model
+                                (sentence/concept-annotations->sentences)
+                                (map #(assoc % :property (evaluation/sent-property model %))))]
+             (assoc model :sentences sentences)))
 
 #_(get-in model [:structure-annotations (sentence/annotation-tok-id model (get-in model [:concept-annotations "23402364-T37"]))])
 #_(get-in model [:structure-annotations "23402364-859768"])
@@ -134,30 +137,30 @@
         (empty? seeds) [#{} #{}]
         (empty? patterns) [matches patterns]))
 
-(def split-model (let [seed-frac 0.2]
-                   (evaluation/frac-seeds model property seed-frac)))
+(comment
+  (def split-model (let [seed-frac 0.2]
+                     (evaluation/frac-seeds model property seed-frac)))
 
-(def results (let [context-path-length-cap 100
-                   params {:context-thresh    0.95
-                           :cluster-thresh    0.95
-                           :min-match-support 3
-                           :min-seed-support  3
-                           :min-match-matches 0}
-                   context-match-fn (partial concept-context-match params)
-                   pattern-update-fn (partial pattern-update context-match-fn params)]
-               (let [sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
-                     [matches patterns] (re/bootstrap (get-in split-model [1]) sentences {:terminate? terminate?
-                                                                                          :context-match-fn  context-match-fn
-                                                                                          :pattern-update-fn pattern-update-fn})]
-                 (log/info "Metrics:" (-> (get-in split-model [0])
-                                          (assoc :predicted-true (evaluation/predicted-true matches))
-                                          (math/calc-metrics)))
-                 [matches patterns])))
+  (def results (let [context-path-length-cap 100
+                     params {:context-thresh    0.95
+                             :cluster-thresh    0.95
+                             :min-match-support 3
+                             :min-seed-support  3
+                             :min-match-matches 0}
+                     context-match-fn (partial concept-context-match params)
+                     pattern-update-fn (partial pattern-update context-match-fn params)]
+                 (let [sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
+                       [matches patterns] (re/bootstrap (get-in split-model [1]) sentences {:terminate?        terminate?
+                                                                                            :context-match-fn  context-match-fn
+                                                                                            :pattern-update-fn pattern-update-fn})]
+                   (log/info "Metrics:" (-> (get-in split-model [0])
+                                            (assoc :predicted-true (evaluation/predicted-true matches))
+                                            (math/calc-metrics)))
+                   [matches patterns])))
 
-(apply evaluation/format-matches model results)
+  (apply evaluation/format-matches model results))
 
 
-#_(evaluation/parameter-walk property model)
 (def results (evaluation/parameter-walk property model
                                                :context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
                                                :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
@@ -170,6 +173,5 @@
                                                :context-match-fn concept-context-match
                                                :pattern-update-fn pattern-update))
 (def results-dataset (incanter/to-dataset results))
-(+ 1 1)
 (incanter/view results-dataset)
 (spit (io/file training-dir "results" "results.edn") results)

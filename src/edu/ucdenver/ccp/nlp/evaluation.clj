@@ -220,3 +220,10 @@
            (map #(edge->sent g % (:sentences model))
                 (ubergraph.core/find-edges g {}))))
        (sentences->dataset)))
+
+(defn sent-property
+  [{:keys [concept-graphs]} {[id1 id2] :entities}]
+  (some (fn [g] (let [e (ubergraph.core/find-edge g id1 id2)]
+                  (:value (ubergraph.core/attrs g e))))
+        concept-graphs))
+
