@@ -5,7 +5,6 @@
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
-            [incanter.stats :as stats]
             [incanter.core :as incanter]
             [incanter.charts :as charts]))
 
@@ -60,46 +59,53 @@
 
 ;;; CLUSTERING ;;;
 
+(defn default-cluster
+  [samples clusters cluster-thresh]
+  (cluster-tools/single-pass-cluster samples clusters
+    {:cluster-merge-fn re/add-to-pattern
+     :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                          (and (< (or %3 cluster-thresh) score)
+                               score))}))
+
 (comment
   (-> (evaluation/make-all-seeds model property (:sentences model))
-      (cluster-tools/single-pass-cluster #{}
-        {:cluster-merge-fn re/add-to-pattern
-         :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                              (and (< (or %3 0.75) score)
-                                   score))})
+      (default-cluster #{} 0.75)
       (count)))
 
 ;;; PCA ;;;
+(comment
+  (def triples-dataset (evaluation/triples->dataset model))
+  (def groups (incanter/sel triples-dataset :cols :property))
 
-(def triples-dataset (evaluation/triples->dataset model))
-(def groups (incanter/sel triples-dataset :cols :property))
-
-(def x (evaluation/pca-2 triples-dataset))
-(count (distinct groups))
-(incanter/view (charts/scatter-plot (get x 0) (get x 1)
-                                    :group-by groups
-                                    :legend true
-                                    :x-label "PC1"
-                                    :y-label "PC2"
-                                    :title "PCA"))
-
-(def sent-dataset (evaluation/sentences->dataset (:sentences model)))
-(def x2 (evaluation/pca-2 sent-dataset))
-(incanter/view (charts/scatter-plot (get x2 0) (get x2 1)
-                                    :legend true
-                                    :x-label "PC1"
-                                    :y-label "PC2"
-                                    :title "PCA"))
+  (def x (evaluation/pca-2 triples-dataset))
+  (incanter/view (charts/scatter-plot (get x 0) (get x 1)
+                                      :group-by groups
+                                      :legend true
+                                      :x-label "PC1"
+                                      :y-label "PC2"
+                                      :title "PCA")))
+(comment
+  (def sent-dataset (evaluation/sentences->dataset (:sentences model)))
+  (def x2 (evaluation/pca-2 sent-dataset))
+  (incanter/view (charts/scatter-plot (get x2 0) (get x2 1)
+                                      :legend true
+                                      :x-label "PC1"
+                                      :y-label "PC2"
+                                      :title "PCA")))
 
 (comment
-  (pca-2 (:sentences model))
-  (-> (:sentences model)
-      (cluster-tools/single-pass-cluster #{}
-        {:cluster-merge-fn re/add-to-pattern
-         :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                              (and (< (or %3 0.75) score)
-                                   score))})
-      (pca-2)))
+  (def clusters (-> model
+                    :sentences
+                    (default-cluster #{} 0.75)))
+  (def clust-sent-dataset (evaluation/sentences->dataset clusters))
+
+  (def x3 (evaluation/pca-2 clust-sent-dataset))
+  (incanter/view (charts/scatter-plot (get x3 0) (get x3 1)
+                                      :legend true
+                                      :x-label "PC1"
+                                      :y-label "PC2"
+                                      :title "PCA")))
+
 
 ;;; RELATION EXTRACTION
 (defn concept-context-match
@@ -107,13 +113,9 @@
   (and (re/sent-pattern-concepts-match? s p)
        (< context-thresh (re/context-vector-cosine-sim s p))))
 (defn pattern-update
-  [context-match-fn cluster-thresh min-seed-support min-match-support min-match-matches seeds new-matches matches patterns]
+  [context-match-fn {:keys [cluster-thresh min-seed-support min-match-support min-match-matches]} seeds new-matches matches patterns]
   (-> new-matches
-      (cluster-tools/single-pass-cluster patterns
-        {:cluster-merge-fn re/add-to-pattern
-         :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                              (and (< (or %3 cluster-thresh) score)
-                                   score))})
+      (default-cluster patterns cluster-thresh)
       (cond->>
         (and (< 0 min-seed-support)
              (empty? new-matches)) (remove #(> min-seed-support (count (:support %))))
