@@ -32,13 +32,13 @@
                   :else old-tok)))
         first-tok-id doc-toks))
     #_(some
-      (fn [tok]
-        (let [tok-start (-> tok :spans vals first :start)
-              tok-end (-> tok :spans vals first :end)]
-          (when (or (<= tok-start concept-start concept-end tok-end)
-                    (<= concept-start tok-start tok-end concept-end))
-            (:id tok))))
-      doc-toks)))
+        (fn [tok]
+          (let [tok-start (-> tok :spans vals first :start)
+                tok-end (-> tok :spans vals first :end)]
+            (when (or (<= tok-start concept-start concept-end tok-end)
+                      (<= concept-start tok-start tok-end concept-end))
+              (:id tok))))
+        doc-toks)))
 
 (defn tok-sent-id
   [model tok-id]
