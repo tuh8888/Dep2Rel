@@ -7,88 +7,100 @@
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [incanter.core :as incanter]
             [incanter.charts :as charts]
-            [edu.ucdenver.ccp.nlp.readers :as rdr]))
+            [edu.ucdenver.ccp.nlp.readers :as rdr]
+            [clojure.string :as str])
+  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
+           (edu.ucdenver.ccp.knowtator.io.conll ConllUtil)))
 
+;; File naming patterns
+(def sep "_")
+(def training-prefix (apply str (interpose sep ["chemprot" "training"])))
+(def training-pattern (apply str (interpose sep [training-prefix "%s"])))
+(def testing-prefix (apply str (interpose sep ["chemprot" "test" "gs"])))
+(def testing-pattern (apply str (interpose sep ["chemprot" "test" "%s" "gs"])))
+
+;; Files
 (def home-dir (io/file "/" "home" "harrison"))
 #_(def home-dir (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
 (def biocreative-dir (io/file home-dir "BioCreative" "BCVI-2017" "ChemProt_Corpus"))
-(def sep "_")
-(def chemprot "chemprot")
-(def training-string "training")
-(def training-prefix (apply str (interpose sep [chemprot training-string])))
-(def training-pattern (apply str (interpose sep [training-prefix "%s"])))
-(def testing-string "test")
-(def gs-string "gs")
-(def testing-prefix (apply str (interpose sep [chemprot testing-string gs-string])))
-(def testing-pattern (apply str (interpose sep [chemprot testing-string "%s" gs-string])))
 (def training-dir (io/file biocreative-dir training-prefix))
 (def testing-dir (io/file biocreative-dir testing-prefix))
+
 (def word-vector-dir (io/file home-dir "WordVectors"))
 (def word2vec-db (.getAbsolutePath (io/file word-vector-dir "bio-word-vectors-clj.vec")))
 
-#_(def training-knowtator-view (k/view training-dir))
+;; Reading in models
+(def training-knowtator-view (k/view training-dir))
 (def testing-knowtator-view (k/view testing-dir))
 
-#_(rdr/biocreative-read-abstracts (k/model training-knowtator-view) (io/file training-dir "chemprot_training_abstracts.tsv"))
-#_(rdr/biocreative-read-entities (k/model training-knowtator-view) (io/file training-dir "chemprot_training_entities.tsv"))
-#_(rdr/biocreative-read-relations (k/model training-knowtator-view) (io/file training-dir "chemprot_training_relations.tsv"))
-(->> "abstracts"
-     (format (str testing-pattern ".tsv"))
-     (io/file testing-dir)
-     (rdr/biocreative-read-abstracts (k/model testing-knowtator-view)))
-#_(->> "entities"
-       (format (str testing-pattern ".tsv"))
-       (io/file testing-dir)
-       (rdr/biocreative-read-entities (k/model testing-knowtator-view)))
-#_(->> "relations"
-       (format (str testing-pattern ".tsv"))
-       (io/file testing-dir)
-       (rdr/biocreative-read-relations (k/model testing-knowtator-view)))
+(defn read-biocreative-files
+  "Read biocreative files to model. Caches them by saving the model.
+  Only reads in files if the cache is empty."
+  [dir pat v]
+  (let [sent-dir (->> "sentences"
+                      (format pat)
+                      (io/file dir))]
+    (when (empty? (file-seq (io/file dir "Articles")))
+      (->> "abstracts"
+           (format (str pat ".tsv"))
+           (io/file dir)
+           (rdr/biocreative-read-abstracts (k/model v))))
+    (when (empty? (file-seq (io/file dir "Annotations")))
+      (->> "entities"
+           (format (str pat ".tsv"))
+           (io/file dir)
+           (rdr/biocreative-read-entities (k/model v)))
+      (->> "relations"
+           (format (str pat ".tsv"))
+           (io/file dir)
+           (rdr/biocreative-read-relations (k/model v))))
+    (when (empty? (file-seq sent-dir))
+      (doseq [[id content] (rdr/sentenize (k/model v))]
+        (log/info id)
+        (let [content (->> content
+                           (map :text)
+                           (interpose "\n")
+                           (apply str))
+              sentence-f (io/file sent-dir (str id ".txt"))]
+          (spit sentence-f content)))
+      (read-line))
+    (when (empty? (file-seq (io/file dir "Structures")))
+      (let [conll-util (ConllUtil.)]
+        (doseq [f (->> sent-dir
+                       (file-seq)
+                       (filter #(str/ends-with? % ".conll")))]
+          (.readToStructureAnnotations conll-util (k/model v) f))))
 
-;; Read from conll files
-;#_(rdr/biocreative-read-dependency annotations training-dir word2vec-db)
-(.save (k/model training-knowtator-view))
-(.save (k/model testing-knowtator-view))
+    (.save ^KnowtatorModel (k/model v))))
 
+(read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
+(read-biocreative-files training-dir training-pattern training-knowtator-view)
 
-(let [sentences-dir (->> "sentences"
-                         (format testing-pattern)
-                         (io/file testing-dir))]
-  (doseq [[id content] (rdr/sentenize (k/model testing-knowtator-view))]
-    (let [content (->> content
-                       (map :text)
-                       (interpose "\n")
-                       (apply str))
-          sentence-f (io/file sentences-dir (str id ".txt"))]
-      (spit sentence-f content))))
+;; Preparing the model
+(defn make-model
+  [v]
+  (let [model (as-> (k/simple-model v) model
+                    (update model :structure-annotations sentence/structures-annotations-with-embeddings)
+                    (update model :concept-annotations sentence/concept-annotations-with-toks model)
+                    (assoc model :sentences (->> model
+                                                 (sentence/concept-annotations->sentences)
+                                                 (map #(assoc % :property (evaluation/sent-property model %))))))]
+    (log/info "Num sentences:" (count (:sentences model)))
+    model))
 
-
-
-(def training-model (let [model (k/simple-model training-knowtator-view)
-                          structures-annotations-with-embeddings (word2vec/with-word2vec word2vec-db
-                                                                   (sentence/structures-annotations-with-embeddings model))
-
-                          concept-annotations-with-toks (sentence/concept-annotations-with-toks model)
-
-                          model (assoc model
-                                  :concept-annotations concept-annotations-with-toks
-                                  :structure-annotations structures-annotations-with-embeddings)
-                          sentences (->> model
-                                         (sentence/concept-annotations->sentences)
-                                         (map #(assoc % :property (evaluation/sent-property model %))))]
-                      (assoc model :sentences sentences)))
+(def training-model (word2vec/with-word2vec word2vec-db
+                      (make-model training-knowtator-view)))
+(def testing-model (word2vec/with-word2vec word2vec-db
+                     (make-model testing-knowtator-view)))
 
 #_(get-in training-model [:structure-annotations (sentence/annotation-tok-id training-model (get-in training-model [:concept-annotations "23402364-T37"]))])
 #_(get-in training-model [:structure-annotations "23402364-859768"])
 #_(map #(:text (first (vals (get-in training-model [:structure-annotations % :spans])))) (keys (get-in training-model [:structure-graphs "23402364-Sentence 1" :node-map])))
-(log/info "Num sentences:" (count (:sentences training-model)))
-
-(def property "INHIBITOR")
-
 ;; #{"12871155-T7" "12871155-T20"} has a ridiculously long context due to the number of tokens in 4-amino-6,7,8,9-tetrahydro-2,3-diphenyl-5H-cyclohepta[e]thieno[2,3-b]pyridine
 ;;(filter #(= 35 (count (:context %))) (make-all-seeds model property (:sentences model) 100))
 
 ;;; CLUSTERING ;;;
+(def property "INHIBITOR")
 
 (defn default-cluster
   [samples clusters cluster-thresh]
@@ -188,18 +200,19 @@
 
   (apply evaluation/format-matches training-model results))
 
-(log/set-level! :info)
-(def results (evaluation/parameter-walk property training-model
-                                        :context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
-                                        :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
-                                        :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
-                                        :min-seed-support #_[3] [0 5 25]
-                                        :min-match-support #_[0] [0 5 25]
-                                        :min-match-matches #_[0] [0 5 25]
-                                        :seed-frac #_[0.2] [0.05 0.25 0.5 0.75]
-                                        :terminate? terminate?
-                                        :context-match-fn concept-context-match
-                                        :pattern-update-fn pattern-update))
-(def results-dataset (incanter/to-dataset results))
-(incanter/view results-dataset)
-(spit (io/file training-dir "results" "results.edn") results)
+(comment
+  (log/set-level! :info)
+  (def results (evaluation/parameter-walk property training-model
+                                          :context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
+                                          :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
+                                          :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
+                                          :min-seed-support #_[3] [0 5 25]
+                                          :min-match-support #_[0] [0 5 25]
+                                          :min-match-matches #_[0] [0 5 25]
+                                          :seed-frac #_[0.2] [0.05 0.25 0.5 0.75]
+                                          :terminate? terminate?
+                                          :context-match-fn concept-context-match
+                                          :pattern-update-fn pattern-update))
+  (def results-dataset (incanter/to-dataset results))
+  (incanter/view results-dataset)
+  (spit (io/file training-dir "results" "results.edn") results))

@@ -109,18 +109,18 @@
     sentences))
 
 (defn concept-annotations-with-toks
-  [model]
-  (zipmap (keys (:concept-annotations model))
+  [model concept-annotations]
+  (zipmap (keys concept-annotations)
           (pmap
             #(let [tok-id (annotation-tok-id model %)
                    sent-id (tok-sent-id model tok-id)]
                (assoc % :tok tok-id
                         :sent sent-id))
-            (vals (:concept-annotations model)))))
+            (vals concept-annotations))))
 
 (defn structures-annotations-with-embeddings
-  [model]
-  (zipmap (keys (:structure-annotations model))
+  [structure-annotations]
+  (zipmap (keys structure-annotations)
           (doall
             (pmap assign-word-embedding
-                  (vals (:structure-annotations model))))))
+                  (vals structure-annotations)))))
