@@ -203,7 +203,7 @@
   [sentences]
   (->> sentences
        (filter #(identity (:context-vector %)))
-       (map flatten-context-vector)
+       (pmap flatten-context-vector)
        (map #(dissoc % :context-vector :entities :concepts :context))
        (vec)
        (incanter/to-dataset)))
