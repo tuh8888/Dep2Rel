@@ -42,9 +42,10 @@
       0)))
 
 (defn bootstrap
-  [seeds sentences & [{:keys [context-match-fn pattern-update-fn]}]]
+  [seeds sentences & [{:keys [terminate? context-match-fn pattern-update-fn]}]]
   (log/info "Seeds" (count seeds))
-  (loop [new-matches (set seeds)
+  (loop [iteration 0
+         new-matches (set seeds)
          matches #{}
          patterns #{}
          sentences sentences]
@@ -54,7 +55,8 @@
           new-matches (util/find-matches sentences patterns context-match-fn)
           matches (into matches new-matches)
           sentences (remove (set new-matches) sentences)]
-      (if (empty? new-matches)
-        [matches patterns]
-        (recur new-matches matches patterns sentences)))))
+
+      (if-let [results (terminate? iteration seeds new-matches matches patterns sentences)]
+        results
+        (recur (inc iteration) new-matches matches patterns sentences)))))
 

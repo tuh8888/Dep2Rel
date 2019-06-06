@@ -113,7 +113,7 @@
   (and (re/sent-pattern-concepts-match? s p)
        (< context-thresh (re/context-vector-cosine-sim s p))))
 (defn pattern-update
-  [context-match-fn {:keys [cluster-thresh min-seed-support min-match-support min-match-matches]} seeds new-matches matches patterns]
+  [context-match-fn {:keys [cluster-thresh min-seed-support min-match-support min-match-matches]} _ new-matches matches patterns]
   (-> new-matches
       (default-cluster patterns cluster-thresh)
       (cond->>
@@ -125,23 +125,30 @@
              (seq new-matches)) (remove #(> min-match-matches
                                             (count (filter (fn [s] (context-match-fn s %)) matches)))))
       (set)))
+(defn terminate?
+  [iteration seeds new-matches matches patterns sentences]
+  (cond (= 100 iteration) [matches patterns]
+        (empty? new-matches) [matches patterns]
+        (empty? sentences) [matches patterns]
+        (< 2000 (count new-matches)) [#{} #{}]
+        (empty? seeds) [#{} #{}]
+        (empty? patterns) [matches patterns]))
 
 (def split-model (let [seed-frac 0.2]
                    (evaluation/frac-seeds model property seed-frac)))
 
 (def results (let [context-path-length-cap 100
-
-                   context-match-fn (partial concept-context-match {:context-thresh 0.95})
-                   pattern-update-fn (partial pattern-update
-                                              context-match-fn
-                                              {:cluster-thresh 0.95
-                                               :min-match-support 3
-                                               :min-seed-support 3
-                                               :min-match-matches 0})]
-               (let [params {:context-match-fn  context-match-fn
-                             :pattern-update-fn pattern-update-fn}
-                     sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
-                     [matches patterns] (re/bootstrap (get-in split-model [1]) sentences params)]
+                   params {:context-thresh    0.95
+                           :cluster-thresh    0.95
+                           :min-match-support 3
+                           :min-seed-support  3
+                           :min-match-matches 0}
+                   context-match-fn (partial concept-context-match params)
+                   pattern-update-fn (partial pattern-update context-match-fn params)]
+               (let [sentences (evaluation/context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
+                     [matches patterns] (re/bootstrap (get-in split-model [1]) sentences {:terminate? terminate?
+                                                                                          :context-match-fn  context-match-fn
+                                                                                          :pattern-update-fn pattern-update-fn})]
                  (log/info "Metrics:" (-> (get-in split-model [0])
                                           (assoc :predicted-true (evaluation/predicted-true matches))
                                           (math/calc-metrics)))
@@ -149,16 +156,20 @@
 
 (apply evaluation/format-matches model results)
 
-(comment
-  #_(evaluation/parameter-walk property model)
-  (def parameter-walk (evaluation/parameter-walk property model
-                                                 :context-path-length-cap [100] #_[2 3 4 5 10 20 35]
-                                                 :context-thresh [0.95] #_[0.975 0.95 0.925 0.9 0.85]
-                                                 :cluster-thresh [0.95] #_[0.95 0.9 0.8 0.7 0.6 0.5]
-                                                 :min-seed-support [3] #_[0 3 5 10 20 30]
-                                                 :min-match-support [3]
-                                                 :min-match-matches [0]
-                                                 :seed-frac [0.05 0.25 0.45 0.65 0.75]
-                                                 :context-match-fn concept-context-match
-                                                 :pattern-update-fn pattern-update))
-  (spit (io/file training-dir "results" "results.edn") parameter-walk))
+
+#_(evaluation/parameter-walk property model)
+(def results (evaluation/parameter-walk property model
+                                               :context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
+                                               :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
+                                               :cluster-thresh [0.95] #_[0.95 0.9 0.8 0.7 0.6 0.5]
+                                               :min-seed-support [3] #_[0 3 5 10 20 30]
+                                               :min-match-support [0] #_[0 3 5 10 20 30]
+                                               :min-match-matches [0]
+                                               :seed-frac [0.2] #_[0.05 0.25 0.45 0.65 0.75]
+                                               :terminate? terminate?
+                                               :context-match-fn concept-context-match
+                                               :pattern-update-fn pattern-update))
+(def results-dataset (incanter/to-dataset results))
+
+(incanter/view results-dataset)
+(spit (io/file training-dir "results" "results.edn") results)

@@ -136,6 +136,7 @@
 (defn parameter-walk
   [property model & {:keys [context-match-fn
                             pattern-update-fn
+                            terminate?
                             context-path-length-cap
                             context-thresh
                             cluster-thresh
@@ -143,34 +144,34 @@
                             min-match-support
                             min-match-matches
                             seed-frac]}]
-  (for [seed-frac seed-frac]
-    (let [split-model (frac-seeds model property seed-frac)]
-      (for [context-path-length-cap context-path-length-cap
-            context-thresh context-thresh
-            cluster-thresh cluster-thresh
-            min-support min-seed-support
-            min-match-support min-match-support
-            min-match-matches min-match-matches
-            context-match-fn (partial context-match-fn context-thresh)
-            pattern-update-fn (partial pattern-update-fn context-match-fn {:cluster-thresh cluster-thresh
-                                                                           :min-match-support min-match-support
-                                                                           :min-seed-support min-seed-support
-                                                                           :min-match-matches min-match-matches})]
-        (let [sentences (context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
-              params {:context-match-fn  context-match-fn
-                      :pattern-update-fn pattern-update-fn}
-              [matches _] (re/bootstrap (get-in split-model [1]) sentences params)
-              model (assoc (get-in split-model [0]) :predicted-true (predicted-true matches))
-              metrics (let [metrics (try
-                                      (math/calc-metrics model)
-                                      (catch ArithmeticException _ {}))]
-                        (assoc metrics :context-path-length-cap context-path-length-cap
-                                       :context-thresh context-thresh
-                                       :cluster-thresh cluster-thresh
-                                       :min-seed-support min-support
-                                       :seed-frac seed-frac))]
-          (log/info "Metrics:" metrics)
-          metrics)))))
+  (for [seed-frac seed-frac
+        :let [split-model (frac-seeds model property seed-frac)]
+        context-path-length-cap context-path-length-cap
+        context-thresh context-thresh
+        cluster-thresh cluster-thresh
+        min-seed-support min-seed-support
+        min-match-support min-match-support
+        min-match-matches min-match-matches]
+    (let [params {:seed-frac seed-frac
+                  :context-path-length-cap context-path-length-cap
+                  :context-thresh    context-thresh
+                  :cluster-thresh    cluster-thresh
+                  :min-match-support min-match-support
+                  :min-seed-support  min-seed-support
+                  :min-match-matches min-match-matches}
+          sentences (context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
+          context-match-fn (partial context-match-fn params)
+          pattern-update-fn (partial pattern-update-fn context-match-fn params)
+          [matches _] (re/bootstrap (get-in split-model [1]) sentences {:context-match-fn  context-match-fn
+                                                                        :pattern-update-fn pattern-update-fn
+                                                                        :terminate? terminate?})
+          model (assoc (get-in split-model [0]) :predicted-true (predicted-true matches))
+          metrics (let [metrics (try
+                                  (math/calc-metrics model)
+                                  (catch ArithmeticException _ {}))]
+                    (merge metrics params))]
+      (log/info "Metrics:" metrics)
+      metrics)))
 
 (defn pca-2
   [data]
