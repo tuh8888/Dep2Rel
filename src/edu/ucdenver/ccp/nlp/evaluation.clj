@@ -123,44 +123,50 @@
 
 (defn frac-seeds
   [model property frac]
-  (let [actual-true (actual-true model property)
-        num-seeds (-> actual-true
-                      (count)
-                      (* frac))
-        seeds (set (take num-seeds (make-all-seeds model property)))
-        model (update model :sentences remove seeds)
-        model (assoc model :actual-true actual-true
-                           :all (all-triples model))]
-    [model seeds]))
+  (-> actual-true
+      (count)
+      (* frac)
+      (take (make-all-seeds model property))
+      (set)))
+
+(defn split-train-test
+  "Splits model into train and test sets"
+  [model property frac]
+  (let [seeds (frac-seeds model property frac)]
+    (as-> model model
+          (update model :sentences remove seeds)
+          (assoc model :actual-true (actual-true model property)
+                       :all (all-triples model)
+                       :seeds seeds))))
+
 
 (defn train-test
   "Makes a model from a training model and a testing model"
   [train-model test-model property frac]
-  (let [actual-true (actual-true test-model property)
-        num-seeds (-> actual-true
-                      (count)
-                      (* frac))
-        seeds (set (take num-seeds (make-all-seeds train-model property)))]
-    [(-> train-model
-         (update :sentences remove seeds)
-         (assoc :actual-true actual-true
-                :all (all-triples train-model)
-                :test-sentences (:sentences train-model)))
-     seeds]))
+  (let [seeds (frac-seeds train-model property frac)]
+    (-> train-model
+        (update :sentences remove seeds)
+        (assoc :actual-true (actual-true test-model property)
+               :all (all-triples test-model)
+               :test-sentences (:sentences test-model)
+               :seeds))))
+
+(defn calc-metrics
+  [model]
+  (let [metrics (try
+                  (calc-metrics model)
+                  (catch ArithmeticException _ model))]
+    (log/info "Metrics:" metrics)
+    (merge model metrics)))
 
 (defn parameter-walk
-  [property model & {:keys [context-match-fn
-                            pattern-update-fn
-                            terminate?
+  [property model & {:keys [context-match-fn pattern-update-fn terminate?
                             context-path-length-cap
-                            context-thresh
-                            cluster-thresh
-                            min-seed-support
-                            min-match-support
-                            min-match-matches
+                            context-thresh cluster-thresh
+                            min-seed-support min-match-support min-match-matches
                             seed-frac]}]
   (cp/upfor (dec (cp/ncpus)) [seed-frac seed-frac
-                              :let [split-model (frac-seeds model property seed-frac)]
+                              :let [split-model (split-train-test model property seed-frac)]
                               context-path-length-cap context-path-length-cap
                               context-thresh context-thresh
                               cluster-thresh cluster-thresh
@@ -174,19 +180,15 @@
                           :min-match-support       min-match-support
                           :min-seed-support        min-seed-support
                           :min-match-matches       min-match-matches}
-                  sentences (context-path-filter context-path-length-cap (get-in split-model [0 :sentences]))
                   context-match-fn (partial context-match-fn params)
-                  pattern-update-fn (partial pattern-update-fn context-match-fn params)
-                  [matches _] (re/bootstrap (get-in split-model [1]) sentences {:context-match-fn  context-match-fn
-                                                                                :pattern-update-fn pattern-update-fn
-                                                                                :terminate?        terminate?})
-                  model (assoc (get-in split-model [0]) :predicted-true (predicted-true matches))
-                  metrics (let [metrics (try
-                                          (math/calc-metrics model)
-                                          (catch ArithmeticException _ {}))]
-                            (merge metrics params))]
-              (log/info "Metrics:" metrics)
-              metrics)))
+                  pattern-update-fn (partial pattern-update-fn context-match-fn params)]
+              (-> split-model
+                  (update :sentences context-path-filter context-path-length-cap)
+                  (re/bootstrap {:context-match-fn  context-match-fn
+                                 :pattern-update-fn pattern-update-fn
+                                 :terminate?        terminate?})
+                  (calc-metrics)
+                  (merge params)))))
 
 (defn pca-2
   [data]
@@ -198,12 +200,12 @@
         x1 (incanter/mmult X pc1)
         x2 (incanter/mmult X pc2)]
     [x1 x2]))
-
 (defn triple->sent
   [t sentences]
   (->> sentences
        (filter #(= t (sent->triple %)))
        (first)))
+
 (defn edge->sent
   [g e sentences]
   (let [t (edge->triple e)

@@ -16,7 +16,7 @@
 (def testing-prefix (apply str (interpose sep ["chemprot" "test" "gs"])))
 (def testing-pattern (apply str (interpose sep ["chemprot" "test" "%s" "gs"])))
 
-;; Files
+;;; FILES ;;;
 (def home-dir (io/file "/" "home" "harrison"))
 #_(def home-dir (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
 (def biocreative-dir (io/file home-dir "BioCreative" "BCVI-2017" "ChemProt_Corpus"))
@@ -26,14 +26,7 @@
 (def word-vector-dir (io/file home-dir "WordVectors"))
 (def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
 
-;; Reading in models
-(def testing-knowtator-view (k/view testing-dir))
-(def training-knowtator-view (k/view training-dir))
-
-(rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
-(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
-
-;; Preparing the model
+;;; MODELS ;;;
 (defn make-model
   [v]
   (log/info "Making model")
@@ -46,6 +39,12 @@
                                                  (map #(assoc % :property (evaluation/sent-property model %))))))]
     (log/info "Num sentences:" (count (:sentences model)))
     model))
+
+(def testing-knowtator-view (k/view testing-dir))
+(def training-knowtator-view (k/view training-dir))
+
+(rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
+(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
 
 (def training-model (word2vec/with-word2vec word2vec-db
                       (make-model training-knowtator-view)))
@@ -109,7 +108,7 @@
                                       :title "PCA")))
 
 
-;;; RELATION EXTRACTION
+;;; RELATION EXTRACTION ;;;
 (defn concept-context-match
   [{:keys [context-thresh]} s p]
   (and (re/sent-pattern-concepts-match? s p)
@@ -128,18 +127,20 @@
                                             (count (filter (fn [s] (context-match-fn s %)) matches)))))
       (set)))
 (defn terminate?
-  [iteration seeds new-matches matches patterns sentences]
-  (cond (= 100 iteration) [matches patterns]
-        (empty? new-matches) [matches patterns]
-        (empty? sentences) [matches patterns]
-        (< 3000 (count matches)) [#{} #{}]
-        (empty? seeds) [#{} #{}]
-        (empty? patterns) [matches patterns]))
+  [model {:keys [iteration seeds new-matches matches patterns sentences]}]
+  (let [success-model (assoc model :matches matches
+                                   :patterns patterns
+                                   :predicted-true (evaluation/predicted-true matches))]
+    (cond (= 100 iteration) success-model
+          (empty? new-matches) success-model
+          (empty? sentences) success-model
+          (< 3000 (count matches)) model
+          (empty? seeds) model
+          (empty? patterns) success-model)))
 
 (comment
-  (def training-split-model (let [seed-frac 0.2]
-                              (evaluation/frac-seeds training-model property seed-frac)))
-
+  (def split-training-model (let [seed-frac 0.2]
+                              (evaluation/split-train-test training-model property seed-frac)))
   (def results (let [context-path-length-cap 100
                      params {:context-thresh    0.95
                              :cluster-thresh    0.95
@@ -148,14 +149,12 @@
                              :min-match-matches 0}
                      context-match-fn (partial concept-context-match params)
                      pattern-update-fn (partial pattern-update context-match-fn params)]
-                 (let [sentences (evaluation/context-path-filter context-path-length-cap (get-in training-split-model [0 :sentences]))
-                       [matches patterns] (re/bootstrap (get-in training-split-model [1]) sentences {:terminate?        terminate?
-                                                                                                     :context-match-fn  context-match-fn
-                                                                                                     :pattern-update-fn pattern-update-fn})]
-                   (log/info "Metrics:" (-> (get-in training-split-model [0])
-                                            (assoc :predicted-true (evaluation/predicted-true matches))
-                                            (math/calc-metrics)))
-                   [matches patterns])))
+                 (-> split-training-model
+                     (update :sentences evaluation/context-path-filter context-path-length-cap)
+                     (re/bootstrap {:terminate?        terminate?
+                                    :context-match-fn  context-match-fn
+                                    :pattern-update-fn pattern-update-fn})
+                     (evaluation/calc-metrics))))
 
   (apply evaluation/format-matches training-model results))
 
@@ -172,6 +171,8 @@
                                           :terminate? terminate?
                                           :context-match-fn concept-context-match
                                           :pattern-update-fn pattern-update))
-  (def results-dataset (incanter/to-dataset results))
+  (def results-dataset (->> results
+                            (map #(apply dissoc % (keys training-model)))
+                            (incanter/to-dataset)))
   (incanter/view results-dataset)
   (spit (io/file training-dir "results" "results.edn") results))
