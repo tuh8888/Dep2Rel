@@ -109,8 +109,8 @@
   (let [sent-dir (->> "sentences"
                       (format pat)
                       (io/file dir))]
-    (.removeModelListener (k/model v) v)
     (.setLoading (k/model v) true)
+
     (when (empty? (rest (file-seq (io/file dir "Articles"))))
       (log/info "Reading BioCreative abstracts")
       (->> "abstracts"
@@ -118,7 +118,7 @@
            (io/file dir)
            (biocreative-read-abstracts (k/model v))
            (doall)))
-    (when  (empty? (rest(file-seq sent-dir)))
+    (when (empty? (rest (file-seq sent-dir)))
       (log/info "Writing abstract sentences to" (str sent-dir))
       (doseq [[id content] (sentenize (k/model v))]
         (let [content (->> content
@@ -149,7 +149,8 @@
                        (file-seq)
                        (filter #(str/ends-with? % ".conll")))]
           (.readToStructureAnnotations conll-util (k/model v) f))))
-    (.addModelListener (k/model v) v)
+
     (.setLoading (k/model v) false)
-    #_(log/info "Saving Knowtator model")
-    #_(.save ^KnowtatorModel (k/model v))))
+
+    (log/info "Saving Knowtator model")
+    (.save ^KnowtatorModel (k/model v))))
