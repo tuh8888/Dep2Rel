@@ -128,11 +128,25 @@
                       (count)
                       (* frac))
         seeds (set (take num-seeds (make-all-seeds model property)))
-        model (update model :sentences #(remove seeds %))
+        model (update model :sentences remove seeds)
         model (assoc model :actual-true actual-true
                            :all (all-triples model))]
     [model seeds]))
 
+(defn train-test
+  "Makes a model from a training model and a testing model"
+  [train-model test-model property frac]
+  (let [actual-true (actual-true test-model property)
+        num-seeds (-> actual-true
+                      (count)
+                      (* frac))
+        seeds (set (take num-seeds (make-all-seeds train-model property)))]
+    [(-> train-model
+         (update :sentences remove seeds)
+         (assoc :actual-true actual-true
+                :all (all-triples train-model)
+                :test-sentences (:sentences train-model)))
+     seeds]))
 
 (defn parameter-walk
   [property model & {:keys [context-match-fn
