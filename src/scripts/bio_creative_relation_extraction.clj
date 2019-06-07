@@ -7,7 +7,9 @@
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [incanter.core :as incanter]
             [incanter.charts :as charts]
-            [edu.ucdenver.ccp.nlp.readers :as rdr]))
+            [edu.ucdenver.ccp.nlp.readers :as rdr]
+            [clojure.string :as str]
+            [ubergraph.core :as uber]))
 
 ;; File naming patterns
 (def sep "_")
@@ -31,12 +33,13 @@
   [v]
   (log/info "Making model")
   (let [model (as-> (k/simple-model v) model
-                    (update model :structure-annotations util/pmap-kv sentence/assign-word-embedding)
-                    (update model :structure-annotations util/pmap-kv sentence/assign-sent-id model)
-                    (update model :concept-annotations util/pmap-kv sentence/assign-tok model)
+                    (update model :structure-annotations #(util/pmap-kv sentence/assign-word-embedding %))
+                    (update model :structure-annotations #(util/pmap-kv (partial sentence/assign-sent-id model) %))
+                    (update model :concept-annotations #(util/pmap-kv (partial sentence/assign-tok model) %))
                     (assoc model :sentences (->> model
                                                  (sentence/concept-annotations->sentences)
-                                                 (map #(assoc % :property (evaluation/sent-property model %))))))]
+                                                 (map #(evaluation/assign-property model %)))))]
+
     (log/info "Num sentences:" (count (:sentences model)))
     model))
 
@@ -46,10 +49,13 @@
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
 (rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
 
+
 (def training-model (word2vec/with-word2vec word2vec-db
                       (make-model training-knowtator-view)))
 (def testing-model (word2vec/with-word2vec word2vec-db
                      (make-model testing-knowtator-view)))
+(log/info "Num sentences:" (count (keep :property (:sentences testing-model))))
+(log/info "Num sentences:" (count (keep :property (:sentences training-model))))
 
 #_(get-in training-model [:structure-annotations (sentence/ann-tok training-model (get-in training-model [:concept-annotations "23402364-T37"]))])
 #_(get-in training-model [:structure-annotations "23402364-859768"])

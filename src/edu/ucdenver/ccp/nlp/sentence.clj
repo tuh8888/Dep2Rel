@@ -9,21 +9,24 @@
 (defrecord Sentence [concepts entities context context-vector])
 
 (defn ann-tok
-  [model {[[_ {concept-start :start concept-end :end}]] :spans :keys [doc] :as ann}]
-  (let [tok-id (->> model
+  [model {:keys [doc spans id] :as ann}]
+  (log/debug "Ann:" id)
+  (let [{concept-start :start concept-end :end} (first (vals spans))
+        tok-id (->> model
                     :structure-annotations
                     (vals)
                     (filter #(= (:doc %) doc))
                     (reduce
-                      (fn [{[[_ {old-tok-start :start old-tok-end :end}]] :spans :as old-tok}
-                           {[[_ {new-tok-start :start new-tok-end :end}]] :spans :as new-tok}]
-                        (cond (<= new-tok-start concept-start concept-end new-tok-end) new-tok
-                              (<= concept-start new-tok-start new-tok-end concept-end) new-tok
-                              (<= old-tok-start concept-start concept-end old-tok-end) old-tok
-                              (<= concept-start old-tok-start old-tok-end concept-end) old-tok
-                              (<= new-tok-start concept-start new-tok-end) new-tok
-                              (<= old-tok-start concept-start old-tok-end) old-tok
-                              :else old-tok))
+                      (fn [{old-spans :spans :as old-tok} {new-spans :spans :as new-tok}]
+                        (let [{old-tok-start :start old-tok-end :end} (first (vals old-spans))
+                              {new-tok-start :start new-tok-end :end} (first (vals new-spans))]
+                          (cond (<= new-tok-start concept-start concept-end new-tok-end) new-tok
+                                (<= concept-start new-tok-start new-tok-end concept-end) new-tok
+                                (and old-tok (<= old-tok-start concept-start concept-end old-tok-end)) old-tok
+                                (and old-tok (<= concept-start old-tok-start old-tok-end concept-end)) old-tok
+                                (<= new-tok-start concept-start new-tok-end) new-tok
+                                (and old-tok (<= old-tok-start concept-start old-tok-end)) old-tok
+                                :else old-tok)))
                       nil))]
     (when-not tok-id (log/warn "No token found for" ann))
     tok-id))
@@ -43,15 +46,19 @@
       (uber-alg/shortest-path tok1 tok2)
       (uber-alg/nodes-in-path)))
 
+(defn sum-vectors
+  [vectors]
+  (let [vectors (seq (keep identity vectors))]
+    (when vectors
+      (apply math/unit-vec-sum vectors))))
+
+
 (defn make-context-vector
   [dependency-path structure-annotations ann1 ann2]
-  (when-let [vectors (let [vectors (->> dependency-path
-                                        (keep #(get-in structure-annotations [% :word-vector]))
-                                        (seq))]
-                          (-> vectors
-                              (conj (:word-vector ann1))
-                              (conj (:word-vector ann2))))]
-    (apply math/unit-vec-sum vectors)))
+  (-> (map #(get-in structure-annotations [% :word-vector]) dependency-path)
+      (conj (:word-vector ann1))
+      (conj (:word-vector ann2))
+      (sum-vectors)))
 
 (defn make-sentence
   "Make a sentence using the sentence graph and entities"
@@ -66,34 +73,45 @@
 (defn concept-annotations->sentences
   [{:keys [concept-annotations structure-graphs] :as model}]
   (log/info "Making sentences for concept annotations")
-  (apply concat
-    (pmap
-      (fn [id g]
-        (let [sent-annotations (filter #(= id (:sent %) concept-annotations))]
-          (when (seq sent-annotations)
-            (let [g (graph/undirected-graph g)]
-              (for [ann1 sent-annotations
-                    ann2 sent-annotations
-                    :when (not= ann1 ann2)]
-                (make-sentence model g ann1 ann2))))))
-      structure-graphs)))
+  (->> structure-graphs
+       (pmap
+         (fn [[id g]]
+           (let [sent-annotations (filter #(= id (:sent %)) (vals concept-annotations))]
+             (when (seq sent-annotations)
+               (log/debug "Sentence:" id)
+               (let [g (graph/undirected-graph g)]
+                 (for [ann1 sent-annotations
+                       ann2 sent-annotations
+                       :when (not= ann1 ann2)]
+                   (make-sentence model g ann1 ann2)))))))
+       (apply concat)))
+
 
 (defn assign-word-embedding
-  [{:as annotation [_ {:keys [text]}] :spans}]
-  (assoc annotation :word-vector (-> text
-                                     (str/lower-case)
-                                     (word2vec/word-embedding))))
+  [{:keys [spans] :as annotation}]
+  (let [{:keys [text]} (first (vals spans))]
+    (assoc annotation :word-vector (-> text
+                                       (str/lower-case)
+                                       (word2vec/word-embedding)))))
 
 (defn assign-sent-id
   [model tok]
-  (update tok :sent tok-sent-id model))
+  (assoc tok :sent (tok-sent-id model tok)))
 
 (defn assign-tok
   [model ann]
   (let [{:keys [sent id]} (ann-tok model ann)]
     (assoc ann :tok id
                :sent sent
-               :word-vector (->> ann :spans (map :text) (map word2vec/word-embedding) (apply math/unit-vec-sum)))))
+               :word-vector (->> ann
+                                 :spans
+                                 vals
+                                 (keep :text)
+                                 (map #(str/split % #" "))
+                                 (apply concat)
+                                 (map str/lower-case)
+                                 (map word2vec/word-embedding)
+                                 (sum-vectors)))))
 
 (defn sentences-with-ann
   [sentences id]

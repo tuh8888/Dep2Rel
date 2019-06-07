@@ -6,7 +6,8 @@
             [taoensso.timbre :as log]
             [incanter.core :as incanter]
             [incanter.stats :as stats]
-            [com.climate.claypoole :as cp]))
+            [com.climate.claypoole :as cp]
+            [ubergraph.core :as uber]))
 
 (defn pprint-sent
   [model sent]
@@ -209,7 +210,7 @@
 (defn edge->sent
   [g e sentences]
   (let [t (edge->triple e)
-        property (:value (ubergraph.core/attrs g e))]
+        property (:value (uber/attrs g e))]
     (assoc (triple->sent t sentences) :property property)))
 
 (defn flatten-context-vector
@@ -238,8 +239,14 @@
        (sentences->dataset)))
 
 (defn sent-property
-  [{:keys [concept-graphs]} {[id1 id2] :entities}]
-  (some (fn [g] (let [e (ubergraph.core/find-edge g id1 id2)]
-                  (:value (ubergraph.core/attrs g e))))
-        concept-graphs))
+  [{:keys [concept-graphs]} [id1 id2]]
+  (some
+    (fn [g]
+      (when-let [e (uber/find-edge g id1 id2)]
+        (:value (uber/attrs g e))))
+    (vals concept-graphs)))
 
+(defn assign-property
+  "Assign the associated property with the sentence"
+  [model s]
+  (assoc s :property (sent-property model (vec (:entities s)))))
