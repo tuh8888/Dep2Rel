@@ -7,10 +7,7 @@
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [incanter.core :as incanter]
             [incanter.charts :as charts]
-            [edu.ucdenver.ccp.nlp.readers :as rdr]
-            [clojure.string :as str])
-  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
-           (edu.ucdenver.ccp.knowtator.io.conll ConllUtil)))
+            [edu.ucdenver.ccp.nlp.readers :as rdr]))
 
 ;; File naming patterns
 (def sep "_")
@@ -27,13 +24,13 @@
 (def testing-dir (io/file biocreative-dir testing-prefix))
 
 (def word-vector-dir (io/file home-dir "WordVectors"))
-(def word2vec-db (.getAbsolutePath (io/file word-vector-dir "bio-word-vectors-clj.vec")))
+(def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
 
 ;; Reading in models
-#_(def training-knowtator-view (k/view training-dir))
 (def testing-knowtator-view (k/view testing-dir))
+(def training-knowtator-view (k/view training-dir))
 
-#_(read-biocreative-files training-dir training-pattern training-knowtator-view)
+(rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
 (rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
 
 ;; Preparing the model
@@ -50,8 +47,8 @@
     (log/info "Num sentences:" (count (:sentences model)))
     model))
 
-#_(def training-model (word2vec/with-word2vec word2vec-db
-                        (make-model training-knowtator-view)))
+(def training-model (word2vec/with-word2vec word2vec-db
+                      (make-model training-knowtator-view)))
 (def testing-model (word2vec/with-word2vec word2vec-db
                      (make-model testing-knowtator-view)))
 

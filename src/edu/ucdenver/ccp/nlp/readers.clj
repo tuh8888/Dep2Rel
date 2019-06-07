@@ -45,32 +45,34 @@
        (map #(s/split % #"\t"))
        (map
          (fn [[doc id _ property source target]]
-           (log/debug "Relation" id property)
            (let [text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
                  graph-space (GraphSpace. text-source nil)
-                 source (str doc "-" (second (s/split source #":")))
-
-                 source (AnnotationNode. (str "node_" source)
+                 src-ent (str doc "-" (second (s/split source #":")))
+                 src-id (str "node_" src-ent)
+                 source (AnnotationNode. src-id
                                          (.get (.get (.getConceptAnnotations text-source)
-                                                     source))
+                                                     src-ent))
                                          0
                                          0
                                          graph-space)
-                 target (str doc "-" (second (s/split target #":")))
-                 target (AnnotationNode. (str "node_" target)
-                                         (.get (.get (.getConceptAnnotations text-source)
-                                                     target))
-                                         0
-                                         0
-                                         graph-space)]
+                 dest-ent (str doc "-" (second (s/split target #":")))
+                 dest-id (str "node_" dest-ent)
+                 dest (AnnotationNode. dest-id
+                                       (.get (.get (.getConceptAnnotations text-source)
+                                                   dest-ent))
+                                       0
+                                       0
+                                       graph-space)
+                 id (str doc "-" id)]
+             (log/debug "Relation" id property src-ent dest-ent)
              (.removeModelListener annotations text-source)
              (.add text-source graph-space)
              (.addCellToGraph graph-space source)
-             (.addCellToGraph graph-space target)
+             (.addCellToGraph graph-space dest)
              (.addTriple graph-space
                          source
-                         target
-                         (str doc "-" id)
+                         dest
+                         id
                          (.getDefaultProfile annotations)
                          property
                          (Quantifier/some)
@@ -87,12 +89,13 @@
        (map #(s/split % #"\t"))
        (map
          (fn [[doc id concept start end _]]
-           (log/debug "Entity" id concept)
-           (let [start (Integer/parseInt start)
+           (let [id (str doc "-" id)
+                 start (Integer/parseInt start)
                  end (Integer/parseInt end)
                  text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
-                 concept-annotation (ConceptAnnotation. text-source (str doc "-" id) concept (.getDefaultProfile annotations) nil nil)
+                 concept-annotation (ConceptAnnotation. text-source id concept (.getDefaultProfile annotations) nil nil)
                  span (Span. concept-annotation nil start end)]
+             (log/debug "Entity" id concept)
              (.removeModelListener annotations text-source)
              (.add ^ConceptAnnotation concept-annotation span)
              (.add (.getConceptAnnotations text-source) concept-annotation)
@@ -106,12 +109,15 @@
   (let [sent-dir (->> "sentences"
                       (format pat)
                       (io/file dir))]
+    (.removeModelListener (k/model v) v)
+    (.setLoading (k/model v) true)
     (when (empty? (rest (file-seq (io/file dir "Articles"))))
       (log/info "Reading BioCreative abstracts")
       (->> "abstracts"
            (format (str pat ".tsv"))
            (io/file dir)
-           (biocreative-read-abstracts (k/model v))))
+           (biocreative-read-abstracts (k/model v))
+           (doall)))
     (when  (empty? (rest(file-seq sent-dir)))
       (log/info "Writing abstract sentences to" (str sent-dir))
       (doseq [[id content] (sentenize (k/model v))]
@@ -128,12 +134,14 @@
       (->> "entities"
            (format (str pat ".tsv"))
            (io/file dir)
-           (biocreative-read-entities (k/model v)))
+           (biocreative-read-entities (k/model v))
+           (doall))
       (log/info "Reading BioCreative relations")
       (->> "relations"
            (format (str pat ".tsv"))
            (io/file dir)
-           (biocreative-read-relations (k/model v))))
+           (biocreative-read-relations (k/model v))
+           (doall)))
     (when (empty? (rest (file-seq (io/file dir "Structures"))))
       (log/info "Reading BioCreative structures")
       (let [conll-util (ConllUtil.)]
@@ -141,6 +149,7 @@
                        (file-seq)
                        (filter #(str/ends-with? % ".conll")))]
           (.readToStructureAnnotations conll-util (k/model v) f))))
-
-    (log/info "Saving Knowtator model")
-    (.save ^KnowtatorModel (k/model v))))
+    (.addModelListener (k/model v) v)
+    (.setLoading (k/model v) false)
+    #_(log/info "Saving Knowtator model")
+    #_(.save ^KnowtatorModel (k/model v))))
