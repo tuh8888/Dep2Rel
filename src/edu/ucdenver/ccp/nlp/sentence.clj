@@ -44,33 +44,39 @@
       (uber-alg/nodes-in-path)))
 
 (defn make-context-vector
-  [dependency-path structure-annotations]
-  (when-let [vectors (->> dependency-path
-                          (keep #(get-in structure-annotations [% :word-vector]))
-                          (seq))]
+  [dependency-path structure-annotations ann1 ann2]
+  (when-let [vectors (let [vectors (->> dependency-path
+                                        (keep #(get-in structure-annotations [% :word-vector]))
+                                        (seq))]
+                          (-> vectors
+                              (conj (:word-vector ann1))
+                              (conj (:word-vector ann2))))]
     (apply math/unit-vec-sum vectors)))
 
 (defn make-sentence
   "Make a sentence using the sentence graph and entities"
-  [{:keys [structure-annotations]} undirected-sent {tok1 :tok c1 :concept id1 :id} {tok2 :tok c2 :concept id2 :id}]
-  (let [concepts (conj #{} #{c1} #{c2})
-        context (make-context-path undirected-sent tok1 tok2)
-        context-vector (make-context-vector context structure-annotations)
-        entities #{id1 id2}]
+  [{:keys [structure-annotations]} undirected-sent ann1 ann2]
+  (let [anns [ann1 ann2]
+        concepts (->> anns (map :concept) (map #(conj #{} %)) (set))
+        context (->> anns (map :tok) (apply make-context-path undirected-sent))
+        context-vector (make-context-vector context structure-annotations ann1 ann2)
+        entities (->> anns (map :id) (set))]
     (->Sentence concepts entities context context-vector)))
 
 (defn concept-annotations->sentences
   [{:keys [concept-annotations structure-graphs] :as model}]
-  (mapcat
-    (fn [id g]
-      (let [sent-annotations (filter #(= id (:sent %) concept-annotations))]
-        (when (seq sent-annotations)
-          (let [g (graph/undirected-graph g)]
-            (for [ann1 sent-annotations
-                  ann2 sent-annotations
-                  :when (not= ann1 ann2)]
-              (make-sentence model g ann1 ann2))))))
-    structure-graphs))
+  (log/info "Making sentences for concept annotations")
+  (apply concat
+    (pmap
+      (fn [id g]
+        (let [sent-annotations (filter #(= id (:sent %) concept-annotations))]
+          (when (seq sent-annotations)
+            (let [g (graph/undirected-graph g)]
+              (for [ann1 sent-annotations
+                    ann2 sent-annotations
+                    :when (not= ann1 ann2)]
+                (make-sentence model g ann1 ann2))))))
+      structure-graphs)))
 
 (defn assign-word-embedding
   [{:as annotation [_ {:keys [text]}] :spans}]
@@ -86,7 +92,8 @@
   [model ann]
   (let [{:keys [sent id]} (ann-tok model ann)]
     (assoc ann :tok id
-               :sent sent)))
+               :sent sent
+               :word-vector (->> ann :spans (map :text) (map word2vec/word-embedding) (apply math/unit-vec-sum)))))
 
 (defn sentences-with-ann
   [sentences id]

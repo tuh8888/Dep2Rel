@@ -30,57 +30,11 @@
 (def word2vec-db (.getAbsolutePath (io/file word-vector-dir "bio-word-vectors-clj.vec")))
 
 ;; Reading in models
-(def training-knowtator-view (k/view training-dir))
+#_(def training-knowtator-view (k/view training-dir))
 (def testing-knowtator-view (k/view testing-dir))
 
-(defn read-biocreative-files
-  "Read biocreative files to model. Caches them by saving the model.
-  Only reads in files if the cache is empty."
-  [dir pat v]
-  (let [sent-dir (->> "sentences"
-                      (format pat)
-                      (io/file dir))]
-    (when (empty? (file-seq (io/file dir "Articles")))
-      (log/info "Reading BioCreative abstracts")
-      (->> "abstracts"
-           (format (str pat ".tsv"))
-           (io/file dir)
-           (rdr/biocreative-read-abstracts (k/model v))))
-    (when (empty? (file-seq sent-dir))
-      (log/info "Writing abstract sentences to" (str sent-dir))
-      (doseq [[id content] (rdr/sentenize (k/model v))]
-        (let [content (->> content
-                           (map :text)
-                           (interpose "\n")
-                           (apply str))
-              sentence-f (io/file sent-dir (str id ".txt"))]
-          (spit sentence-f content)))
-      (println "Run dependency parser, then continue")
-      (read-line))
-    (when (empty? (file-seq (io/file dir "Annotations")))
-      (log/info "Reading BioCreative entities")
-      (->> "entities"
-           (format (str pat ".tsv"))
-           (io/file dir)
-           (rdr/biocreative-read-entities (k/model v)))
-      (log/info "Reading BioCreative relations")
-      (->> "relations"
-           (format (str pat ".tsv"))
-           (io/file dir)
-           (rdr/biocreative-read-relations (k/model v))))
-    (when (empty? (file-seq (io/file dir "Structures")))
-      (log/info "Reading BioCreative structures")
-      (let [conll-util (ConllUtil.)]
-        (doseq [f (->> sent-dir
-                       (file-seq)
-                       (filter #(str/ends-with? % ".conll")))]
-          (.readToStructureAnnotations conll-util (k/model v) f))))
-
-    (log/info "Saving Knowtatomodel")
-    (.save ^KnowtatorModel (k/model v))))
-
-(read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
-(read-biocreative-files training-dir training-pattern training-knowtator-view)
+#_(read-biocreative-files training-dir training-pattern training-knowtator-view)
+(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
 
 ;; Preparing the model
 (defn make-model
@@ -96,8 +50,8 @@
     (log/info "Num sentences:" (count (:sentences model)))
     model))
 
-(def training-model (word2vec/with-word2vec word2vec-db
-                      (make-model training-knowtator-view)))
+#_(def training-model (word2vec/with-word2vec word2vec-db
+                        (make-model training-knowtator-view)))
 (def testing-model (word2vec/with-word2vec word2vec-db
                      (make-model testing-knowtator-view)))
 
