@@ -7,9 +7,7 @@
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [incanter.core :as incanter]
             [incanter.charts :as charts]
-            [edu.ucdenver.ccp.nlp.readers :as rdr]
-            [clojure.string :as str]
-            [ubergraph.core :as uber]))
+            [edu.ucdenver.ccp.nlp.readers :as rdr]))
 
 ;; File naming patterns
 (def sep "_")
@@ -144,25 +142,25 @@
           (empty? seeds) model
           (empty? patterns) success-model)))
 
-(comment
-  (def split-training-model (let [seed-frac 0.2]
-                              (evaluation/split-train-test training-model property seed-frac)))
-  (def results (let [context-path-length-cap 100
-                     params {:context-thresh    0.95
-                             :cluster-thresh    0.95
-                             :min-match-support 3
-                             :min-seed-support  3
-                             :min-match-matches 0}
-                     context-match-fn (partial concept-context-match params)
-                     pattern-update-fn (partial pattern-update context-match-fn params)]
-                 (-> split-training-model
-                     (update :sentences evaluation/context-path-filter context-path-length-cap)
-                     (re/bootstrap {:terminate?        terminate?
-                                    :context-match-fn  context-match-fn
-                                    :pattern-update-fn pattern-update-fn})
-                     (evaluation/calc-metrics))))
 
-  (apply evaluation/format-matches training-model results))
+(def split-training-model (let [seed-frac 0.2]
+                            (evaluation/split-train-test training-model property seed-frac)))
+(def results (let [context-path-length-cap 100
+                   params {:context-thresh    0.95
+                           :cluster-thresh    0.95
+                           :min-match-support 3
+                           :min-seed-support  3
+                           :min-match-matches 0}
+                   context-match-fn (partial concept-context-match params)
+                   pattern-update-fn (partial pattern-update context-match-fn params)]
+               (-> split-training-model
+                   (update :sentences evaluation/context-path-filter context-path-length-cap)
+                   (re/bootstrap {:terminate?        terminate?
+                                  :context-match-fn  context-match-fn
+                                  :pattern-update-fn pattern-update-fn})
+                   (evaluation/calc-metrics))))
+
+#_(apply evaluation/format-matches training-model results)
 
 (comment
   (log/set-level! :info)
