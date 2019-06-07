@@ -124,7 +124,7 @@
 
 (defn frac-seeds
   [model property frac]
-  (-> actual-true
+  (-> (actual-true model property)
       (count)
       (* frac)
       (take (make-all-seeds model property))
@@ -135,7 +135,7 @@
   [model property frac]
   (let [seeds (frac-seeds model property frac)]
     (as-> model model
-          (update model :sentences remove seeds)
+          (update model :sentences #(remove seeds %))
           (assoc model :actual-true (actual-true model property)
                        :all (all-triples model)
                        :seeds seeds))))
@@ -155,8 +155,8 @@
 (defn calc-metrics
   [model]
   (let [metrics (try
-                  (calc-metrics model)
-                  (catch ArithmeticException _ model))]
+                  (math/calc-metrics model)
+                  (catch ArithmeticException _ {}))]
     (log/info "Metrics:" metrics)
     (merge model metrics)))
 

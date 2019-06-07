@@ -31,8 +31,11 @@
   [v]
   (log/info "Making model")
   (let [model (as-> (k/simple-model v) model
-                    (update model :structure-annotations #(util/pmap-kv sentence/assign-word-embedding %))
-                    (update model :structure-annotations #(util/pmap-kv (partial sentence/assign-sent-id model) %))
+                    (update model :structure-annotations #(util/pmap-kv (fn [s]
+                                                                          (->> s
+                                                                               sentence/assign-word-embedding
+                                                                               (sentence/assign-sent-id model)))
+                                                                        %))
                     (update model :concept-annotations #(util/pmap-kv (partial sentence/assign-tok model) %))
                     (assoc model :sentences (->> model
                                                  (sentence/concept-annotations->sentences)
@@ -41,18 +44,18 @@
     (log/info "Num sentences:" (count (:sentences model)))
     model))
 
-(def testing-knowtator-view (k/view testing-dir))
 (def training-knowtator-view (k/view training-dir))
+#_(def testing-knowtator-view (k/view testing-dir))
 
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
-(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
+#_(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
 
 
 (def training-model (word2vec/with-word2vec word2vec-db
                       (make-model training-knowtator-view)))
-(def testing-model (word2vec/with-word2vec word2vec-db
-                     (make-model testing-knowtator-view)))
-(log/info "Num sentences:" (count (keep :property (:sentences testing-model))))
+#_(def testing-model (word2vec/with-word2vec word2vec-db
+                       (make-model testing-knowtator-view)))
+#_(log/info "Num sentences:" (count (keep :property (:sentences testing-model))))
 (log/info "Num sentences:" (count (keep :property (:sentences training-model))))
 
 #_(get-in training-model [:structure-annotations (sentence/ann-tok training-model (get-in training-model [:concept-annotations "23402364-T37"]))])
@@ -63,14 +66,6 @@
 
 ;;; CLUSTERING ;;;
 (def property "INHIBITOR")
-
-(defn default-cluster
-  [samples clusters cluster-thresh]
-  (cluster-tools/single-pass-cluster samples clusters
-    {:cluster-merge-fn re/add-to-pattern
-     :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                          (and (< (or %3 cluster-thresh) score)
-                               score))}))
 
 (comment
   (-> (evaluation/make-all-seeds training-model property (:sentences training-model))
@@ -120,7 +115,11 @@
 (defn pattern-update
   [context-match-fn {:keys [cluster-thresh min-seed-support min-match-support min-match-matches]} _ new-matches matches patterns]
   (-> new-matches
-      (default-cluster patterns cluster-thresh)
+      (set)
+      (cluster-tools/single-pass-cluster patterns
+        {:cluster-merge-fn re/add-to-pattern
+         :cluster-sim-fn   re/context-vector-cosine-sim
+         :cluster-thresh cluster-thresh})
       (cond->>
         (and (< 0 min-seed-support)
              (empty? new-matches)) (remove #(> min-seed-support (count (:support %))))
@@ -142,19 +141,19 @@
           (empty? seeds) model
           (empty? patterns) success-model)))
 
-
 (def split-training-model (let [seed-frac 0.2]
                             (evaluation/split-train-test training-model property seed-frac)))
+
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
                            :cluster-thresh    0.95
                            :min-match-support 3
-                           :min-seed-support  3
+                           :min-seed-support  0
                            :min-match-matches 0}
                    context-match-fn (partial concept-context-match params)
                    pattern-update-fn (partial pattern-update context-match-fn params)]
                (-> split-training-model
-                   (update :sentences evaluation/context-path-filter context-path-length-cap)
+                   (update :sentences #(evaluation/context-path-filter context-path-length-cap %))
                    (re/bootstrap {:terminate?        terminate?
                                   :context-match-fn  context-match-fn
                                   :pattern-update-fn pattern-update-fn})
