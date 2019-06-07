@@ -1,6 +1,5 @@
 (ns edu.ucdenver.ccp.nlp.sentence
-  (:require [clojure.math.combinatorics :as combo]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [ubergraph.alg :as uber-alg]
             [graph :as graph]
             [math :as math]
@@ -38,55 +37,56 @@
         sent-id))
     structure-graphs))
 
-
-(defn dependency-path
+(defn make-context-path
   [undirected-sent tok1 tok2]
   (-> undirected-sent
       (uber-alg/shortest-path tok1 tok2)
       (uber-alg/nodes-in-path)))
 
-(defn dependency-embedding
+(defn make-context-vector
   [dependency-path structure-annotations]
   (when-let [vectors (->> dependency-path
-                          (keep #(get-in structure-annotations [% :VEC]))
+                          (keep #(get-in structure-annotations [% :word-vector]))
                           (seq))]
     (apply math/unit-vec-sum vectors)))
 
-(defn sentence-entities
-  [{:keys [structure-annotations structure-graphs]} sent entities]
-  (let [undirected-sent (graph/undirected-graph (get structure-graphs sent))]
-    (keep
-      (fn [[{tok1 :tok c1 :concept id1 :id}
-            {tok2 :tok c2 :concept id2 :id}]]
-        (when-not (= tok1 tok2)
-          (log/info id1)
-          (let [concepts (conj #{} #{c1} #{c2})
-                context (dependency-path undirected-sent tok1 tok2)
-                context-vector (dependency-embedding context structure-annotations)
-                entities #{id1 id2}]
-            (->Sentence concepts entities context context-vector))))
-      (combo/combinations entities 2))))
+(defn make-sentence
+  "Make a sentence using the sentence graph and entities"
+  [{:keys [structure-annotations]} undirected-sent {tok1 :tok c1 :concept id1 :id} {tok2 :tok c2 :concept id2 :id}]
+  (let [concepts (conj #{} #{c1} #{c2})
+        context (make-context-path undirected-sent tok1 tok2)
+        context-vector (make-context-vector context structure-annotations)
+        entities #{id1 id2}]
+    (->Sentence concepts entities context context-vector)))
 
 (defn concept-annotations->sentences
-  [{:keys [concept-annotations] :as model}]
+  [{:keys [concept-annotations structure-graphs] :as model}]
   (mapcat
-    (fn [[sent entities]]
-      (log/info sent)
-      (sentence-entities model sent entities))
-    (->> concept-annotations
-         vals
-         (group-by :sent)
-         (remove (comp nil? first)))))
+    (fn [id g]
+      (let [sent-annotations (filter #(= id (:sent %) concept-annotations))]
+        (when (seq sent-annotations)
+          (let [g (graph/undirected-graph g)]
+            (for [ann1 sent-annotations
+                  ann2 sent-annotations
+                  :when (not= ann1 ann2)]
+              (make-sentence model g ann1 ann2))))))
+    structure-graphs))
 
 (defn assign-word-embedding
   [{:as annotation [_ {:keys [text]}] :spans}]
-  (assoc annotation :VEC (-> text
-                             (str/lower-case)
-                             (word2vec/word-embedding))))
+  (assoc annotation :word-vector (-> text
+                                     (str/lower-case)
+                                     (word2vec/word-embedding))))
 
 (defn assign-sent-id
   [model tok]
-  (assoc tok :sent tok-sent-id model tok))
+  (update tok :sent tok-sent-id model))
+
+(defn assign-tok
+  [model ann]
+  (let [{:keys [sent id]} (ann-tok model ann)]
+    (assoc ann :tok id
+               :sent sent)))
 
 (defn sentences-with-ann
   [sentences id]
@@ -94,10 +94,4 @@
     (fn [{:keys [entities]}]
       (some #(= id %) entities))
     sentences))
-
-(defn assign-tok
-  [model ann]
-  (let [{:keys [sent id]} (ann-tok model ann)]
-    (assoc ann :tok id
-               :sent sent)))
 

@@ -41,22 +41,14 @@
                       (format pat)
                       (io/file dir))]
     (when (empty? (file-seq (io/file dir "Articles")))
+      (log/info "Reading BioCreative abstracts")
       (->> "abstracts"
            (format (str pat ".tsv"))
            (io/file dir)
            (rdr/biocreative-read-abstracts (k/model v))))
-    (when (empty? (file-seq (io/file dir "Annotations")))
-      (->> "entities"
-           (format (str pat ".tsv"))
-           (io/file dir)
-           (rdr/biocreative-read-entities (k/model v)))
-      (->> "relations"
-           (format (str pat ".tsv"))
-           (io/file dir)
-           (rdr/biocreative-read-relations (k/model v))))
     (when (empty? (file-seq sent-dir))
+      (log/info "Writing abstract sentences to" (str sent-dir))
       (doseq [[id content] (rdr/sentenize (k/model v))]
-        (log/info id)
         (let [content (->> content
                            (map :text)
                            (interpose "\n")
@@ -65,13 +57,26 @@
           (spit sentence-f content)))
       (println "Run dependency parser, then continue")
       (read-line))
+    (when (empty? (file-seq (io/file dir "Annotations")))
+      (log/info "Reading BioCreative entities")
+      (->> "entities"
+           (format (str pat ".tsv"))
+           (io/file dir)
+           (rdr/biocreative-read-entities (k/model v)))
+      (log/info "Reading BioCreative relations")
+      (->> "relations"
+           (format (str pat ".tsv"))
+           (io/file dir)
+           (rdr/biocreative-read-relations (k/model v))))
     (when (empty? (file-seq (io/file dir "Structures")))
+      (log/info "Reading BioCreative structures")
       (let [conll-util (ConllUtil.)]
         (doseq [f (->> sent-dir
                        (file-seq)
                        (filter #(str/ends-with? % ".conll")))]
           (.readToStructureAnnotations conll-util (k/model v) f))))
 
+    (log/info "Saving Knowtatomodel")
     (.save ^KnowtatorModel (k/model v))))
 
 (read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
@@ -80,10 +85,11 @@
 ;; Preparing the model
 (defn make-model
   [v]
+  (log/info "Making model")
   (let [model (as-> (k/simple-model v) model
                     (update model :structure-annotations util/pmap-kv sentence/assign-word-embedding)
                     (update model :structure-annotations util/pmap-kv sentence/assign-sent-id model)
-                    (update model :concept-annotations util/map-kv sentence/assign-tok model)
+                    (update model :concept-annotations util/pmap-kv sentence/assign-tok model)
                     (assoc model :sentences (->> model
                                                  (sentence/concept-annotations->sentences)
                                                  (map #(assoc % :property (evaluation/sent-property model %))))))]

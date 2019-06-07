@@ -50,8 +50,8 @@
             :e2-concept e2-concept
             :e2-tok     e2-tok
             :seed       (apply str seed)
-            :sentence   (str "\"" sent "\"")
-            }))
+            :sentence   (str "\"" sent "\"")}))
+
        matches))
 
 (defn ->csv

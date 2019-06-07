@@ -1,6 +1,7 @@
 (ns edu.ucdenver.ccp.knowtator-clj
   (:require [ubergraph.core :as uber]
-            [util :as util])
+            [util :as util]
+            [taoensso.timbre :as log])
   (:import (edu.ucdenver.ccp.knowtator.view KnowtatorView)
            (javax.swing JFrame)
            (org.semanticweb.HermiT ReasonerFactory)
@@ -16,6 +17,7 @@
 
 (defn view
   [f]
+  (log/info "Reading Knowtator model from" f)
   (let [v (KnowtatorView.)]
     (.loadProject v f nil)
     v))
