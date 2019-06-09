@@ -5,7 +5,7 @@
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [taoensso.timbre :as log]
             [incanter.core :as incanter]
-            [incanter.stats :as stats]
+            [incanter.stats :as inc-stats]
             [com.climate.claypoole :as cp]
             [ubergraph.core :as uber]))
 
@@ -194,7 +194,7 @@
 (defn pca-2
   [data]
   (let [X (incanter/to-matrix data)
-        pca (stats/principal-components X)
+        pca (inc-stats/principal-components X)
         components (:rotation pca)
         pc1 (incanter/sel components :cols 0)
         pc2 (incanter/sel components :cols 1)

@@ -6,7 +6,8 @@
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [incanter.core :as incanter]
-            [incanter.charts :as charts]
+            [incanter.charts :as inc-charts]
+            [incanter.svg :as inc-svg]
             [edu.ucdenver.ccp.nlp.readers :as rdr]))
 
 ;; File naming patterns
@@ -74,24 +75,25 @@
 
 ;;; PCA ;;;
 (comment
-  (def triples-dataset (evaluation/triples->dataset training-model))
+  (def triples-dataset (evaluation/sentences->dataset (:sentences training-model)))
   (def groups (incanter/sel triples-dataset :cols :property))
 
   (def x (evaluation/pca-2 triples-dataset))
-  (incanter/view (charts/scatter-plot (get x 0) (get x 1)
-                                      :group-by groups
-                                      :legend true
-                                      :x-label "PC1"
-                                      :y-label "PC2"
-                                      :title "PCA")))
+  (-> (inc-charts/scatter-plot (get x 0) (get x 1)
+                               :group-by groups
+                               :legend true
+                               :x-label "PC1"
+                               :y-label "PC2"
+                               :title "PCA")
+      (inc-svg/save-svg "pca-all.svg")))
 (comment
   (def sent-dataset (evaluation/sentences->dataset (:sentences training-model)))
   (def x2 (evaluation/pca-2 sent-dataset))
-  (incanter/view (charts/scatter-plot (get x2 0) (get x2 1)
-                                      :legend true
-                                      :x-label "PC1"
-                                      :y-label "PC2"
-                                      :title "PCA")))
+  (incanter/view (inc-charts/scatter-plot (get x2 0) (get x2 1)
+                                          :legend true
+                                          :x-label "PC1"
+                                          :y-label "PC2"
+                                          :title "PCA")))
 
 (comment
   (def clusters (-> training-model
@@ -100,12 +102,11 @@
   (def clust-sent-dataset (evaluation/sentences->dataset clusters))
 
   (def x3 (evaluation/pca-2 clust-sent-dataset))
-  (incanter/view (charts/scatter-plot (get x3 0) (get x3 1)
-                                      :legend true
-                                      :x-label "PC1"
-                                      :y-label "PC2"
-                                      :title "PCA")))
-
+  (incanter/view (inc-charts/scatter-plot (get x3 0) (get x3 1)
+                                          :legend true
+                                          :x-label "PC1"
+                                          :y-label "PC2"
+                                          :title "PCA")))
 
 ;;; RELATION EXTRACTION ;;;
 (defn concept-context-match

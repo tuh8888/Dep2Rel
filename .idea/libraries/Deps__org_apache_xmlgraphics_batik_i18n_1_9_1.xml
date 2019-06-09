@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="Deps: org.apache.xmlgraphics/batik-i18n:1.9.1">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/apache/xmlgraphics/batik-i18n/1.9.1/batik-i18n-1.9.1.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
