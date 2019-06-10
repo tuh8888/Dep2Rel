@@ -129,14 +129,15 @@
 (defn concept-context-match
   [{:keys [context-thresh] :as params} samples patterns]
   (when (and (seq samples) (seq patterns))
-    (->> patterns (math/find-best-row-matches params samples)
+    (->> patterns
+         (math/find-best-row-matches params samples)
          (filter (fn [{:keys [score]}] (< context-thresh score)))
          (filter (fn [{:keys [sample match]}] (re/sent-pattern-concepts-match? sample match)))
          (map (fn [{:keys [sample match]}]
                 (assoc sample :predicted (:predicted match)))))))
 
 (defn pattern-update
-  [{:keys [min-match-support reclustering?] :as params}
+  [{:keys [min-match-support reclustering? vector-fn] :as params}
    new-matches patterns property]
   (let [samples (->> new-matches
                      (filter #(= (:predicted %) property))
@@ -145,8 +146,7 @@
                       (filter #(= (:predicted %) property))
                       (set))
         patterns (->> (cluster-tools/single-pass-cluster samples patterns
-                        (merge params {:cluster-merge-fn re/add-to-pattern
-                                       :cluster-sim-fn   context/context-vector-cosine-sim}))
+                        (merge params {:cluster-merge-fn (partial re/add-to-pattern vector-fn)}))
                       (map #(assoc % :predicted property)))
         filt #(or (empty? new-matches) (< min-match-support (count (:support %))))]
     [(filter filt patterns)
@@ -174,8 +174,11 @@
 (def training-sentences (map #(sentence/map->Sentence %) training-sentences))
 
 (def split-training-model (let [seed-frac 0.2]
-                            (evaluation/split-train-test training-sentences training-model seed-frac properties)))
-(log/set-level! :debug)
+                            (-> training-sentences
+                                (evaluation/split-train-test training-model seed-frac properties)
+                                (update :samples (fn [samples] (map #(assoc % :VEC (context/context-vector % training-model))
+                                                                    samples))))))
+(log/set-level! :info)
 
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
@@ -193,7 +196,6 @@
                  (-> split-training-model
                      (assoc :properties properties)
                      (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
-                     (update :samples (fn [samples] (map #(assoc % :VEC (context/context-vector % training-model)) samples)))
                      (re/bootstrap {:terminate?        terminate?
                                     :context-match-fn  context-match-fn
                                     :pattern-update-fn pattern-update-fn})

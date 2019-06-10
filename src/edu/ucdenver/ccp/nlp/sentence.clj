@@ -11,13 +11,13 @@
 (defrecord Sentence [concepts entities context]
   context/ContextVector
   (context-vector [self {:keys [structure-annotations concept-annotations]}]
-    (let [v (->> self
-                 :entities
-                 (map (fn [e] (get concept-annotations e))))]
+    (let [context-toks (->> self
+                            :context
+                            (map #(get structure-annotations %)))]
       (->> self
-           :context
-           (map #(get structure-annotations %))
-           (lazy-cat v)
+           :entities
+           (map (fn [e] (get concept-annotations e)))
+           (lazy-cat context-toks)
            (map :spans)
            (mapcat vals)
            (keep :text)
@@ -70,8 +70,8 @@
 (defn make-context-path
   [undirected-sent toks]
   (->> toks
-      (apply uber-alg/shortest-path undirected-sent)
-      (uber-alg/nodes-in-path)))
+       (apply uber-alg/shortest-path undirected-sent)
+       (uber-alg/nodes-in-path)))
 
 
 (defn make-sentence

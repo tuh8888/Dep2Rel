@@ -1,7 +1,6 @@
 (ns edu.ucdenver.ccp.nlp.relation-extraction
-  (:require [taoensso.timbre :as t]
-            [math]
-            [util]
+  (:require [math :as math]
+            [util :as util]
             [cluster-tools]
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
@@ -22,8 +21,9 @@
        (some #(= concepts %))))
 
 (defn add-to-pattern
-  [p s]
-  (map->Pattern {:support (conj (set (:support p)) s)}))
+  [vector-fn p s]
+  (let [p (->Pattern (conj (set (:support p)) s))]
+    (assoc p :VEC (vector-fn p))))
 
 (defn bootstrap
   [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn]}]
@@ -41,9 +41,9 @@
           samples (remove :predicted new-matches)
           new-matches (filter :predicted new-matches)
           matches (into matches new-matches)]
-      (t/debug "\nPatterns" (util/map-kv count (group-by :predicted patterns))
-               "\nNew matches " (util/map-kv count (group-by :predicted new-matches))
-               "\nMatches " (util/map-kv count (group-by :predicted matches)))
+      (log/info "\nPatterns" (util/map-kv count (group-by :predicted patterns))
+                "\nNew matches " (util/map-kv count (group-by :predicted new-matches))
+                "\nMatches " (util/map-kv count (group-by :predicted matches)))
       (if-let [results (terminate? model {:iteration        iteration
                                           :seeds            seeds
                                           :new-matches      new-matches

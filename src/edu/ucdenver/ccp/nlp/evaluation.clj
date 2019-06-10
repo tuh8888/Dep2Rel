@@ -52,7 +52,7 @@
     (spit f csv-form)))
 
 (defn cluster-sentences
-  [sentences model cluster-thresh]
+  [sentences]
   (map
     #(map :entities %)
     (map :support
@@ -60,10 +60,7 @@
            #(when (< 1 (count (:support %)))
               %)
            (cluster-tools/single-pass-cluster sentences #{}
-             {:cluster-merge-fn re/add-to-pattern
-              :cluster-match-fn #(let [score (context/context-vector-cosine-sim %1 %2 model)]
-                                   (and (< (or %3 cluster-thresh) score)
-                                        score))})))))
+             {:cluster-merge-fn re/add-to-pattern})))))
 
 (defn context-path-filter
   [dep-filter coll]
