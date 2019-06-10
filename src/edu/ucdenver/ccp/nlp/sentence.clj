@@ -6,10 +6,25 @@
             [util :as util]
             [word2vec :as word2vec]
             [taoensso.timbre :as log]
-            [uncomplicate.neanderthal.native :as thal-native]
-            [uncomplicate.commons.core :as uncomplicate]))
+            [uncomplicate-context-alg :as context]))
 
-(defrecord Sentence [concepts entities context context-vector])
+(defrecord Sentence [concepts entities context]
+  context/ContextVector
+  (context-vector [self {:keys [structure-annotations concept-annotations]}]
+    (let [v (->> self
+                 :entities
+                 (map (fn [e] (get concept-annotations e))))]
+      (->> self
+           :context
+           (map #(get structure-annotations %))
+           (lazy-cat v)
+           (map :spans)
+           (mapcat vals)
+           (keep :text)
+           (mapcat #(str/split % #" "))
+           (map str/lower-case)
+           (map word2vec/word-embedding)
+           (math/sum-vectors)))))
 
 (defn pprint-sent
   [model sent]
@@ -59,27 +74,21 @@
       (apply uber-alg/shortest-path undirected-sent)
       (uber-alg/nodes-in-path)))
 
-(defn sum-vectors
-  [vectors]
-  (uncomplicate/with-release [vectors (seq (map thal-native/dv (keep identity vectors)))
-                              result (when vectors (apply math/unit-vec-sum vectors))]
-    (seq result)))
-
-(defn make-context-vector
-  [dependency-path structure-annotations [ann1 ann2]]
-  (-> (map #(get-in structure-annotations [% :word-vector]) dependency-path)
-      (conj (:word-vector ann1))
-      (conj (:word-vector ann2))
-      (sum-vectors)))
+#_(defn make-context-vector
+    [dependency-path structure-annotations [ann1 ann2]]
+    (-> (map #(get-in structure-annotations [% :word-vector]) dependency-path)
+        (conj (:word-vector ann1))
+        (conj (:word-vector ann2))
+        (sum-vectors)))
 
 (defn make-sentence
   "Make a sentence using the sentence graph and entities"
   [{:keys [structure-annotations]} undirected-sent anns]
   (let [concepts (->> anns (map :concept) (map #(conj #{} %)) (set))
         context (->> anns (map :tok) (make-context-path undirected-sent))
-        context-vector (make-context-vector context structure-annotations anns)
+        #_context-vector #_(make-context-vector context structure-annotations anns)
         entities (->> anns (map :id) (set))]
-    (->Sentence concepts entities context context-vector)))
+    (->Sentence concepts entities context #_context-vector)))
 
 (defn make-sentences
   [model undirected-sent sent-annotations]
@@ -101,12 +110,12 @@
 
 
 
-(defn assign-word-embedding
-  [{:keys [spans] :as annotation}]
-  (let [{:keys [text]} (first (vals spans))]
-    (assoc annotation :word-vector (-> text
-                                       (str/lower-case)
-                                       (word2vec/word-embedding)))))
+#_(defn assign-word-embedding
+    [{:keys [spans] :as annotation}]
+    (let [{:keys [text]} (first (vals spans))]
+      (assoc annotation :word-vector (-> text
+                                         (str/lower-case)
+                                         (word2vec/word-embedding)))))
 
 (defn assign-sent-id
   [model tok]
@@ -117,15 +126,15 @@
   (let [{:keys [sent id]} (ann-tok model ann)]
     (assoc ann :tok id
                :sent sent
-               :word-vector (->> ann
-                                 :spans
-                                 vals
-                                 (keep :text)
-                                 (map #(str/split % #" "))
-                                 (apply concat)
-                                 (map str/lower-case)
-                                 (map word2vec/word-embedding)
-                                 (sum-vectors)))))
+               #_:word-vector #_(->> ann
+                                     :spans
+                                     vals
+                                     (keep :text)
+                                     (map #(str/split % #" "))
+                                     (apply concat)
+                                     (map str/lower-case)
+                                     (map word2vec/word-embedding)
+                                     (sum-vectors)))))
 
 (defn sentences-with-ann
   [sentences id]

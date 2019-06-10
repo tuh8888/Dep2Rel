@@ -7,12 +7,10 @@
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [incanter.core :as incanter]
             [incanter.charts :as inc-charts]
-            [uncomplicate.neanderthal.native :as thal-native]
             [incanter.svg :as inc-svg]
             [edu.ucdenver.ccp.nlp.readers :as rdr]
-            [uncomplicate.neanderthal.core :as thal]
-            [uncomplicate.commons.core :as uncomplicate]
-            [uncomplicate.neanderthal.real :as thal-real]))
+            [uncomplicate-context-alg :as context]
+            [uncomplicate.neanderthal.native :as thal-native]))
 
 ;; File naming patterns
 (def sep "_")
@@ -31,6 +29,7 @@
 (def word-vector-dir (io/file home-dir "WordVectors"))
 (def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
 
+
 ;;; MODELS ;;;
 (defn make-model
   [v]
@@ -38,7 +37,7 @@
   (let [model (as-> (k/simple-model v) model
                     (update model :structure-annotations #(util/pmap-kv (fn [s]
                                                                           (->> s
-                                                                               sentence/assign-word-embedding
+                                                                               #_sentence/assign-word-embedding
                                                                                (sentence/assign-sent-id model)))
                                                                         %))
                     (update model :concept-annotations #(util/pmap-kv (partial sentence/assign-tok model) %)))]
@@ -94,7 +93,6 @@
                                    "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
                                    "NOT"})
 
-
 ;;; PCA ;;;
 (comment
   (def triples-dataset (->> training-sentences
@@ -126,36 +124,17 @@
                                           :y-label "PC2"
                                           :title "PCA")))
 
-(defn context-matrix
-  [factory coll]
-  (let [d (count (some #(seq (:context-vector %)) coll))]
-    (->> coll
-         (map :context-vector)
-         (mapcat seq)
-         (thal/ge factory d (count coll)))))
+
 
 ;;; RELATION EXTRACTION ;;;
 (defn concept-context-match
-  [{:keys [context-thresh factory matrix-fn]} samples patterns]
+  [{:keys [context-thresh] :as params} samples patterns]
   (when (and (seq samples) (seq patterns))
-    (uncomplicate/with-release [s1-1 (matrix-fn factory samples)
-                                s1 (thal/trans s1-1)
-                                s2 (matrix-fn factory patterns)
-                                score-m (thal/mm s1 s2)]
-      #_(println (thal/mrows s1) (thal/ncols s1) (thal/mrows s2) (thal/ncols s2))
-
-      (map-indexed (fn [i s]
-                     (let [pattern (->> (reduce
-                                          (fn [{:keys [score] :as best} [j pattern]]
-                                            (let [new-score (thal-real/entry score-m i j)]
-                                              (if (< score new-score)
-                                                {:pattern pattern :score score}
-                                                best)))
-                                          {:score context-thresh}
-                                          (map-indexed vector patterns))
-                                        :pattern)]
-                       (assoc s :predicted (when (re/sent-pattern-concepts-match? s pattern) (:predicted pattern)))))
-                   samples))))
+    (->> patterns (math/find-best-matches params samples)
+         (filter (fn [{:keys [score]}] (< context-thresh score)))
+         (filter (fn [{:keys [sample match]}] (re/sent-pattern-concepts-match? sample match)))
+         (map (fn [{:keys [sample match]}]
+                (assoc sample :predicted (:predicted match)))))))
 
 (defn pattern-update
   [{:keys [min-match-support reclustering?] :as params}
@@ -168,7 +147,7 @@
                       (set))
         patterns (->> (cluster-tools/single-pass-cluster samples patterns
                         (merge params {:cluster-merge-fn re/add-to-pattern
-                                       :cluster-sim-fn   re/context-vector-cosine-sim}))
+                                       :cluster-sim-fn   context/context-vector-cosine-sim}))
                       (map #(assoc % :predicted property)))
         filt #(or (empty? new-matches) (< min-match-support (count (:support %))))]
     [(filter filt patterns)
@@ -193,45 +172,50 @@
           (empty? seeds) (do (log/info "No seeds")
                              model))))
 
+(def training-sentences (map #(sentence/map->Sentence %) training-sentences))
+
 (def split-training-model (let [seed-frac 0.2]
                             (evaluation/split-train-test training-sentences training-model seed-frac properties)))
-(comment
-  (def results (let [context-path-length-cap 100
-                     params {:context-thresh    0.95
-                             :cluster-thresh    0.95
-                             :min-match-support 0
-                             :max-iterations    10
-                             :max-matches       3000
-                             :reclustering?      true
-                             :matrix-fn         context-matrix
-                             :factory           thal-native/native-double}
-                     context-match-fn (partial concept-context-match params)
-                     pattern-update-fn (partial pattern-update params)
-                     terminate? (partial terminate? params)]
+(log/set-level! :debug)
+
+(def results (let [context-path-length-cap 100
+                   params {:context-thresh    0.95
+                           :cluster-thresh    0.95
+                           :min-match-support 0
+                           :max-iterations    10
+                           :max-matches       3000
+                           :reclustering?     true
+                           :matrix-fn         (partial context/context-matrix training-model)
+                           :factory           thal-native/native-double}
+                   context-match-fn (partial concept-context-match params)
+                   pattern-update-fn (partial pattern-update params)
+                   terminate? (partial terminate? params)]
+               (word2vec/with-word2vec word2vec-db
                  (-> split-training-model
                      (assoc :properties properties)
                      (update :samples #(evaluation/context-path-filter context-path-length-cap %))
                      (re/bootstrap {:terminate?        terminate?
                                     :context-match-fn  context-match-fn
                                     :pattern-update-fn pattern-update-fn})
-                     (evaluation/calc-metrics)))))
+                     (evaluation/calc-metrics)
+                     (doall)))))
 
 
 #_(apply evaluation/format-matches training-model results)
 
 (comment
   (log/set-level! :info)
-  (def results (evaluation/parameter-walk properties training-sentences training-model
-                                          {:context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
-                                           :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
-                                           :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
-                                           :min-seed-support #_[3]  [0 5 25]
-                                           :min-match-support #_[0] [0 5 25]
-                                           :min-match-matches #_[0] [0 5 25]
-                                           :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
-                                           :terminate?              terminate?
-                                           :context-match-fn        concept-context-match
-                                           :pattern-update-fn       pattern-update}))
+  #_(def results (evaluation/parameter-walk properties training-sentences training-model
+                                            {:context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
+                                             :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
+                                             :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
+                                             :min-seed-support #_[3]  [0 5 25]
+                                             :min-match-support #_[0] [0 5 25]
+                                             :min-match-matches #_[0] [0 5 25]
+                                             :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
+                                             :terminate?              terminate?
+                                             :context-match-fn        concept-context-match
+                                             :pattern-update-fn       pattern-update}))
   (def results-dataset (->> results
                             (map #(apply dissoc % (keys training-model)))
                             (incanter/to-dataset)))

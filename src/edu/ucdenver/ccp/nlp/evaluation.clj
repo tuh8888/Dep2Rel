@@ -6,7 +6,8 @@
             [incanter.stats :as inc-stats]
             [com.climate.claypoole :as cp]
             [ubergraph.core :as uber]
-            [edu.ucdenver.ccp.nlp.sentence :as sentence]))
+            [edu.ucdenver.ccp.nlp.sentence :as sentence]
+            [uncomplicate-context-alg :as context]))
 
 (defn format-matches
   [model matches _]
@@ -51,7 +52,7 @@
     (spit f csv-form)))
 
 (defn cluster-sentences
-  [sentences cluster-thresh]
+  [sentences model cluster-thresh]
   (map
     #(map :entities %)
     (map :support
@@ -60,7 +61,7 @@
               %)
            (cluster-tools/single-pass-cluster sentences #{}
              {:cluster-merge-fn re/add-to-pattern
-              :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+              :cluster-match-fn #(let [score (context/context-vector-cosine-sim %1 %2 model)]
                                    (and (< (or %3 cluster-thresh) score)
                                         score))})))))
 
@@ -164,16 +165,16 @@
     [x1 x2]))
 
 (defn flatten-context-vector
-  [s]
-  (let [v (vec (seq (:context-vector s)))]
+  [s model]
+  (let [v (vec (seq (context/context-vector s model)))]
     (apply assoc s (interleave (range (count v)) v))))
 
 (defn sentences->dataset
-  [sentences]
+  [sentences model]
   (->> sentences
-       (filter #(identity (:context-vector %)))
+       (filter #(context/context-vector % model))
        (pmap flatten-context-vector)
-       (map #(dissoc % :context-vector :entities :concepts :context))
+       (map #(dissoc % :entities :concepts :context))
        (vec)
        (incanter/to-dataset)))
 

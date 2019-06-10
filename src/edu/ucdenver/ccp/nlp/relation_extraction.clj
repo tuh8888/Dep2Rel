@@ -5,12 +5,14 @@
             [cluster-tools]
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
-            [uncomplicate.commons.core :as uncomplicate]
-            [uncomplicate.neanderthal.core :as thal]
-            [uncomplicate.neanderthal.native :as thal-native]
-            [edu.ucdenver.ccp.nlp.sentence :as sentence]))
+            [uncomplicate-context-alg :as context]))
 
-(defrecord Pattern [context-vector support])
+(defrecord Pattern [support]
+  context/ContextVector
+  (context-vector [self model]
+    (->> self :support
+         (map #(context/context-vector % model))
+         (math/sum-vectors))))
 
 (defn sent-pattern-concepts-match?
   [{:keys [concepts]} {:keys [support]}]
@@ -20,18 +22,10 @@
 
 (defn add-to-pattern
   [p s]
-  (map->Pattern {:context-vector (if (:context-vector p)
-                                   (sentence/sum-vectors (map :context-vector [p s]))
-                                   (:context-vector s))
+  (map->Pattern {#_:context-vector #_(if (:context-vector p)
+                                       (sentence/sum-vectors (map :context-vector [p s]))
+                                       (:context-vector s))
                  :support        (conj (set (:support p)) s)}))
-
-(defn context-vector-cosine-sim
-  [s1 s2]
-  (uncomplicate/with-release [vec1 (thal-native/dv (:context-vector s1))
-                              vec2 (thal-native/dv (:context-vector s2))]
-    (if (and vec1 vec2)
-      (thal/dot vec1 vec2)
-      0)))
 
 (defn bootstrap
   [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn]}]
