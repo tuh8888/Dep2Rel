@@ -81,16 +81,11 @@
 ;; Mutation located in gene
 (def property (.get (.getOwlObjectPropertyById ^KnowtatorModel (k/model annotations) "exists_at_or_derives_from")))
 
-(def actual-true (set (map evaluation/edge->triple
-                           (k/edges-for-property model property))))
-
-(def all-triples (set (map evaluation/sent->triple sentences)))
-
 
 
 (defn c-metrics
   [matches]
-  (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
+  (math/calc-metrics {:predicted-true
                       :actual-true    actual-true
                       :all            all-triples}))
 
@@ -129,7 +124,7 @@
 
   (log/info "Metrics" metrics)
 
-  (def params {:predicted-true (evaluation/predicted-true matches)
+  (def params {:predicted-true
                :actual-true    actual-true
                :all            all-triples}))
 

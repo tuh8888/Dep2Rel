@@ -1,23 +1,12 @@
 (ns edu.ucdenver.ccp.nlp.evaluation
   (:require [cluster-tools]
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
-            [edu.ucdenver.ccp.nlp.sentence :as sentence]
-            [edu.ucdenver.ccp.knowtator-clj :as k]
             [taoensso.timbre :as log]
             [incanter.core :as incanter]
             [incanter.stats :as inc-stats]
             [com.climate.claypoole :as cp]
-            [ubergraph.core :as uber]))
-
-(defn pprint-sent
-  [model sent]
-  (->> sent
-       (map #(get-in model [:structure-annotations %]))
-       (map (comp first vals :spans))
-       (sort-by :start)
-       (map :text)
-       (interpose " ")
-       (apply str)))
+            [ubergraph.core :as uber]
+            [edu.ucdenver.ccp.nlp.sentence :as sentence]))
 
 (defn format-matches
   [model matches _]
@@ -27,10 +16,10 @@
                doc (:doc e1)
                sent (->> (get-in model [:structure-graphs (:sent e1) :node-map])
                          keys
-                         (pprint-sent model))
+                         (sentence/pprint-sent model))
                context (->> match
                             :context
-                            (pprint-sent model))
+                            (sentence/pprint-sent model))
                [e1-concept e2-concept] (->> entities
                                             (sort-by :concept)
                                             (map :concept)
@@ -61,16 +50,8 @@
         csv-form (str (apply str (interpose "," cols)) "\n" (apply str (map #(str (apply str (interpose "," ((apply juxt cols) %))) "\n") formatted)))]
     (spit f csv-form)))
 
-(defn sent->triple
-  [match]
-  (set (:entities match)))
-
-(defn edge->triple
-  [edge]
-  #{(:src edge) (:dest edge)})
-
 (defn cluster-sentences
-  [sentences]
+  [sentences cluster-thresh]
   (map
     #(map :entities %)
     (map :support
@@ -80,42 +61,8 @@
            (cluster-tools/single-pass-cluster sentences #{}
              {:cluster-merge-fn re/add-to-pattern
               :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                   (and (< (or %3 0.75) score)
+                                   (and (< (or %3 cluster-thresh) score)
                                         score))})))))
-
-(defn make-seeds
-  [sentences e1 e2]
-  (clojure.set/intersection
-    (set (sentence/sentences-with-ann sentences e1))
-    (set (sentence/sentences-with-ann sentences e2))))
-
-(defn predicted-true
-  [matches]
-  (set (map sent->triple matches)))
-
-(defn actual-true
-  [model property]
-  (->> property
-       (k/edges-for-property (vals (:concept-graphs model)))
-       (map edge->triple)
-       (set)))
-
-(defn all-triples
-  [model]
-  (->> model
-       :sentences
-       (map sent->triple)
-       (set)))
-
-(defn potential-seeds
-  [sentences actual-true]
-  (filter (fn [t] (some #(= t (:entities %)) sentences)) actual-true))
-
-(defn make-all-seeds
-  [model property]
-  (->> (actual-true model property)
-       (potential-seeds (:sentences model))
-       (mapcat #(apply make-seeds (model :sentences) %))))
 
 (defn context-path-filter
   [dep-filter coll]
@@ -141,18 +88,6 @@
                  :seeds (->> seeds
                              (map #(assoc % :predicted (:property %)))
                              (set)))))
-
-
-(defn train-test
-  "Makes a model from a training model and a testing model"
-  [train-model test-model property frac]
-  (let [seeds (frac-seeds train-model property frac)]
-    (-> train-model
-        (update :sentences remove seeds)
-        (assoc :actual-true (actual-true test-model property)
-               :all (all-triples test-model)
-               :test-sentences (:sentences test-model)
-               :seeds))))
 
 (defn sentences->entities
   [sentences]

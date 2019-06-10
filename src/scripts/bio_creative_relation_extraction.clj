@@ -81,10 +81,8 @@
 ;;; CLUSTERING ;;;
 (def properties #{"INHIBITOR"})
 
-(comment
-  (-> (evaluation/make-all-seeds training-model property training-sentences)
-      (default-cluster #{} 0.75)
-      (count)))
+(comment)
+
 
 ;;; PCA ;;;
 (comment

@@ -3,10 +3,21 @@
             [ubergraph.alg :as uber-alg]
             [graph :as graph]
             [math :as math]
+            [util :as util]
             [word2vec :as word2vec]
             [taoensso.timbre :as log]))
 
 (defrecord Sentence [concepts entities context context-vector])
+
+(defn pprint-sent
+  [model sent]
+  (->> sent
+       (map #(get-in model [:structure-annotations %]))
+       (map (comp first vals :spans))
+       (sort-by :start)
+       (map :text)
+       (interpose " ")
+       (apply str)))
 
 (defn ann-tok
   [model {:keys [doc spans id] :as ann}]
