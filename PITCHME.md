@@ -6,6 +6,10 @@
 
 **Institution:** University of Colorado, Anschutz Medical Campus
 
+@snap[south span-100]
+@img[](resources/CUAnschutz_sl_clr.png)
+@snap-end
+
 ---
 @title[Background]
 
