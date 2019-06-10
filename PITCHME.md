@@ -11,11 +11,11 @@
 ---
 @title[Background]
 
-@snap[north span-100]
+@snap[north span-75]
 ## Background
 @snapend
 
-@snap[north-west span-100]
+@snap[north-west span-25]
 @img[](resources/CUAnschutz_sm_clr.png)
 @snapend
 
