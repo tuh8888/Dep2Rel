@@ -53,8 +53,7 @@
 
 (defn make-context-path
   [undirected-sent toks]
-  (-> toks
-      (map :id)
+  (->> toks
       (apply uber-alg/shortest-path undirected-sent)
       (uber-alg/nodes-in-path)))
 

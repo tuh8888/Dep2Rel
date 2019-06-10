@@ -4,7 +4,8 @@
             [util]
             [cluster-tools]
             [clojure.set :refer [subset? intersection]]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [uncomplicate.neanderthal.core :as thal]))
 
 (defrecord Pattern [context-vector support])
 
@@ -27,7 +28,7 @@
   (let [vec1 (:context-vector s1)
         vec2 (:context-vector s2)]
     (if (and vec1 vec2)
-      (math/cosine-sim vec1 vec2)
+      (thal/dot vec1 vec2)
       0)))
 
 (defn bootstrap
@@ -38,8 +39,11 @@
          matches #{}
          patterns #{}
          samples samples]
-    (let [patterns (mapcat #(pattern-update-fn new-matches patterns %) properties)
-          new-matches (map #(context-match-fn % patterns) samples)
+    (let [[patterns unclustered] (mapcat #(pattern-update-fn new-matches patterns %) properties)
+          last-new-matches new-matches
+          new-matches (-> samples
+                           (context-match-fn patterns)
+                           (lazy-cat unclustered))
           samples (remove :predicted new-matches)
           new-matches (filter :predicted new-matches)
           matches (into matches new-matches)]
@@ -51,7 +55,8 @@
                                           :new-matches new-matches
                                           :matches     matches
                                           :patterns    patterns
-                                          :samples   samples})]
+                                          :samples   samples
+                                          :last-new-matches last-new-matches})]
         results
         (recur (inc iteration) new-matches matches patterns samples)))))
 

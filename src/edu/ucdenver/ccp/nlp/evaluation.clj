@@ -70,7 +70,9 @@
 
 (defn frac-seeds
   [property sentences frac]
-  (let [pot (filter #(= (:property %) property) sentences)]
+  (let [pot (->> sentences
+                 (filter #(= (:property %) property))
+                 (shuffle))]
     (-> pot
         (count)
         (* frac)

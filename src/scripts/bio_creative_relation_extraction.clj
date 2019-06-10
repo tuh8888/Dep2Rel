@@ -7,8 +7,12 @@
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [incanter.core :as incanter]
             [incanter.charts :as inc-charts]
+            [uncomplicate.neanderthal.native :as thal-native]
             [incanter.svg :as inc-svg]
-            [edu.ucdenver.ccp.nlp.readers :as rdr]))
+            [edu.ucdenver.ccp.nlp.readers :as rdr]
+            [uncomplicate.neanderthal.core :as thal]
+            [uncomplicate.commons.core :as uncomplicate]
+            [uncomplicate.neanderthal.real :as thal-real]))
 
 ;; File naming patterns
 (def sep "_")
@@ -81,9 +85,6 @@
 ;;; CLUSTERING ;;;
 (def properties #{"INHIBITOR"})
 
-(comment)
-
-
 ;;; PCA ;;;
 (comment
   (def triples-dataset (->> training-sentences
@@ -115,62 +116,92 @@
                                           :y-label "PC2"
                                           :title "PCA")))
 
+(defn context-matrix
+  [factory coll]
+  (let [d (count (seq (:context-vector (first coll))))]
+    (->> coll
+         (map :context-vector)
+         (mapcat seq)
+         (thal/ge factory d (count coll)))))
+
 ;;; RELATION EXTRACTION ;;;
 (defn concept-context-match
-  [{:keys [context-thresh]} s patterns]
-  (->> patterns
-       (filter #(re/sent-pattern-concepts-match? s %))
-       (map #(assoc % :score (re/context-vector-cosine-sim s %)))
-       (reduce (fn [best new]
-                 (if (< (:score best) (:score new))
-                   new
-                   best))
-               {:score context-thresh})
-       :predicted
-       (assoc s :predicted)))
+  [{:keys [context-thresh factory matrix-fn]} samples patterns]
+  (when (and (seq samples) (seq patterns))
+    (uncomplicate/with-release [s1 (->> samples
+                                        (matrix-fn factory)
+                                        (thal/trans))
+                                s2 (matrix-fn factory patterns)
+                                score-m (thal/mm s1 s2)]
+      #_(println (thal/mrows s1) (thal/ncols s1) (thal/mrows s2 ) (thal/ncols s2))
+
+      #_(->> score-m
+             (thal/rows)
+             (map (fn [sample row]
+                    (let [i (thal/imax row)
+                          score (thal/entry row i)]
+                      (when (< context-thresh score)
+                        (let [property (-> patterns (get i) :predicted)]
+                          (assoc sample :predicted property)))))
+                  samples))
+      (map-indexed (fn [i s]
+                     (->> (reduce
+                            (fn [{:keys [score] :as best} [j pattern]]
+                              (let [new-score (thal-real/entry score-m i j)]
+                                (if (< score new-score)
+                                  {:pattern pattern :score score}
+                                  best)))
+                            {:score context-thresh}
+                            (map-indexed vector patterns))
+                          :pattern
+                          :predicted
+                          (assoc s :predicted)))
+                   samples))))
+
 
 (defn pattern-update
-  [{:keys [cluster-thresh
-           min-match-support]}
+  [{:keys [min-match-support] :as params}
    new-matches patterns property]
   (let [samples (->> new-matches
                      (filter #(= (:predicted %) property))
                      (set))
         patterns (->> patterns
                       (filter #(= (:predicted %) property))
-                      (set))]
-
-    (->> (cluster-tools/single-pass-cluster samples patterns
-           {:cluster-merge-fn re/add-to-pattern
-            :cluster-sim-fn   re/context-vector-cosine-sim
-            :cluster-thresh   cluster-thresh})
-         (map #(assoc % :predicted property))
-         (filter #(< min-match-support (count (:support %)))))))
+                      (set))
+        patterns (->> (cluster-tools/single-pass-cluster samples patterns
+                        (merge params {:cluster-merge-fn re/add-to-pattern
+                                       :cluster-sim-fn   re/context-vector-cosine-sim}))
+                      (map #(assoc % :predicted property)))
+        filt #(or (empty? new-matches) (< min-match-support (count (:support %))))]
+    [(filter filt patterns)
+     (->> patterns
+          (remove filt)
+          (mapcat :support))]))
 
 (defn terminate?
-  [model {:keys [iteration seeds new-matches matches patterns samples]}]
+  [model {:keys [iteration seeds new-matches matches patterns samples last-new-matches]}]
   (let [success-model (assoc model :matches matches
                                    :patterns patterns)]
     (cond (= 100 iteration) (do (log/info "Max iteration reached")
                                 success-model)
-          (empty? new-matches) (do (log/info "No new matches")
-                                   success-model)
+          (= last-new-matches new-matches) (do (log/info "No new matches")
+                                               success-model)
           (empty? samples) (do (log/info "No more samples")
                                success-model)
-          (< 3000 (count matches)) (do (log/info "Too many matches")
+          (< 5000 (count matches)) (do (log/info "Too many matches")
                                        model)
           (empty? seeds) (do (log/info "No seeds")
                              model))))
 
-(def split-training-model (let [seed-frac 0.4]
+(def split-training-model (let [seed-frac 0.2]
                             (evaluation/split-train-test training-sentences training-model seed-frac properties)))
 
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
-                           :cluster-thresh    0.95
-                           :min-match-support 3
-                           :min-seed-support  0
-                           :min-match-matches 0}
+                           :cluster-thresh    0.9
+                           :min-match-support 5
+                           :matrix-fn         context-matrix
+                           :factory           thal-native/native-double}
                    context-match-fn (partial concept-context-match params)
                    pattern-update-fn (partial pattern-update params)]
                (-> split-training-model
