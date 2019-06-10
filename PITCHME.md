@@ -26,7 +26,10 @@
 
 ---
 @title[Method]
+
+@snap[north-west span-100]
 ## Method
+@snapend
 
 @snap[west span-50]
 @ul[spaced]
@@ -45,7 +48,10 @@
 
 ---
 @title[Results]
+
+@snap[north-west span-100]
 ## Results
+@snapend
 
 @snap[west span-50]
 @ul[spaced]
@@ -58,7 +64,10 @@
 
 ---
 @title[Conclusion]
+
+@snap[north-west span-100]
 ## Conclusion
+@snapend
 
 @snap[west span-50]
 ### Contact
