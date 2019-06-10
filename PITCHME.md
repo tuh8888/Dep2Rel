@@ -8,7 +8,7 @@
 
 @snap[south span-100]
 @img[](resources/CUAnschutz_sl_clr.png)
-@snap-end
+@snapend
 
 ---
 @title[Background]
