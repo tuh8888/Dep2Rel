@@ -5,7 +5,10 @@
             [cluster-tools]
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
-            [uncomplicate.neanderthal.core :as thal]))
+            [uncomplicate.commons.core :as uncomplicate]
+            [uncomplicate.neanderthal.core :as thal]
+            [uncomplicate.neanderthal.native :as thal-native]
+            [edu.ucdenver.ccp.nlp.sentence :as sentence]))
 
 (defrecord Pattern [context-vector support])
 
@@ -18,15 +21,14 @@
 (defn add-to-pattern
   [p s]
   (map->Pattern {:context-vector (if (:context-vector p)
-                                   (when-let [vectors (seq (keep :context-vector [p s]))]
-                                     (apply math/unit-vec-sum vectors))
+                                   (sentence/sum-vectors (map :context-vector [p s]))
                                    (:context-vector s))
-                 :support (conj (set (:support p)) s)}))
+                 :support        (conj (set (:support p)) s)}))
 
 (defn context-vector-cosine-sim
   [s1 s2]
-  (let [vec1 (:context-vector s1)
-        vec2 (:context-vector s2)]
+  (uncomplicate/with-release [vec1 (thal-native/dv (:context-vector s1))
+                              vec2 (thal-native/dv (:context-vector s2))]
     (if (and vec1 vec2)
       (thal/dot vec1 vec2)
       0)))

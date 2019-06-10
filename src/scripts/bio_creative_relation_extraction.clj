@@ -83,7 +83,17 @@
 ;;(filter #(= 35 (count (:context %))) (make-all-seeds model property (:sentences model) 100))
 
 ;;; CLUSTERING ;;;
-(def properties #{"INHIBITOR"})
+(def properties #{"INHIBITOR"} #_#{"PART-OF"
+                                   "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
+                                   "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
+                                   "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
+                                   "AGONIST" "AGONIST-ACTIVATOR" "AGONIST-INHIBITOR"
+                                   "ANTAGONIST"
+                                   "MODULATOR" "MODULATOR‐ACTIVATOR" "MODULATOR‐INHIBITOR"
+                                   "COFACTOR"
+                                   "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
+                                   "NOT"})
+
 
 ;;; PCA ;;;
 (comment
@@ -102,7 +112,7 @@
                                :y-label "PC2"
                                :title "PCA")
       (incanter/view)
-      #_(inc-svg/save-svg "pca-all.svg")))
+      #_(inc-svg/save-svg "pca-all.svg ")))
 
 (comment
   (def clusters (-> training-sentences
@@ -118,7 +128,7 @@
 
 (defn context-matrix
   [factory coll]
-  (let [d (count (seq (:context-vector (first coll))))]
+  (let [d (count (some #(seq (:context-vector %)) coll))]
     (->> coll
          (map :context-vector)
          (mapcat seq)
@@ -128,39 +138,27 @@
 (defn concept-context-match
   [{:keys [context-thresh factory matrix-fn]} samples patterns]
   (when (and (seq samples) (seq patterns))
-    (uncomplicate/with-release [s1 (->> samples
-                                        (matrix-fn factory)
-                                        (thal/trans))
+    (uncomplicate/with-release [s1-1 (matrix-fn factory samples)
+                                s1 (thal/trans s1-1)
                                 s2 (matrix-fn factory patterns)
                                 score-m (thal/mm s1 s2)]
-      #_(println (thal/mrows s1) (thal/ncols s1) (thal/mrows s2 ) (thal/ncols s2))
+      #_(println (thal/mrows s1) (thal/ncols s1) (thal/mrows s2) (thal/ncols s2))
 
-      #_(->> score-m
-             (thal/rows)
-             (map (fn [sample row]
-                    (let [i (thal/imax row)
-                          score (thal/entry row i)]
-                      (when (< context-thresh score)
-                        (let [property (-> patterns (get i) :predicted)]
-                          (assoc sample :predicted property)))))
-                  samples))
       (map-indexed (fn [i s]
-                     (->> (reduce
-                            (fn [{:keys [score] :as best} [j pattern]]
-                              (let [new-score (thal-real/entry score-m i j)]
-                                (if (< score new-score)
-                                  {:pattern pattern :score score}
-                                  best)))
-                            {:score context-thresh}
-                            (map-indexed vector patterns))
-                          :pattern
-                          :predicted
-                          (assoc s :predicted)))
+                     (let [pattern (->> (reduce
+                                          (fn [{:keys [score] :as best} [j pattern]]
+                                            (let [new-score (thal-real/entry score-m i j)]
+                                              (if (< score new-score)
+                                                {:pattern pattern :score score}
+                                                best)))
+                                          {:score context-thresh}
+                                          (map-indexed vector patterns))
+                                        :pattern)]
+                       (assoc s :predicted (when (re/sent-pattern-concepts-match? s pattern) (:predicted pattern)))))
                    samples))))
 
-
 (defn pattern-update
-  [{:keys [min-match-support] :as params}
+  [{:keys [min-match-support reclustering?] :as params}
    new-matches patterns property]
   (let [samples (->> new-matches
                      (filter #(= (:predicted %) property))
@@ -174,43 +172,49 @@
                       (map #(assoc % :predicted property)))
         filt #(or (empty? new-matches) (< min-match-support (count (:support %))))]
     [(filter filt patterns)
-     (->> patterns
-          (remove filt)
-          (mapcat :support))]))
+     (when reclustering?
+       (->> patterns
+            (remove filt)
+            (mapcat :support)))]))
 
 (defn terminate?
-  [model {:keys [iteration seeds new-matches matches patterns samples last-new-matches]}]
+  [{:keys [max-iterations max-matches]} model
+   {:keys [iteration seeds new-matches matches patterns samples last-new-matches]}]
   (let [success-model (assoc model :matches matches
                                    :patterns patterns)]
-    (cond (= 100 iteration) (do (log/info "Max iteration reached")
-                                success-model)
+    (cond (<= max-iterations iteration) (do (log/info "Max iteration reached")
+                                            success-model)
           (= last-new-matches new-matches) (do (log/info "No new matches")
                                                success-model)
           (empty? samples) (do (log/info "No more samples")
                                success-model)
-          (< 5000 (count matches)) (do (log/info "Too many matches")
-                                       model)
+          (<= max-matches (count matches)) (do (log/info "Too many matches")
+                                               model)
           (empty? seeds) (do (log/info "No seeds")
                              model))))
 
 (def split-training-model (let [seed-frac 0.2]
                             (evaluation/split-train-test training-sentences training-model seed-frac properties)))
-
-(def results (let [context-path-length-cap 100
-                   params {:context-thresh    0.95
-                           :cluster-thresh    0.9
-                           :min-match-support 5
-                           :matrix-fn         context-matrix
-                           :factory           thal-native/native-double}
-                   context-match-fn (partial concept-context-match params)
-                   pattern-update-fn (partial pattern-update params)]
-               (-> split-training-model
-                   (assoc :properties properties)
-                   (update :samples #(evaluation/context-path-filter context-path-length-cap %))
-                   (re/bootstrap {:terminate?        terminate?
-                                  :context-match-fn  context-match-fn
-                                  :pattern-update-fn pattern-update-fn})
-                   (evaluation/calc-metrics))))
+(comment
+  (def results (let [context-path-length-cap 100
+                     params {:context-thresh    0.95
+                             :cluster-thresh    0.95
+                             :min-match-support 0
+                             :max-iterations    10
+                             :max-matches       3000
+                             :reclustering?      true
+                             :matrix-fn         context-matrix
+                             :factory           thal-native/native-double}
+                     context-match-fn (partial concept-context-match params)
+                     pattern-update-fn (partial pattern-update params)
+                     terminate? (partial terminate? params)]
+                 (-> split-training-model
+                     (assoc :properties properties)
+                     (update :samples #(evaluation/context-path-filter context-path-length-cap %))
+                     (re/bootstrap {:terminate?        terminate?
+                                    :context-match-fn  context-match-fn
+                                    :pattern-update-fn pattern-update-fn})
+                     (evaluation/calc-metrics)))))
 
 
 #_(apply evaluation/format-matches training-model results)

@@ -5,7 +5,9 @@
             [math :as math]
             [util :as util]
             [word2vec :as word2vec]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [uncomplicate.neanderthal.native :as thal-native]
+            [uncomplicate.commons.core :as uncomplicate]))
 
 (defrecord Sentence [concepts entities context context-vector])
 
@@ -59,10 +61,9 @@
 
 (defn sum-vectors
   [vectors]
-  (let [vectors (seq (keep identity vectors))]
-    (when vectors
-      (apply math/unit-vec-sum vectors))))
-
+  (uncomplicate/with-release [vectors (seq (map thal-native/dv (keep identity vectors)))
+                              result (when vectors (apply math/unit-vec-sum vectors))]
+    (seq result)))
 
 (defn make-context-vector
   [dependency-path structure-annotations [ann1 ann2]]
