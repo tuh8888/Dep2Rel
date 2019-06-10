@@ -34,6 +34,7 @@
 
 @snap[north-west span-100]
 ### Context
+@snapend
 
 @snap[west span-50]
 @ul[](false)
