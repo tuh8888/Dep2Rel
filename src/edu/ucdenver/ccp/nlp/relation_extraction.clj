@@ -16,22 +16,11 @@
 
 (defn add-to-pattern
   [p s]
-  (map->Pattern {:concepts       (into (set (:concepts p)) (:concepts s))
-                 :context-vector (if (:context-vector p)
+  (map->Pattern {:context-vector (if (:context-vector p)
                                    (when-let [vectors (seq (keep :context-vector [p s]))]
                                      (apply math/unit-vec-sum vectors))
                                    (:context-vector s))
-                 :support        (conj (set (:support p)) s)}))
-
-(defn concepts-match?
-  [sample seed]
-  (every?
-    (fn [sample-concept-set]
-      (some
-        (fn [seed-concept-set]
-          (clojure.set/subset? sample-concept-set seed-concept-set))
-        (set (:concepts seed))))
-    (set (:concepts sample))))
+                 :support (conj (set (:support p)) s)}))
 
 (defn context-vector-cosine-sim
   [s1 s2]
@@ -42,26 +31,27 @@
       0)))
 
 (defn bootstrap
-  [{:keys [seeds sentences] :as model} {:keys [terminate? context-match-fn pattern-update-fn]}]
-  (log/info "Seeds" (count seeds))
+  [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn]}]
+  (log/info "Seeds" (util/map-kv count (group-by :predicted seeds)))
   (loop [iteration 0
          new-matches (set seeds)
          matches #{}
          patterns #{}
-         sentences sentences]
-    (t/debug "Patterns" (count patterns))
-    (t/debug "Matches" (count matches))
-    (let [patterns (pattern-update-fn seeds new-matches matches patterns)
-          new-matches (util/find-matches sentences patterns context-match-fn)
-          matches (into matches new-matches)
-          sentences (remove (set new-matches) sentences)]
-
-      (if-let [results (terminate? model {:iteration iteration
-                                          :seeds seeds
+         samples samples]
+    (let [patterns (mapcat #(pattern-update-fn new-matches patterns %) properties)
+          new-matches (map #(context-match-fn % patterns) samples)
+          samples (remove :predicted new-matches)
+          new-matches (filter :predicted new-matches)
+          matches (into matches new-matches)]
+      (t/debug "\nPatterns" (util/map-kv count (group-by :predicted patterns))
+               "\nNew matches " (util/map-kv count (group-by :predicted new-matches))
+               "\nMatches " (util/map-kv count (group-by :predicted matches)))
+      (if-let [results (terminate? model {:iteration   iteration
+                                          :seeds       seeds
                                           :new-matches new-matches
-                                          :matches matches
-                                          :patterns patterns
-                                          :sentences sentences})]
+                                          :matches     matches
+                                          :patterns    patterns
+                                          :samples   samples})]
         results
-        (recur (inc iteration) new-matches matches patterns sentences)))))
+        (recur (inc iteration) new-matches matches patterns samples)))))
 

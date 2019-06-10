@@ -37,13 +37,18 @@
                                                                                sentence/assign-word-embedding
                                                                                (sentence/assign-sent-id model)))
                                                                         %))
-                    (update model :concept-annotations #(util/pmap-kv (partial sentence/assign-tok model) %))
-                    (assoc model :sentences (->> model
-                                                 (sentence/concept-annotations->sentences)
-                                                 (map #(evaluation/assign-property model %)))))]
-
-    (log/info "Num sentences:" (count (:sentences model)))
+                    (update model :concept-annotations #(util/pmap-kv (partial sentence/assign-tok model) %)))]
+    (log/info "Model" (util/map-kv count model))
     model))
+
+(defn make-sentences
+  [model]
+  (let [sentences (->> model
+                       (sentence/concept-annotations->sentences)
+                       (pmap #(evaluation/assign-property model %)))]
+    (log/info "Num sentences:" (count sentences))
+    (log/info "Num sentences with property:" (util/map-kv count (group-by :property sentences)))
+    sentences))
 
 (def training-knowtator-view (k/view training-dir))
 #_(def testing-knowtator-view (k/view testing-dir))
@@ -54,50 +59,54 @@
 
 (def training-model (word2vec/with-word2vec word2vec-db
                       (make-model training-knowtator-view)))
+
 #_(def testing-model (word2vec/with-word2vec word2vec-db
                        (make-model testing-knowtator-view)))
-#_(log/info "Num sentences:" (count (keep :property (:sentences testing-model))))
-(log/info "Num sentences:" (count (keep :property (:sentences training-model))))
 
-#_(get-in training-model [:structure-annotations (sentence/ann-tok training-model (get-in training-model [:concept-annotations "23402364-T37"]))])
+(def training-sentences (make-sentences training-model))
+
+(log/info "Num sentences with property:" (count (keep :property training-sentences))
+          (util/map-kv count (group-by :property training-sentences)))
+
+#_(get-in training-model
+          [:structure-annotations (sentence/ann-tok training-model
+                                                    (get-in training-model [:concept-annotations "23402364-T37"]))])
 #_(get-in training-model [:structure-annotations "23402364-859768"])
-#_(map #(:text (first (vals (get-in training-model [:structure-annotations % :spans])))) (keys (get-in training-model [:structure-graphs "23402364-Sentence 1" :node-map])))
-;; #{"12871155-T7" "12871155-T20"} has a ridiculously long context due to the number of tokens in 4-amino-6,7,8,9-tetrahydro-2,3-diphenyl-5H-cyclohepta[e]thieno[2,3-b]pyridine
+#_(map #(:text (first (vals (get-in training-model [:structure-annotations % :spans]))))
+       (keys (get-in training-model [:structure-graphs "23402364-Sentence 1" :node-map])))
+;; #{"12871155-T7" "12871155-T20"} has a ridiculously long context due to the number of tokens in
+;; 4-amino-6,7,8,9-tetrahydro-2,3-diphenyl-5H-cyclohepta[e]thieno[2,3-b]pyridine
 ;;(filter #(= 35 (count (:context %))) (make-all-seeds model property (:sentences model) 100))
 
 ;;; CLUSTERING ;;;
-(def property "INHIBITOR")
+(def properties #{"INHIBITOR"})
 
 (comment
-  (-> (evaluation/make-all-seeds training-model property (:sentences training-model))
+  (-> (evaluation/make-all-seeds training-model property training-sentences)
       (default-cluster #{} 0.75)
       (count)))
 
 ;;; PCA ;;;
 (comment
-  (def triples-dataset (evaluation/sentences->dataset (:sentences training-model)))
-  (def groups (incanter/sel triples-dataset :cols :property))
+  (def triples-dataset (->> training-sentences
+                            (filter #(or (nil? (:property %))
+                                         (properties (:property %))))
+                            (evaluation/sentences->dataset)))
 
-  (def x (evaluation/pca-2 triples-dataset))
+  (def groups (incanter/sel triples-dataset :cols :property))
+  (def y (incanter/sel triples-dataset :cols (range 0 200)))
+  (def x (evaluation/pca-2 y))
   (-> (inc-charts/scatter-plot (get x 0) (get x 1)
                                :group-by groups
                                :legend true
                                :x-label "PC1"
                                :y-label "PC2"
                                :title "PCA")
-      (inc-svg/save-svg "pca-all.svg")))
-(comment
-  (def sent-dataset (evaluation/sentences->dataset (:sentences training-model)))
-  (def x2 (evaluation/pca-2 sent-dataset))
-  (incanter/view (inc-charts/scatter-plot (get x2 0) (get x2 1)
-                                          :legend true
-                                          :x-label "PC1"
-                                          :y-label "PC2"
-                                          :title "PCA")))
+      (incanter/view)
+      #_(inc-svg/save-svg "pca-all.svg")))
 
 (comment
-  (def clusters (-> training-model
-                    :sentences
+  (def clusters (-> training-sentences
                     (default-cluster #{} 0.75)))
   (def clust-sent-dataset (evaluation/sentences->dataset clusters))
 
@@ -110,40 +119,53 @@
 
 ;;; RELATION EXTRACTION ;;;
 (defn concept-context-match
-  [{:keys [context-thresh]} s p]
-  (and (re/sent-pattern-concepts-match? s p)
-       (< context-thresh (re/context-vector-cosine-sim s p))))
-(defn pattern-update
-  [context-match-fn {:keys [cluster-thresh min-seed-support min-match-support min-match-matches]} _ new-matches matches patterns]
-  (-> new-matches
-      (set)
-      (cluster-tools/single-pass-cluster patterns
-        {:cluster-merge-fn re/add-to-pattern
-         :cluster-sim-fn   re/context-vector-cosine-sim
-         :cluster-thresh cluster-thresh})
-      (cond->>
-        (and (< 0 min-seed-support)
-             (empty? new-matches)) (remove #(> min-seed-support (count (:support %))))
-        (and (< 0 min-match-support)
-             (seq new-matches)) (remove #(> (+ min-match-support) (count (:support %))))
-        (and (< 0 min-match-matches)
-             (seq new-matches)) (remove #(> min-match-matches
-                                            (count (filter (fn [s] (context-match-fn s %)) matches)))))
-      (set)))
-(defn terminate?
-  [model {:keys [iteration seeds new-matches matches patterns sentences]}]
-  (let [success-model (assoc model :matches matches
-                                   :patterns patterns
-                                   :predicted-true (evaluation/predicted-true matches))]
-    (cond (= 100 iteration) success-model
-          (empty? new-matches) success-model
-          (empty? sentences) success-model
-          (< 3000 (count matches)) model
-          (empty? seeds) model
-          (empty? patterns) success-model)))
+  [{:keys [context-thresh]} s patterns]
+  (->> patterns
+       (filter #(re/sent-pattern-concepts-match? s %))
+       (map #(assoc % :score (re/context-vector-cosine-sim s %)))
+       (reduce (fn [best new]
+                 (if (< (:score best) (:score new))
+                   new
+                   best))
+               {:score context-thresh})
+       :predicted
+       (assoc s :predicted)))
 
-(def split-training-model (let [seed-frac 0.2]
-                            (evaluation/split-train-test training-model property seed-frac)))
+(defn pattern-update
+  [{:keys [cluster-thresh
+           min-match-support]}
+   new-matches patterns property]
+  (let [samples (->> new-matches
+                     (filter #(= (:predicted %) property))
+                     (set))
+        patterns (->> patterns
+                      (filter #(= (:predicted %) property))
+                      (set))]
+
+    (->> (cluster-tools/single-pass-cluster samples patterns
+           {:cluster-merge-fn re/add-to-pattern
+            :cluster-sim-fn   re/context-vector-cosine-sim
+            :cluster-thresh   cluster-thresh})
+         (map #(assoc % :predicted property))
+         (filter #(< min-match-support (count (:support %)))))))
+
+(defn terminate?
+  [model {:keys [iteration seeds new-matches matches patterns samples]}]
+  (let [success-model (assoc model :matches matches
+                                   :patterns patterns)]
+    (cond (= 100 iteration) (do (log/info "Max iteration reached")
+                                success-model)
+          (empty? new-matches) (do (log/info "No new matches")
+                                   success-model)
+          (empty? samples) (do (log/info "No more samples")
+                               success-model)
+          (< 3000 (count matches)) (do (log/info "Too many matches")
+                                       model)
+          (empty? seeds) (do (log/info "No seeds")
+                             model))))
+
+(def split-training-model (let [seed-frac 0.4]
+                            (evaluation/split-train-test training-sentences training-model seed-frac properties)))
 
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
@@ -152,29 +174,31 @@
                            :min-seed-support  0
                            :min-match-matches 0}
                    context-match-fn (partial concept-context-match params)
-                   pattern-update-fn (partial pattern-update context-match-fn params)]
+                   pattern-update-fn (partial pattern-update params)]
                (-> split-training-model
-                   (update :sentences #(evaluation/context-path-filter context-path-length-cap %))
+                   (assoc :properties properties)
+                   (update :samples #(evaluation/context-path-filter context-path-length-cap %))
                    (re/bootstrap {:terminate?        terminate?
                                   :context-match-fn  context-match-fn
                                   :pattern-update-fn pattern-update-fn})
                    (evaluation/calc-metrics))))
 
+
 #_(apply evaluation/format-matches training-model results)
 
 (comment
   (log/set-level! :info)
-  (def results (evaluation/parameter-walk property training-model
-                                          :context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
-                                          :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
-                                          :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
-                                          :min-seed-support #_[3] [0 5 25]
-                                          :min-match-support #_[0] [0 5 25]
-                                          :min-match-matches #_[0] [0 5 25]
-                                          :seed-frac #_[0.2] [0.05 0.25 0.5 0.75]
-                                          :terminate? terminate?
-                                          :context-match-fn concept-context-match
-                                          :pattern-update-fn pattern-update))
+  (def results (evaluation/parameter-walk properties training-sentences training-model
+                                          {:context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
+                                           :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
+                                           :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
+                                           :min-seed-support #_[3]  [0 5 25]
+                                           :min-match-support #_[0] [0 5 25]
+                                           :min-match-matches #_[0] [0 5 25]
+                                           :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
+                                           :terminate?              terminate?
+                                           :context-match-fn        concept-context-match
+                                           :pattern-update-fn       pattern-update}))
   (def results-dataset (->> results
                             (map #(apply dissoc % (keys training-model)))
                             (incanter/to-dataset)))

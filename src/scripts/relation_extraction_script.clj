@@ -114,8 +114,6 @@
                      params {:seed             (first seeds)
                              :seed-thresh      seed-thresh
                              :context-thresh   context-thresh
-                             :seed-match-fn    #(and (re/concepts-match? %1 %2)
-                                                     (< seed-thresh (re/context-vector-cosine-sim %1 %2)))
                              :context-match-fn #(< context-thresh (re/context-vector-cosine-sim %1 %2))
                              :cluster-merge-fn re/add-to-pattern
                              :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]

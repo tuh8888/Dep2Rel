@@ -41,9 +41,10 @@
     structure-graphs))
 
 (defn make-context-path
-  [undirected-sent tok1 tok2]
-  (-> undirected-sent
-      (uber-alg/shortest-path tok1 tok2)
+  [undirected-sent toks]
+  (-> toks
+      (map :id)
+      (apply uber-alg/shortest-path undirected-sent)
       (uber-alg/nodes-in-path)))
 
 (defn sum-vectors
@@ -54,7 +55,7 @@
 
 
 (defn make-context-vector
-  [dependency-path structure-annotations ann1 ann2]
+  [dependency-path structure-annotations [ann1 ann2]]
   (-> (map #(get-in structure-annotations [% :word-vector]) dependency-path)
       (conj (:word-vector ann1))
       (conj (:word-vector ann2))
@@ -62,29 +63,31 @@
 
 (defn make-sentence
   "Make a sentence using the sentence graph and entities"
-  [{:keys [structure-annotations]} undirected-sent ann1 ann2]
-  (let [anns [ann1 ann2]
-        concepts (->> anns (map :concept) (map #(conj #{} %)) (set))
-        context (->> anns (map :tok) (apply make-context-path undirected-sent))
-        context-vector (make-context-vector context structure-annotations ann1 ann2)
+  [{:keys [structure-annotations]} undirected-sent anns]
+  (let [concepts (->> anns (map :concept) (map #(conj #{} %)) (set))
+        context (->> anns (map :tok) (make-context-path undirected-sent))
+        context-vector (make-context-vector context structure-annotations anns)
         entities (->> anns (map :id) (set))]
     (->Sentence concepts entities context context-vector)))
+
+(defn make-sentences
+  [model undirected-sent sent-annotations]
+  (->> (clojure.math.combinatorics/combinations sent-annotations 2)
+       (map #(make-sentence model undirected-sent %))))
 
 (defn concept-annotations->sentences
   [{:keys [concept-annotations structure-graphs] :as model}]
   (log/info "Making sentences for concept annotations")
-  (->> structure-graphs
-       (pmap
-         (fn [[id g]]
-           (let [sent-annotations (filter #(= id (:sent %)) (vals concept-annotations))]
-             (when (seq sent-annotations)
-               (log/debug "Sentence:" id)
-               (let [g (graph/undirected-graph g)]
-                 (for [ann1 sent-annotations
-                       ann2 sent-annotations
-                       :when (not= ann1 ann2)]
-                   (make-sentence model g ann1 ann2)))))))
-       (apply concat)))
+  (let [undirected-sents (util/map-kv graph/undirected-graph structure-graphs)]
+    (->> concept-annotations
+         (vals)
+         (group-by :sent)
+         (pmap (fn [[sent sent-annotations]]
+                 (log/debug "Sentence:" sent)
+                 (make-sentences model (get undirected-sents sent) sent-annotations)))
+
+         (apply concat))))
+
 
 
 (defn assign-word-embedding

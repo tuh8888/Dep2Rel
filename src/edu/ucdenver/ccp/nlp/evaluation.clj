@@ -11,7 +11,6 @@
 
 (defn pprint-sent
   [model sent]
-
   (->> sent
        (map #(get-in model [:structure-annotations %]))
        (map (comp first vals :spans))
@@ -123,22 +122,25 @@
   (filter #(<= (count (:context %)) dep-filter) coll))
 
 (defn frac-seeds
-  [model property frac]
-  (-> (actual-true model property)
-      (count)
-      (* frac)
-      (take (make-all-seeds model property))
-      (set)))
+  [property sentences frac]
+  (let [pot (filter #(= (:property %) property) sentences)]
+    (-> pot
+        (count)
+        (* frac)
+        (take pot)
+        (set))))
 
 (defn split-train-test
   "Splits model into train and test sets"
-  [model property frac]
-  (let [seeds (frac-seeds model property frac)]
-    (as-> model model
-          (update model :sentences #(remove seeds %))
-          (assoc model :actual-true (actual-true model property)
-                       :all (all-triples model)
-                       :seeds seeds))))
+  [sentences model frac properties]
+  (let [seeds (->> (group-by :property sentences)
+                   (filter #(properties (first %)))
+                   (map (fn [[property sentences]] (frac-seeds property sentences frac)))
+                   (apply clojure.set/union))]
+    (assoc model :samples (remove seeds sentences)
+                 :seeds (->> seeds
+                             (map #(assoc % :predicted (:property %)))
+                             (set)))))
 
 
 (defn train-test
@@ -152,22 +154,44 @@
                :test-sentences (:sentences test-model)
                :seeds))))
 
+(defn sentences->entities
+  [sentences]
+  (->> sentences
+       (map :entities)
+       (map set)
+       (set)))
+
+
 (defn calc-metrics
-  [model]
-  (let [metrics (try
-                  (math/calc-metrics model)
-                  (catch ArithmeticException _ {}))]
-    (log/info "Metrics:" metrics)
-    (merge model metrics)))
+  [{:keys [matches properties samples]}]
+  (let [all (sentences->entities samples)
+        metrics (zipmap properties
+                  (map (fn [property]
+                         (let [actual-true (->> samples
+                                                (filter #(= property (:property %)))
+                                                (sentences->entities))
+                               predicted-true (->> matches
+                                                   (filter #(= property (:predicted %)))
+                                                   (sentences->entities))]
+
+                           (log/debug "ALL" (count all) "AT" (count actual-true) "PT" (count predicted-true))
+                           (try
+                             (math/calc-metrics {:actual-true    actual-true
+                                                 :predicted-true predicted-true
+                                                 :all            all})
+                             (catch ArithmeticException _ {}))))
+                       properties))]
+    (log/info "Metrics:" (seq metrics))
+    metrics))
 
 (defn parameter-walk
-  [property model & {:keys [context-match-fn pattern-update-fn terminate?
-                            context-path-length-cap
-                            context-thresh cluster-thresh
-                            min-seed-support min-match-support min-match-matches
-                            seed-frac]}]
+  [properties sentences model {:keys [context-match-fn pattern-update-fn terminate?
+                                      context-path-length-cap
+                                      context-thresh cluster-thresh
+                                      min-seed-support min-match-support min-match-matches
+                                      seed-frac]}]
   (cp/upfor (dec (cp/ncpus)) [seed-frac seed-frac
-                              :let [split-model (split-train-test model property seed-frac)]
+                              :let [split-model (split-train-test sentences model seed-frac properties)]
                               context-path-length-cap context-path-length-cap
                               context-thresh context-thresh
                               cluster-thresh cluster-thresh
@@ -201,17 +225,6 @@
         x1 (incanter/mmult X pc1)
         x2 (incanter/mmult X pc2)]
     [x1 x2]))
-(defn triple->sent
-  [t sentences]
-  (->> sentences
-       (filter #(= t (sent->triple %)))
-       (first)))
-
-(defn edge->sent
-  [g e sentences]
-  (let [t (edge->triple e)
-        property (:value (uber/attrs g e))]
-    (assoc (triple->sent t sentences) :property property)))
 
 (defn flatten-context-vector
   [s]
@@ -227,22 +240,11 @@
        (vec)
        (incanter/to-dataset)))
 
-(defn triples->dataset
-  [model]
-  (->> model
-       :concept-graphs
-       (vals)
-       (mapcat
-         (fn [g]
-           (map #(edge->sent g % (:sentences model))
-                (ubergraph.core/find-edges g {}))))
-       (sentences->dataset)))
-
 (defn sent-property
   [{:keys [concept-graphs]} [id1 id2]]
   (some
     (fn [g]
-      (when-let [e (uber/find-edge g id1 id2)]
+      (when-let [e (or (uber/find-edge g id2 id1) (uber/find-edge g id1 id2))]
         (:value (uber/attrs g e))))
     (vals concept-graphs)))
 
