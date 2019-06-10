@@ -15,7 +15,7 @@
 
 @snap[west span-50]
 @ul[](false)
-- Can we make enough gold standard data?
+- Gold standard data &rarr; not a lot
 - How many relations are there?
 @ulend
 @snapend
@@ -27,22 +27,30 @@
 ---
 @title[Method]
 
-@snap[north-west span-100]
 ## Method
-@snapend
+
+---
+@title[Context]
+
+@snap[north-west span-100]
+### Context
+@snap-end
 
 @snap[west span-50]
 @ul[](false)
-- Dependency path between two entities -> context path
-- Combine word vectors -> context vectors
-- Bootstrapping
-  - Seeds
-  - Clustering -> patterns
-  - Context similarity
+- Word vectors provide semantic and sytntactic information
+- Dependency paths between entities &rarr; *Context Paths
 @ulend
 @snapend
 
-@snap[east span-50]
+---
+@title[Relation Extraction]
+
+@snap[north-west span-100]
+### Relation Extraction
+@snapend
+
+@snap[center span-50]
 @img[](resources/algorithm.svg)
 @snapend
 
