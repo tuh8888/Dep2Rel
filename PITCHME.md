@@ -69,7 +69,15 @@
 ## Conclusion
 @snapend
 
-@snap[west span-50]
+@snap[north-east span-25]
+### Acknowledgements
+@ul[](false)
+- Advisor: Lawrence Hunter
+- Funding: T15 LM009451
+@ulend
+@snapend
+
+@snap[south-east span-25]
 ### Contact
 @ul[](false)
 - Email: Harrison.Pielke-Lombardo@ucdenver.edu
