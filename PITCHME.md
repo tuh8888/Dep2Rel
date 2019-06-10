@@ -72,8 +72,11 @@
 ---
 @title[Acknoledgements]
 
+@snap[north-west span-100]
+## Acknowledgements
+@snapend
+
 @snap[west span-50]
-### Acknowledgements
 @ul[](false)
 - Advisor: Lawrence Hunter
 - Funding: T15 LM009451
@@ -81,7 +84,6 @@
 @snapend
 
 @snap[east span-50]
-### Contact
 @ul[](false)
 - Email: Harrison.Pielke-Lombardo@ucdenver.edu
 - GitHub: https://github.com/tuh8888
