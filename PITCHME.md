@@ -32,7 +32,7 @@
 @snapend
 
 @snap[west span-50]
-@ul[spaced]
+@ul[](false)
 - Dependency path between two entities -> context path
 - Combine word vectors -> context vectors
 - Bootstrapping
@@ -54,7 +54,7 @@
 @snapend
 
 @snap[west span-50]
-@ul[spaced]
+@ul[](false)
 @ulend
 @snapend
 
@@ -71,7 +71,7 @@
 
 @snap[west span-50]
 ### Contact
-@ul[spaced]
+@ul[](false)
 - Email: Harrison.Pielke-Lombardo@ucdenver.edu
 - GitHub: https://github.com/tuh8888
 - Project: https://github.com/tuh8888/Dep2Rel
