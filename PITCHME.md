@@ -69,7 +69,10 @@
 ## Conclusion
 @snapend
 
-@snap[north-east span-25]
+---
+@title[Acknoledgements]
+
+@snap[west span-25]
 ### Acknowledgements
 @ul[](false)
 - Advisor: Lawrence Hunter
@@ -77,7 +80,7 @@
 @ulend
 @snapend
 
-@snap[south-east span-25]
+@snap[east span-25]
 ### Contact
 @ul[](false)
 - Email: Harrison.Pielke-Lombardo@ucdenver.edu
