@@ -15,11 +15,8 @@
 
 @snap[west span-50]
 @ul[](false)
-- Relation extraction lets us go beyond just using mentions in text
-- Previous approaches
-  - Regular expressions and patterns
-  - Supervised methods
-  - One-shot learning language models
+- Can we make enough gold standard data?
+- How many relations are there?
 @ulend
 @snapend
 
