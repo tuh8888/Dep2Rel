@@ -29,7 +29,6 @@
 (def word-vector-dir (io/file home-dir "WordVectors"))
 (def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
 
-
 ;;; MODELS ;;;
 (defn make-model
   [v]
@@ -130,7 +129,7 @@
 (defn concept-context-match
   [{:keys [context-thresh] :as params} samples patterns]
   (when (and (seq samples) (seq patterns))
-    (->> patterns (math/find-best-matches params samples)
+    (->> patterns (math/find-best-row-matches params samples)
          (filter (fn [{:keys [score]}] (< context-thresh score)))
          (filter (fn [{:keys [sample match]}] (re/sent-pattern-concepts-match? sample match)))
          (map (fn [{:keys [sample match]}]
@@ -185,7 +184,7 @@
                            :max-iterations    10
                            :max-matches       3000
                            :reclustering?     true
-                           :matrix-fn         (partial context/context-matrix training-model)
+                           :vector-fn         #(or (:VEC %) (context/context-vector % training-model))
                            :factory           thal-native/native-double}
                    context-match-fn (partial concept-context-match params)
                    pattern-update-fn (partial pattern-update params)
@@ -193,7 +192,8 @@
                (word2vec/with-word2vec word2vec-db
                  (-> split-training-model
                      (assoc :properties properties)
-                     (update :samples #(evaluation/context-path-filter context-path-length-cap %))
+                     (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
+                     (update :samples (fn [samples] (map #(assoc % :VEC (context/context-vector % training-model)) samples)))
                      (re/bootstrap {:terminate?        terminate?
                                     :context-match-fn  context-match-fn
                                     :pattern-update-fn pattern-update-fn})

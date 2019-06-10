@@ -24,7 +24,7 @@
            (mapcat #(str/split % #" "))
            (map str/lower-case)
            (map word2vec/word-embedding)
-           (math/sum-vectors)))))
+           (apply math/unit-vec-sum)))))
 
 (defn pprint-sent
   [model sent]
@@ -59,7 +59,6 @@
     (when-not tok-id (log/warn "No token found for" ann))
     tok-id))
 
-
 (defn tok-sent-id
   [{:keys [structure-graphs]} {:keys [id]}]
   (some
@@ -74,29 +73,23 @@
       (apply uber-alg/shortest-path undirected-sent)
       (uber-alg/nodes-in-path)))
 
-#_(defn make-context-vector
-    [dependency-path structure-annotations [ann1 ann2]]
-    (-> (map #(get-in structure-annotations [% :word-vector]) dependency-path)
-        (conj (:word-vector ann1))
-        (conj (:word-vector ann2))
-        (sum-vectors)))
 
 (defn make-sentence
   "Make a sentence using the sentence graph and entities"
-  [{:keys [structure-annotations]} undirected-sent anns]
+  [undirected-sent anns]
+  ;; TODO: Remove context toks that are part of the entities
   (let [concepts (->> anns (map :concept) (map #(conj #{} %)) (set))
         context (->> anns (map :tok) (make-context-path undirected-sent))
-        #_context-vector #_(make-context-vector context structure-annotations anns)
         entities (->> anns (map :id) (set))]
-    (->Sentence concepts entities context #_context-vector)))
+    (->Sentence concepts entities context)))
 
 (defn make-sentences
-  [model undirected-sent sent-annotations]
+  [undirected-sent sent-annotations]
   (->> (clojure.math.combinatorics/combinations sent-annotations 2)
-       (map #(make-sentence model undirected-sent %))))
+       (map #(make-sentence undirected-sent %))))
 
 (defn concept-annotations->sentences
-  [{:keys [concept-annotations structure-graphs] :as model}]
+  [{:keys [concept-annotations structure-graphs]}]
   (log/info "Making sentences for concept annotations")
   (let [undirected-sents (util/map-kv graph/undirected-graph structure-graphs)]
     (->> concept-annotations
@@ -104,18 +97,8 @@
          (group-by :sent)
          (pmap (fn [[sent sent-annotations]]
                  (log/debug "Sentence:" sent)
-                 (make-sentences model (get undirected-sents sent) sent-annotations)))
-
+                 (make-sentences (get undirected-sents sent) sent-annotations)))
          (apply concat))))
-
-
-
-#_(defn assign-word-embedding
-    [{:keys [spans] :as annotation}]
-    (let [{:keys [text]} (first (vals spans))]
-      (assoc annotation :word-vector (-> text
-                                         (str/lower-case)
-                                         (word2vec/word-embedding)))))
 
 (defn assign-sent-id
   [model tok]
@@ -125,16 +108,7 @@
   [model ann]
   (let [{:keys [sent id]} (ann-tok model ann)]
     (assoc ann :tok id
-               :sent sent
-               #_:word-vector #_(->> ann
-                                     :spans
-                                     vals
-                                     (keep :text)
-                                     (map #(str/split % #" "))
-                                     (apply concat)
-                                     (map str/lower-case)
-                                     (map word2vec/word-embedding)
-                                     (sum-vectors)))))
+               :sent sent)))
 
 (defn sentences-with-ann
   [sentences id]
@@ -142,4 +116,3 @@
     (fn [{:keys [entities]}]
       (some #(= id %) entities))
     sentences))
-
