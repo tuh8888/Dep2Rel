@@ -130,28 +130,33 @@
 
 ;;; RELATION EXTRACTION ;;;
 (defn concept-context-match
-  [{:keys [context-thresh] :as params} samples patterns]
+  [{:keys [context-thresh vector-fn] :as params} samples patterns]
+  (log/info #_(first samples) (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
     (->> patterns
          (math/find-best-row-matches params samples)
-         (filter (fn [{:keys [score]}] (< context-thresh score)))
-         (filter (fn [{:keys [sample match]}] (re/sent-pattern-concepts-match? sample match)))
+         (map (fn [{:keys [score] :as best}] (if (< context-thresh score)
+                                               best
+                                               (dissoc best :match))))
+         (map (fn [{:keys [sample match] :as best}] (if (re/sent-pattern-concepts-match? sample match)
+                                                      best
+                                                      (dissoc best :match))))
          (map (fn [{:keys [sample match]}]
                 (assoc sample :predicted (:predicted match)))))))
 
 (defn pattern-update
   [{:keys [min-match-support reclustering?] :as params}
    new-matches patterns property]
-  (let [samples (->> new-matches
+  (let [filt #(or (empty? new-matches) (< min-match-support (count (:support %))))
+        samples (->> new-matches
                      (filter #(= (:predicted %) property))
                      (set))
         patterns (->> patterns
                       (filter #(= (:predicted %) property))
-                      (set))
-        patterns (->> (cluster-tools/single-pass-cluster samples patterns
-                        (merge params {:cluster-merge-fn (partial re/add-to-pattern training-model)}))
-                      (map #(assoc % :predicted property)))
-        filt #(or (empty? new-matches) (< min-match-support (count (:support %))))]
+                      (set)
+                      (cluster-tools/single-pass-cluster (merge params {:cluster-merge-fn (partial re/add-to-pattern training-model)})
+                                                         samples)
+                      (map #(assoc % :predicted property)))]
     [(filter filt patterns)
      (when reclustering?
        (->> patterns
@@ -177,29 +182,17 @@
 (def training-sentences (map #(sentence/map->Sentence %) training-sentences))
 
 (def split-training-model (word2vec/with-word2vec word2vec-db
-                            (let [seed-frac 0.2]
+                            (let [seed-frac 0.2
+                                  rng 0.022894]
                               (-> training-sentences
-                                  (evaluation/split-train-test training-model seed-frac properties)
+                                  (evaluation/split-train-test training-model seed-frac properties rng)
                                   (update :samples (fn [samples] (map #(sentence/assign-embedding training-model %)
                                                                       samples)))
                                   (update :seeds (fn [seeds] (map #(sentence/assign-embedding training-model %)
                                                                   seeds)))))))
 (log/set-level! :info)
 
-#_(word2vec/with-word2vec word2vec-db
-    (-> split-training-model :structure-annotations
-        (vals)
-        (first)
-        (context/context-vector training-model)
-        #_(->> :spans
-               vals
-               (keep :text)
-               (mapcat #(clojure.string/split % #" "))
-               (map clojure.string/lower-case)
-               (map word2vec/word-embedding)
-               (apply math/unit-vec-sum factory)
-               (doall))))
-
+(count (remove #(context/context-vector % split-training-model) (:samples split-training-model)))
 
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
@@ -208,7 +201,7 @@
                            :max-iterations    10
                            :max-matches       3000
                            :reclustering?     true
-                           :factory (:factory split-training-model)
+                           :factory           (:factory split-training-model)
                            :vector-fn         #(context/context-vector % split-training-model)}
                    context-match-fn (partial concept-context-match params)
                    pattern-update-fn (partial pattern-update params)
@@ -234,7 +227,7 @@
                                              :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
                                              :min-seed-support #_[3]  [0 5 25]
                                              :min-match-support #_[0] [0 5 25]
-                                                                  :min-match-matches #_[0] [0 5 25]
+                                             :min-match-matches #_[0] [0 5 25]
                                              :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
                                              :terminate?              terminate?
                                              :context-match-fn        concept-context-match

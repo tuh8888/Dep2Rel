@@ -17,7 +17,7 @@
              :spans
              vals
              (keep :text)
-             (mapcat #(str/split % #" "))
+             (mapcat #(str/split % #" |-"))
              (map str/lower-case)
              (map word2vec/word-embedding)
              (doall)
@@ -35,6 +35,7 @@
                (map (fn [e] (get concept-annotations e)))
                (lazy-cat context-toks)
                (map #(context/context-vector % model))
+               (doall)
                (apply math/unit-vec-sum factory))))))
 
 (defn pprint-sent

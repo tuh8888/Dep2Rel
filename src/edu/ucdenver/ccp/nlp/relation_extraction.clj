@@ -29,7 +29,9 @@
 
 (defn bootstrap
   [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn]}]
-  (log/info "Seeds" (util/map-kv count (group-by :predicted seeds)))
+  (log/info
+    "\nSeeds" (util/map-kv count (group-by :predicted seeds))
+    "\nSamples" (count samples))
   (loop [iteration 0
          new-matches (set seeds)
          matches #{}
