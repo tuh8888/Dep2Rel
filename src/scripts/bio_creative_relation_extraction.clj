@@ -96,23 +96,29 @@
                                    "NOT"})
 
 ;;; PCA ;;;
-(comment
-  (def triples-dataset (->> training-sentences
-                            (filter #(or (nil? (:property %))
-                                         (properties (:property %))))
-                            (evaluation/sentences->dataset)))
 
-  (def groups (incanter/sel triples-dataset :cols :property))
-  (def y (incanter/sel triples-dataset :cols (range 0 200)))
-  (def x (evaluation/pca-2 y))
-  (-> (inc-charts/scatter-plot (get x 0) (get x 1)
-                               :group-by groups
-                               :legend true
-                               :x-label "PC1"
-                               :y-label "PC2"
-                               :title "PCA")
-      (incanter/view)
-      #_(inc-svg/save-svg "pca-all.svg ")))
+(def triples-dataset (->> training-sentences
+                          (filter #(or (nil? (:property %))
+                                       (properties (:property %))))
+                          (evaluation/sentences->dataset training-model)))
+
+(def groups (incanter/sel triples-dataset :cols :property))
+(def y (incanter/sel triples-dataset :cols (range 0 200)))
+(def x (evaluation/pca-2 y))
+
+(defn pca-plot
+  [x {{:as save :keys [file]} :save :keys [view]}]
+  (let [plot (inc-charts/scatter-plot (get x 0) (get x 1)
+                                      :group-by groups
+                                      :legend true
+                                      :x-label "PC1"
+                                      :y-label "PC2"
+                                      :title "PCA")]
+    (when save (inc-svg/save-svg plot file))
+    (when view (incanter/view plot))))
+
+(pca-plot x {:save {:file "pca-all.svg"}
+             :view true})
 
 (comment
   (def clusters (-> training-sentences
@@ -131,7 +137,7 @@
 ;;; RELATION EXTRACTION ;;;
 (defn concept-context-match
   [{:keys [context-thresh vector-fn] :as params} samples patterns]
-  (log/info #_(first samples) (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
+  #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
     (->> patterns
          (math/find-best-row-matches params samples)
@@ -145,22 +151,23 @@
                 (assoc sample :predicted (:predicted match)))))))
 
 (defn pattern-update
-  [{:keys [min-match-support reclustering?] :as params}
+  [{:keys [min-match-support re-clustering?] :as params}
    new-matches patterns property]
-  (let [filt #(or (empty? new-matches) (< min-match-support (count (:support %))))
+  (let [support-filter #(or (empty? new-matches) (<= min-match-support (count (:support %))))
         samples (->> new-matches
                      (filter #(= (:predicted %) property))
                      (set))
         patterns (->> patterns
                       (filter #(= (:predicted %) property))
                       (set)
-                      (cluster-tools/single-pass-cluster (merge params {:cluster-merge-fn (partial re/add-to-pattern training-model)})
+                      (cluster-tools/single-pass-cluster (merge params
+                                                                {:cluster-merge-fn (partial re/add-to-pattern training-model)})
                                                          samples)
                       (map #(assoc % :predicted property)))]
-    [(filter filt patterns)
-     (when reclustering?
+    [(filter support-filter patterns)
+     (when re-clustering?
        (->> patterns
-            (remove filt)
+            (remove support-filter)
             (mapcat :support)))]))
 
 (defn terminate?
@@ -179,7 +186,7 @@
           (empty? seeds) (do (log/info "No seeds")
                              model))))
 
-(def training-sentences (map #(sentence/map->Sentence %) training-sentences))
+#_(def training-sentences (map #(sentence/map->Sentence %) training-sentences))
 
 (def split-training-model (word2vec/with-word2vec word2vec-db
                             (let [seed-frac 0.2
@@ -192,29 +199,26 @@
                                                                   seeds)))))))
 (log/set-level! :info)
 
-(count (remove #(context/context-vector % split-training-model) (:samples split-training-model)))
-
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
                            :cluster-thresh    0.95
-                           :min-match-support 0
+                           :min-match-support 1
                            :max-iterations    10
                            :max-matches       3000
-                           :reclustering?     true
+                           :re-clustering?    true
                            :factory           (:factory split-training-model)
                            :vector-fn         #(context/context-vector % split-training-model)}
                    context-match-fn (partial concept-context-match params)
                    pattern-update-fn (partial pattern-update params)
                    terminate? (partial terminate? params)]
-               (word2vec/with-word2vec word2vec-db
-                 (-> split-training-model
-                     (assoc :properties properties)
-                     (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
-                     (re/bootstrap {:terminate?        terminate?
-                                    :context-match-fn  context-match-fn
-                                    :pattern-update-fn pattern-update-fn})
-                     (evaluation/calc-metrics)
-                     (doall)))))
+               (-> split-training-model
+                   (assoc :properties properties)
+                   (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
+                   (re/bootstrap {:terminate?        terminate?
+                                  :context-match-fn  context-match-fn
+                                  :pattern-update-fn pattern-update-fn})
+                   (evaluation/calc-metrics)
+                   (doall))))
 
 
 #_(apply evaluation/format-matches training-model results)

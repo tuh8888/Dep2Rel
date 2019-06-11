@@ -167,10 +167,10 @@
     (apply assoc s (interleave (range (count v)) v))))
 
 (defn sentences->dataset
-  [sentences model]
+  [model sentences]
   (->> sentences
        (filter #(context/context-vector % model))
-       (pmap flatten-context-vector)
+       (pmap #(flatten-context-vector % model))
        (map #(dissoc % :entities :concepts :context))
        (vec)
        (incanter/to-dataset)))
@@ -186,4 +186,5 @@
 (defn assign-property
   "Assign the associated property with the sentence"
   [model s]
-  (assoc s :property (sent-property model (vec (:entities s)))))
+  (assoc s :property (or (sent-property model (vec (:entities s)))
+                         "NONE")))
