@@ -155,8 +155,10 @@
        (incanter/to-dataset)))
 
 (defn pca-plot
-  [x groups {{:as save :keys [file]} :save :keys [view]}]
-  (let [plot (inc-charts/scatter-plot (get x 0) (get x 1)
+  [sentences-dataset groups {{:as save :keys [file]} :save :keys [view]}]
+  (let [y (incanter/sel sentences-dataset :cols (range 0 200))
+        x (pca-2 y)
+        plot (inc-charts/scatter-plot (get x 0) (get x 1)
                                       :group-by groups
                                       :legend true
                                       :x-label "PC1"
@@ -166,13 +168,13 @@
     (when view (incanter/view plot))))
 
 (defn plot-metrics
-  [results]
-  (let [dataset (incanter/to-dataset (calc-metrics results))
-        plot (inc-charts/scatter-plot (incanter/sel dataset :cols :precision)
-                                      (incanter/sel dataset :cols :recall)
-                                      :group-by (incanter/sel dataset :cols :property)
+  [metrics-dataset groups {{:as save :keys [file]} :save :keys [view]}]
+  (let [plot (inc-charts/scatter-plot (incanter/sel metrics-dataset :cols :precision)
+                                      (incanter/sel metrics-dataset :cols :recall)
+                                      :group-by groups
                                       :legend true
                                       :x-label "Precision"
                                       :y-label "Recall"
                                       :title "Relation Extraction Results")]
-    (incanter/view plot)))
+    (when save (inc-svg/save-svg plot file))
+    (when view (incanter/view plot))))

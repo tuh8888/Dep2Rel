@@ -183,8 +183,7 @@
 (defn assign-property
   "Assign the associated property with the sentence"
   [model s]
-  (assoc s :property (or (sent-property model (vec (:entities s)))
-                         "NONE")))
+  (assoc s :property (sent-property model (vec (:entities s)))))
 
 (defn sentences-with-ann
   [sentences id]

@@ -25,6 +25,7 @@
 (def biocreative-dir (io/file home-dir "BioCreative" "BCVI-2017" "ChemProt_Corpus"))
 (def training-dir (io/file biocreative-dir training-prefix))
 (def testing-dir (io/file biocreative-dir testing-prefix))
+(def results-dir (io/file training-dir "results"))
 
 (def word-vector-dir (io/file home-dir "WordVectors"))
 (def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
@@ -56,18 +57,17 @@
                                    "NOT"})
 
 ;;; PCA ;;;
-(def triples-dataset (word2vec/with-word2vec word2vec-db
-                       (->> training-sentences
-                            (filter #(or (= "NONE" (:property %))
-                                         (properties (:property %))))
-                            (evaluation/sentences->dataset training-model))))
+(def sentences-dataset (word2vec/with-word2vec word2vec-db
+                         (->> training-sentences
+                              (filter #(or (nil? (:property %))
+                                           (properties (:property %))))
+                              (evaluation/sentences->dataset training-model))))
 
-(def groups (map keyword (incanter/sel triples-dataset :cols :property)))
-(def y (incanter/sel triples-dataset :cols (range 0 200)))
-(def x (evaluation/pca-2 y))
+(def groups (map keyword (incanter/sel sentences-dataset :cols :property)))
 
-(evaluation/pca-plot x groups {:save {:file "pca-all.svg"}
-                               :view true})
+(evaluation/pca-plot sentences-dataset groups
+                     {:save {:file (io/file results-dir "pca-all.svg")}
+                      :view true})
 
 ;;; RELATION EXTRACTION ;;;
 (log/set-level! :info)
@@ -81,32 +81,34 @@
                               (re-model/split-train-test training-sentences training-model
                                                          seed-frac properties rng))))
 
+(def results (word2vec/with-word2vec word2vec-db
+               (let [context-path-length-cap 100
+                     params {:context-thresh    0.95
+                             :cluster-thresh    0.95
+                             :min-match-support 1
+                             :max-iterations    100
+                             :max-matches       3000
+                             :re-clustering?    true
+                             :factory           (:factory split-training-model)
+                             :vector-fn         #(context/context-vector % split-training-model)}
+                     context-match-fn (partial re/concept-context-match params)
+                     pattern-update-fn (partial re/pattern-update params training-model)
+                     terminate? (partial re/terminate? params)
+                     support-filter (partial re/support-filter params)
+                     decluster (partial re/decluster params support-filter)]
+                 (-> split-training-model
+                     (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
+                     (re/bootstrap {:terminate?        terminate?
+                                    :context-match-fn  context-match-fn
+                                    :pattern-update-fn pattern-update-fn
+                                    :support-filter    support-filter
+                                    :decluster         decluster})
+                     (doall)))))
 
-(def results (let [context-path-length-cap 100
-                   params {:context-thresh    0.95
-                           :cluster-thresh    0.95
-                           :min-match-support 1
-                           :max-iterations    100
-                           :max-matches       3000
-                           :re-clustering?    true
-                           :factory           (:factory split-training-model)
-                           :vector-fn         #(context/context-vector % split-training-model)}
-                   context-match-fn (partial re/concept-context-match params)
-                   pattern-update-fn (partial re/pattern-update params training-model)
-                   terminate? (partial re/terminate? params)
-                   support-filter (partial re/support-filter params)
-                   decluster (partial re/decluster params support-filter)]
-               (-> split-training-model
-                   (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
-                   (re/bootstrap {:terminate?        terminate?
-                                  :context-match-fn  context-match-fn
-                                  :pattern-update-fn pattern-update-fn
-                                  :support-filter    support-filter
-                                  :decluster         decluster})
-                   (doall))))
-
-(evaluation/calc-metrics results)
-(evaluation/plot-metrics results)
+(def metrics (incanter/to-dataset (evaluation/calc-metrics results)))
+(evaluation/plot-metrics metrics (incanter/sel groups :cols :property)
+                         {:view true
+                          :save {:file (io/file results-dir "metrics.svg")}})
 
 (comment
   #_(apply evaluation/format-matches training-model results)
@@ -126,4 +128,4 @@
                             (map #(apply dissoc % (keys training-model)))
                             (incanter/to-dataset)))
   (incanter/view results-dataset)
-  (spit (io/file training-dir "results" "results.edn") results))
+  (spit (io/file results-dir "results.edn") results))
