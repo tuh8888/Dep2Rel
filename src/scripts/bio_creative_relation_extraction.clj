@@ -8,7 +8,9 @@
             [incanter.core :as incanter]
             [edu.ucdenver.ccp.nlp.readers :as rdr]
             [uncomplicate-context-alg :as context]
-            [uncomplicate.neanderthal.native :as thal-native]))
+            [uncomplicate.neanderthal.native :as thal-native]
+            [incanter.charts :as inc-charts]
+            [incanter.svg :as inc-svg]))
 
 ;; File naming patterns
 (def sep "_")
@@ -54,12 +56,13 @@
                                    "NOT"})
 
 ;;; PCA ;;;
-(def triples-dataset (->> training-sentences
-                          (filter #(or (= "NONE" (:property %))
-                                       (properties (:property %))))
-                          (evaluation/sentences->dataset training-model)))
+(def triples-dataset (word2vec/with-word2vec word2vec-db
+                       (->> training-sentences
+                            (filter #(or (= "NONE" (:property %))
+                                         (properties (:property %))))
+                            (evaluation/sentences->dataset training-model))))
 
-(def groups (incanter/sel triples-dataset :cols :property))
+(def groups (map keyword (incanter/sel triples-dataset :cols :property)))
 (def y (incanter/sel triples-dataset :cols (range 0 200)))
 (def x (evaluation/pca-2 y))
 
@@ -68,6 +71,9 @@
 
 ;;; RELATION EXTRACTION ;;;
 (log/set-level! :info)
+
+;; This allows me to reset sentences if they get reloaded
+#_(def training-sentences (map #(re-model/map->Sentence %) training-sentences))
 
 (def split-training-model (word2vec/with-word2vec word2vec-db
                             (let [seed-frac 0.2
@@ -86,7 +92,7 @@
                            :factory           (:factory split-training-model)
                            :vector-fn         #(context/context-vector % split-training-model)}
                    context-match-fn (partial re/concept-context-match params)
-                   pattern-update-fn (partial re/pattern-update params)
+                   pattern-update-fn (partial re/pattern-update params training-model)
                    terminate? (partial re/terminate? params)
                    support-filter (partial re/support-filter params)
                    decluster (partial re/decluster params support-filter)]
@@ -97,12 +103,10 @@
                                   :pattern-update-fn pattern-update-fn
                                   :support-filter    support-filter
                                   :decluster         decluster})
-
-                   (evaluation/calc-metrics)
                    (doall))))
 
-(incanter/to-dataset (map #(assoc (second %) :property (first %)) results))
-
+(evaluation/calc-metrics results)
+(evaluation/plot-metrics results)
 
 (comment
   #_(apply evaluation/format-matches training-model results)

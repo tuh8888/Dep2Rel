@@ -5,7 +5,9 @@
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
             [uncomplicate-context-alg :as context]
-            [edu.ucdenver.ccp.nlp.re-model :as re-model]))
+            [edu.ucdenver.ccp.nlp.re-model :as re-model]
+            [incanter.core :as incanter])
+  (:import (org.tukaani.xz.lz Matches)))
 
 (defrecord Pattern [support]
   context/ContextVector
@@ -30,9 +32,14 @@
 (defn bootstrap
   [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn
                                                         support-filter decluster]}]
-  (log/info
-    "\nSeeds" (util/map-kv count (group-by :predicted seeds))
-    "\nSamples" (count samples))
+  (let [p1 (util/map-kv count (group-by :predicted seeds))]
+    (->> properties
+         (map (fn [property]
+                {:Seeds       (get p1 property)
+                 :Property    property
+                 :Samples (count samples)}))
+         (incanter/to-dataset)
+         (log/info)))
   (loop [iteration 0
          new-matches (set seeds)
          matches #{}
@@ -48,9 +55,17 @@
           samples (remove :predicted new-matches)
           new-matches (filter :predicted new-matches)
           matches (into matches new-matches)]
-      (log/info "\nPatterns" (util/map-kv count (group-by :predicted patterns))
-                "\nNew matches " (util/map-kv count (group-by :predicted new-matches))
-                "\nMatches " (util/map-kv count (group-by :predicted matches)))
+      (let [p1 (util/map-kv count (group-by :predicted patterns))
+            p2 (util/map-kv count (group-by :predicted new-matches))
+            p3 (util/map-kv count (group-by :predicted matches))]
+        (->> properties
+             (map (fn [property]
+                    {:Patterns    (get p1 property)
+                     :New-Matches (get p2 property)
+                     :Matches     (get p3 property)
+                     :Property    property}))
+             (incanter/to-dataset)
+             (log/info)))
       (if-let [results (terminate? model {:iteration        iteration
                                           :seeds            seeds
                                           :new-matches      new-matches

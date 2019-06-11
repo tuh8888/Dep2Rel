@@ -78,23 +78,24 @@
 (defn calc-metrics
   [{:keys [matches properties samples]}]
   (let [all (sentences->entities samples)
-        metrics (zipmap properties
-                  (map (fn [property]
-                         (let [actual-true (->> samples
-                                                (filter #(= property (:property %)))
-                                                (sentences->entities))
-                               predicted-true (->> matches
-                                                   (filter #(= property (:predicted %)))
-                                                   (sentences->entities))]
-
-                           (log/debug "ALL" (count all) "AT" (count actual-true) "PT" (count predicted-true))
-                           (try
-                             (math/calc-metrics {:actual-true    actual-true
-                                                 :predicted-true predicted-true
-                                                 :all            all})
-                             (catch ArithmeticException _ {}))))
-                       properties))]
-    (log/info "Metrics:" (seq metrics))
+        metrics (map (fn [property]
+                       (let [actual-true (->> samples
+                                              (filter #(= property (:property %)))
+                                              (sentences->entities))
+                             predicted-true (->> matches
+                                                 (filter #(= property (:predicted %)))
+                                                 (sentences->entities))]
+                         #_(log/debug "ALL" (count all) "AT" (count actual-true) "PT" (count predicted-true))
+                         (-> (try
+                               (math/calc-metrics {:actual-true    actual-true
+                                                   :predicted-true predicted-true
+                                                   :all            all})
+                               (catch ArithmeticException _ {}))
+                             (assoc :property property))))
+                     properties)]
+    (->> metrics
+         (incanter/to-dataset)
+         (log/info))
     metrics))
 
 (defn parameter-walk
@@ -163,3 +164,15 @@
                                       :title "PCA")]
     (when save (inc-svg/save-svg plot file))
     (when view (incanter/view plot))))
+
+(defn plot-metrics
+  [results]
+  (let [dataset (incanter/to-dataset (calc-metrics results))
+        plot (inc-charts/scatter-plot (incanter/sel dataset :cols :precision)
+                                      (incanter/sel dataset :cols :recall)
+                                      :group-by (incanter/sel dataset :cols :property)
+                                      :legend true
+                                      :x-label "Precision"
+                                      :y-label "Recall"
+                                      :title "Relation Extraction Results")]
+    (incanter/view plot)))
