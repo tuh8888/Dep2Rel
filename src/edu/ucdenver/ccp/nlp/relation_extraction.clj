@@ -28,7 +28,8 @@
     (sentence/assign-embedding model p)))
 
 (defn bootstrap
-  [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn]}]
+  [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn
+                                                        support-filter decluster]}]
   (log/info
     "\nSeeds" (util/map-kv count (group-by :predicted seeds))
     "\nSamples" (count samples))
@@ -37,7 +38,9 @@
          matches #{}
          patterns #{}
          samples samples]
-    (let [[patterns unclustered] (mapcat #(pattern-update-fn new-matches patterns %) properties)
+    (let [patterns (mapcat #(pattern-update-fn new-matches patterns %) properties)
+          unclustered (decluster new-matches patterns)
+          patterns (filter #(support-filter new-matches %) patterns)
           last-new-matches new-matches
           new-matches (-> samples
                           (context-match-fn patterns)

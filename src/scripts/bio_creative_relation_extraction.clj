@@ -90,7 +90,7 @@
 
 
 ;;; CLUSTERING ;;;
-(def properties #{"INHIBITOR"} #_#{"PART-OF"
+(def properties #_#{"INHIBITOR"} #{"PART-OF"
                                    "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
                                    "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
                                    "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
@@ -157,24 +157,16 @@
                 (assoc sample :predicted (:predicted match)))))))
 
 (defn pattern-update
-  [{:keys [min-match-support re-clustering?] :as params}
-   new-matches patterns property]
-  (let [support-filter #(or (empty? new-matches) (<= min-match-support (count (:support %))))
-        samples (->> new-matches
+  [params new-matches patterns property]
+  (let [samples (->> new-matches
                      (filter #(= (:predicted %) property))
                      (set))
-        patterns (->> patterns
-                      (filter #(= (:predicted %) property))
-                      (set)
-                      (cluster-tools/single-pass-cluster (merge params
-                                                                {:cluster-merge-fn (partial re/add-to-pattern training-model)})
-                                                         samples)
-                      (map #(assoc % :predicted property)))]
-    [(filter support-filter patterns)
-     (when re-clustering?
-       (->> patterns
-            (remove support-filter)
-            (mapcat :support)))]))
+        params (merge params {:cluster-merge-fn (partial re/add-to-pattern training-model)})]
+    (->> patterns
+         (filter #(= (:predicted %) property))
+         (set)
+         (cluster-tools/single-pass-cluster params samples)
+         (map #(assoc % :predicted property)))))
 
 (defn terminate?
   [{:keys [max-iterations max-matches]} model
@@ -192,6 +184,18 @@
           (empty? seeds) (do (log/info "No seeds")
                              model))))
 
+(defn support-filter
+  [{:keys [min-match-support]} new-matches p]
+  (or (empty? new-matches) (<= min-match-support (count (:support p)))))
+
+(defn decluster
+  [{:keys [re-clustering?]} support-filter new-matches patterns]
+  (when re-clustering?
+    (->> patterns
+         (remove #(support-filter new-matches %))
+         (mapcat :support))))
+
+
 #_(def training-sentences (map #(sentence/map->Sentence %) training-sentences))
 
 (def split-training-model (word2vec/with-word2vec word2vec-db
@@ -204,34 +208,60 @@
                                                                       (doall))))
                                   (update :seeds (fn [seeds] (->> seeds
                                                                   (map #(sentence/assign-embedding training-model %))
-                                                                  (doall))))))))
+                                                                  (doall))))
+                                  (assoc :properties properties)))))
 (log/set-level! :info)
-#_(get-in training-model [:concept-annotations "23532634-T26"])
+#_(get-in training-model [:concept-annotations "12871155-T18"])
 #_(get-in training-model [:structure-annotations "23541637-971272"])
 #_(remove #(context/context-vector % training-model) (:samples split-training-model))
+#_(->> split-training-model
+       :samples
+       (filter #(= (count (:context %)) 33))
+       (first)
+       :context
+       (map #(get-in split-training-model [:structure-annotations %]))
+       (map :spans))
+(->> properties
+     (mapcat (fn [property]
+               (pattern-update {:context-thresh    0.95
+                                :cluster-thresh    0.95
+                                :min-match-support 1
+                                :max-iterations    100
+                                :max-matches       3000
+                                :re-clustering?    true
+                                :factory           (:factory split-training-model)
+                                :vector-fn         #(context/context-vector % split-training-model)}
+                               (set (:seeds split-training-model))
+                               #{} property)))
+     (group-by :predicted)
+     (util/map-kv count))
 
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
                            :cluster-thresh    0.95
                            :min-match-support 1
-                           :max-iterations    10
+                           :max-iterations    100
                            :max-matches       3000
                            :re-clustering?    true
                            :factory           (:factory split-training-model)
                            :vector-fn         #(context/context-vector % split-training-model)}
                    context-match-fn (partial concept-context-match params)
                    pattern-update-fn (partial pattern-update params)
-                   terminate? (partial terminate? params)]
+                   terminate? (partial terminate? params)
+                   support-filter (partial support-filter params)
+                   decluster (partial decluster params support-filter)]
                (-> split-training-model
-                   (assoc :properties properties)
                    (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
                    (re/bootstrap {:terminate?        terminate?
                                   :context-match-fn  context-match-fn
-                                  :pattern-update-fn pattern-update-fn})
+                                  :pattern-update-fn pattern-update-fn
+                                  :support-filter support-filter
+                                  :decluster decluster})
+
                    (evaluation/calc-metrics)
                    (doall))))
 
-
+(incanter/to-dataset (map #(assoc (second %) :property (first %)) results))
 #_(apply evaluation/format-matches training-model results)
 
 (comment
