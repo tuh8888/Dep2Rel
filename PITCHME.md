@@ -4,60 +4,55 @@
 
 **Advisor:** Lawrence Hunter
 
-@snap[south span-100]
-@img[](resources/CUAnschutz_sl_clr.png)
+@snap[south span-75]
+@img[](assets/CUAnschutz_sl_clr.png)
 @snapend
 
 ---
 @title[Background]
 
-@snap[north span-75]
-## Background
-@snapend
+## Some questions
 
-@snap[north-west span-25]
-@img[](resources/CUAnschutz_sm_clr.png)
-@snapend
-
-@snap[west span-50]
-@ul[](false)
-- Gold standard data &rarr; not a lot
-- How many relations are there?
-@ulend
-@snapend
-
-@snap[east span-40]
-@img[](resources/dep_example.gif)
-@snapend
+- What if there aren't enough gold standard annotations?
+- Can we construct syntactic/semantic patterns for finding relations in 
+scientific literature?
+- How many relations are there in the scientific literature?
 
 ---
 @title[Method]
 
-## Method
+## Semi-Supervised Method
+- Few seed sentences required
+- Bootstrapping
 
 ---
 @title[Context]
 
-@snap[north-west span-100]
+@snap[north span-75]
 ### Context
 @snapend
 
-@snap[west span-50]
-@ul[](false)
-- Word vectors provide semantic and sytntactic information
-- Dependency paths between entities &rarr; *Context Paths
-@ulend
+@snap[west span-60]
+**Context Path:** Word vectors along the dependency path between two entities
+@snapend
+
+@snap[south-east]
+@size[.5em]("Little is known about genetic factors affecting intraocular pressure [IOP] in mice and other mammals.")
+@snapend
+
+@snap[east span-40]
+@img[clean-img](/assets/dep_example.svg) 
 @snapend
 
 ---
 @title[Relation Extraction]
 
-@snap[north-west span-100]
+@snap[west span-50]
 ### Relation Extraction
 @snapend
 
-@snap[center span-50]
-@img[](resources/algorithm.svg)
+@snap[east span-50]
+@img[clean-img](assets/algorithm.svg)
 @snapend
 
 ---
@@ -86,21 +81,14 @@
 ---
 @title[Acknoledgements]
 
-@snap[north-west span-100]
 ## Acknowledgements
-@snapend
 
-@snap[west span-50]
-@ul[](false)
-- Advisor: Lawrence Hunter
-- Funding: T15 LM009451
-@ulend
-@snapend
+UCD Computational Bioscience Program
 
-@snap[east span-50]
-@ul[](false)
-- Email: Harrison.Pielke-Lombardo@ucdenver.edu
-- GitHub: https://github.com/tuh8888
-- Project: https://github.com/tuh8888/Dep2Rel
-@ulend
-@snapend
+Funding: T15 LM009451
+
+Email: Harrison.Pielke-Lombardo@ucdenver.edu
+
+GitHub: https://github.com/tuh8888
+
+Project: https://github.com/tuh8888/Dep2Rel
