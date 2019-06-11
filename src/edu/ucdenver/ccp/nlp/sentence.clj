@@ -6,25 +6,36 @@
             [util :as util]
             [word2vec :as word2vec]
             [taoensso.timbre :as log]
-            [uncomplicate-context-alg :as context]))
+            [uncomplicate-context-alg :as context])
+  (:import (clojure.lang PersistentArrayMap)))
+
+(extend-type PersistentArrayMap
+  context/ContextVector
+  (context-vector [self {:keys [factory]}]
+    (or (:VEC self)
+        (->> self
+             :spans
+             vals
+             (keep :text)
+             (mapcat #(str/split % #" "))
+             (map str/lower-case)
+             (map word2vec/word-embedding)
+             (doall)
+             (apply math/unit-vec-sum factory)))))
 
 (defrecord Sentence [concepts entities context]
   context/ContextVector
-  (context-vector [self {:keys [structure-annotations concept-annotations]}]
-    (let [context-toks (->> self
-                            :context
-                            (map #(get structure-annotations %)))]
-      (->> self
-           :entities
-           (map (fn [e] (get concept-annotations e)))
-           (lazy-cat context-toks)
-           (map :spans)
-           (mapcat vals)
-           (keep :text)
-           (mapcat #(str/split % #" "))
-           (map str/lower-case)
-           (map word2vec/word-embedding)
-           (apply math/unit-vec-sum)))))
+  (context-vector [self {:keys [structure-annotations concept-annotations factory] :as model}]
+    (or (:VEC self)
+        (let [context-toks (->> self
+                                :context
+                                (map #(get structure-annotations %)))]
+          (->> self
+               :entities
+               (map (fn [e] (get concept-annotations e)))
+               (lazy-cat context-toks)
+               (map #(context/context-vector % model))
+               (apply math/unit-vec-sum factory))))))
 
 (defn pprint-sent
   [model sent]
@@ -99,6 +110,10 @@
                  (log/debug "Sentence:" sent)
                  (make-sentences (get undirected-sents sent) sent-annotations)))
          (apply concat))))
+
+(defn assign-embedding
+  [model tok]
+  (assoc tok :VEC (context/context-vector tok model)))
 
 (defn assign-sent-id
   [model tok]

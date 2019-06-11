@@ -4,15 +4,17 @@
             [cluster-tools]
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
-            [uncomplicate-context-alg :as context]))
+            [uncomplicate-context-alg :as context]
+            [edu.ucdenver.ccp.nlp.sentence :as sentence]))
 
 (defrecord Pattern [support]
   context/ContextVector
-  (context-vector [self model]
-    (->> self
-         :support
-         (map #(context/context-vector % model))
-         (apply math/unit-vec-sum))))
+  (context-vector [self {:keys [factory] :as model}]
+    (or (:VEC self)
+        (->> self
+             :support
+             (map #(context/context-vector % model))
+             (apply math/unit-vec-sum factory)))))
 
 (defn sent-pattern-concepts-match?
   [{:keys [concepts]} {:keys [support]}]
@@ -21,9 +23,9 @@
        (some #(= concepts %))))
 
 (defn add-to-pattern
-  [vector-fn p s]
+  [model p s]
   (let [p (->Pattern (conj (set (:support p)) s))]
-    (assoc p :VEC (vector-fn p))))
+    (sentence/assign-embedding model p)))
 
 (defn bootstrap
   [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn]}]

@@ -29,18 +29,21 @@
 (def word-vector-dir (io/file home-dir "WordVectors"))
 (def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
 
+(def factory thal-native/native-double)
+
 ;;; MODELS ;;;
 (defn make-model
   [v]
   (log/info "Making model")
   (let [model (as-> (k/simple-model v) model
+                    (assoc model :factory factory)
                     (update model :structure-annotations #(util/pmap-kv (fn [s]
                                                                           (->> s
-                                                                               #_sentence/assign-word-embedding
+                                                                               (sentence/assign-embedding model)
                                                                                (sentence/assign-sent-id model)))
                                                                         %))
                     (update model :concept-annotations #(util/pmap-kv (partial sentence/assign-tok model) %)))]
-    (log/info "Model" (util/map-kv count model))
+    (log/info "Model" (util/map-kv count (dissoc model :factory)))
     model))
 
 (defn make-sentences
@@ -137,7 +140,7 @@
                 (assoc sample :predicted (:predicted match)))))))
 
 (defn pattern-update
-  [{:keys [min-match-support reclustering? vector-fn] :as params}
+  [{:keys [min-match-support reclustering?] :as params}
    new-matches patterns property]
   (let [samples (->> new-matches
                      (filter #(= (:predicted %) property))
@@ -146,7 +149,7 @@
                       (filter #(= (:predicted %) property))
                       (set))
         patterns (->> (cluster-tools/single-pass-cluster samples patterns
-                        (merge params {:cluster-merge-fn (partial re/add-to-pattern vector-fn)}))
+                        (merge params {:cluster-merge-fn (partial re/add-to-pattern training-model)}))
                       (map #(assoc % :predicted property)))
         filt #(or (empty? new-matches) (< min-match-support (count (:support %))))]
     [(filter filt patterns)
@@ -173,12 +176,30 @@
 
 (def training-sentences (map #(sentence/map->Sentence %) training-sentences))
 
-(def split-training-model (let [seed-frac 0.2]
-                            (-> training-sentences
-                                (evaluation/split-train-test training-model seed-frac properties)
-                                (update :samples (fn [samples] (map #(assoc % :VEC (context/context-vector % training-model))
-                                                                    samples))))))
+(def split-training-model (word2vec/with-word2vec word2vec-db
+                            (let [seed-frac 0.2]
+                              (-> training-sentences
+                                  (evaluation/split-train-test training-model seed-frac properties)
+                                  (update :samples (fn [samples] (map #(sentence/assign-embedding training-model %)
+                                                                      samples)))
+                                  (update :seeds (fn [seeds] (map #(sentence/assign-embedding training-model %)
+                                                                  seeds)))))))
 (log/set-level! :info)
+
+#_(word2vec/with-word2vec word2vec-db
+    (-> split-training-model :structure-annotations
+        (vals)
+        (first)
+        (context/context-vector training-model)
+        #_(->> :spans
+               vals
+               (keep :text)
+               (mapcat #(clojure.string/split % #" "))
+               (map clojure.string/lower-case)
+               (map word2vec/word-embedding)
+               (apply math/unit-vec-sum factory)
+               (doall))))
+
 
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
@@ -187,8 +208,8 @@
                            :max-iterations    10
                            :max-matches       3000
                            :reclustering?     true
-                           :vector-fn         #(or (:VEC %) (context/context-vector % training-model))
-                           :factory           thal-native/native-double}
+                           :factory (:factory split-training-model)
+                           :vector-fn         #(context/context-vector % split-training-model)}
                    context-match-fn (partial concept-context-match params)
                    pattern-update-fn (partial pattern-update params)
                    terminate? (partial terminate? params)]
@@ -213,7 +234,7 @@
                                              :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
                                              :min-seed-support #_[3]  [0 5 25]
                                              :min-match-support #_[0] [0 5 25]
-                                             :min-match-matches #_[0] [0 5 25]
+                                                                  :min-match-matches #_[0] [0 5 25]
                                              :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
                                              :terminate?              terminate?
                                              :context-match-fn        concept-context-match
