@@ -8,9 +8,7 @@
             [incanter.core :as incanter]
             [edu.ucdenver.ccp.nlp.readers :as rdr]
             [uncomplicate-context-alg :as context]
-            [uncomplicate.neanderthal.native :as thal-native]
-            [incanter.charts :as inc-charts]
-            [incanter.svg :as inc-svg]))
+            [uncomplicate.neanderthal.native :as thal-native]))
 
 ;; File naming patterns
 (def sep "_")
