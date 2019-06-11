@@ -8,7 +8,8 @@
             [word2vec :as word2vec]
             [taoensso.timbre :as log]
             [uncomplicate-context-alg :as context]
-            [edu.ucdenver.ccp.knowtator-clj :as k])
+            [edu.ucdenver.ccp.knowtator-clj :as k]
+            [incanter.core :as incanter])
   (:import (clojure.lang PersistentArrayMap)))
 
 (extend-type PersistentArrayMap
@@ -148,7 +149,6 @@
 
 (defn concept-annotations->sentences
   [{:keys [concept-annotations structure-graphs] :as model}]
-  (log/info "Making sentences for concept annotations")
   (let [undirected-sents (util/map-kv graph/undirected-graph structure-graphs)]
     (->> concept-annotations
          (vals)
@@ -198,22 +198,30 @@
   (let [model (as-> (k/simple-model v) model
                     (assoc model :factory factory)
                     (update model :structure-annotations (fn [structure-annotations]
+                                                           (log/info "Making structure annotations")
                                                            (util/pmap-kv (fn [s]
                                                                            (->> s
                                                                                 (assign-embedding model)
                                                                                 (assign-sent-id model)))
                                                                          structure-annotations)))
-                    (update model :concept-annotations #(util/pmap-kv (partial assign-tok model) %)))]
+                    (update model :concept-annotations (fn [concept-annotations]
+                                                         (log/info "Making concept annotations")
+                                                         (util/pmap-kv (fn [s]
+                                                                         (assign-tok model s))
+                                                                       concept-annotations))))]
     (log/info "Model" (util/map-kv count (dissoc model :factory)))
     model))
 
 (defn make-sentences
   [model]
+  (log/info "Making sentences")
   (let [sentences (->> model
                        (concept-annotations->sentences)
                        (pmap #(assign-property model %)))]
     (log/info "Num sentences:" (count sentences))
-    (log/info "Num sentences with property:" (util/map-kv count (group-by :property sentences)))
+    (log/info "Num sentences with property:" (->> sentences
+                                                  (group-by :property)
+                                                  (util/map-kv count)))
     sentences))
 
 (defn frac-seeds

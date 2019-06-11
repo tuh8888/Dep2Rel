@@ -100,33 +100,41 @@
 
 (defn parameter-walk
   [properties sentences model {:keys [context-match-fn pattern-update-fn terminate?
+                                      support-filter decluster
                                       context-path-length-cap
                                       context-thresh cluster-thresh
-                                      min-seed-support min-match-support min-match-matches
+                                      min-match-support
                                       seed-frac rng]}]
   (cp/upfor (dec (cp/ncpus)) [seed-frac seed-frac
                               :let [split-model (re-model/split-train-test sentences model seed-frac properties rng)]
                               context-path-length-cap context-path-length-cap
                               context-thresh context-thresh
                               cluster-thresh cluster-thresh
-                              min-seed-support min-seed-support
-                              min-match-support min-match-support
-                              min-match-matches min-match-matches]
-            (let [params {:seed-frac               seed-frac
+                              min-match-support min-match-support]
+            (let [context-path-length-cap context-path-length-cap
+                  params {:context-thresh    context-thresh
+                          :cluster-thresh    cluster-thresh
+                          :min-match-support min-match-support
+                          :max-iterations    100
+                          :max-matches       3000
+                          :re-clustering?    true
                           :context-path-length-cap context-path-length-cap
-                          :context-thresh          context-thresh
-                          :cluster-thresh          cluster-thresh
-                          :min-match-support       min-match-support
-                          :min-seed-support        min-seed-support
-                          :min-match-matches       min-match-matches}
+                          :seed-frac seed-frac
+                          :factory           (:factory split-model)
+                          :vector-fn         #(context/context-vector % split-model)}
                   context-match-fn (partial context-match-fn params)
-                  pattern-update-fn (partial pattern-update-fn context-match-fn params)]
+                  pattern-update-fn (partial pattern-update-fn params model)
+                  terminate? (partial terminate? params)
+                  support-filter (partial support-filter params)
+                  decluster (partial decluster params support-filter)]
               (-> split-model
-                  (update :sentences context-path-filter context-path-length-cap)
-                  (re/bootstrap {:context-match-fn  context-match-fn
+                  (update :samples (fn [samples] (context-path-filter context-path-length-cap samples)))
+                  (re/bootstrap {:terminate?        terminate?
+                                 :context-match-fn  context-match-fn
                                  :pattern-update-fn pattern-update-fn
-                                 :terminate?        terminate?})
-                  (calc-metrics)
+                                 :support-filter    support-filter
+                                 :decluster         decluster})
+                  (doall)
                   (merge params)))))
 
 (defn pca-2
