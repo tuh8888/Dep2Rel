@@ -5,7 +5,7 @@
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
             [uncomplicate-context-alg :as context]
-            [edu.ucdenver.ccp.nlp.sentence :as sentence]))
+            [edu.ucdenver.ccp.nlp.re-model :as sentence]))
 
 (defrecord Pattern [support]
   context/ContextVector
@@ -60,4 +60,59 @@
                                           :last-new-matches last-new-matches})]
         results
         (recur (inc iteration) new-matches matches patterns samples)))))
+
+
+(defn concept-context-match
+  [{:keys [context-thresh vector-fn] :as params} samples patterns]
+  #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
+  (when (and (seq samples) (seq patterns))
+    (->> patterns
+         (math/find-best-row-matches params samples)
+         (map (fn [{:keys [score] :as best}] (if (< context-thresh score)
+                                               best
+                                               (dissoc best :match))))
+         (map (fn [{:keys [sample match] :as best}] (if (sent-pattern-concepts-match? sample match)
+                                                      best
+                                                      (dissoc best :match))))
+         (map (fn [{:keys [sample match]}]
+                (assoc sample :predicted (:predicted match)))))))
+
+(defn pattern-update
+  [params model new-matches patterns property]
+  (let [samples (->> new-matches
+                     (filter #(= (:predicted %) property))
+                     (set))
+        params (merge params {:cluster-merge-fn (partial add-to-pattern model)})]
+    (->> patterns
+         (filter #(= (:predicted %) property))
+         (set)
+         (cluster-tools/single-pass-cluster params samples)
+         (map #(assoc % :predicted property)))))
+
+(defn terminate?
+  [{:keys [max-iterations max-matches]} model
+   {:keys [iteration seeds new-matches matches patterns samples last-new-matches]}]
+  (let [success-model (assoc model :matches matches
+                                   :patterns patterns)]
+    (cond (<= max-iterations iteration) (do (log/info "Max iteration reached")
+                                            success-model)
+          (= last-new-matches new-matches) (do (log/info "No new matches")
+                                               success-model)
+          (empty? samples) (do (log/info "No more samples")
+                               success-model)
+          (<= max-matches (count matches)) (do (log/info "Too many matches")
+                                               model)
+          (empty? seeds) (do (log/info "No seeds")
+                             model))))
+
+(defn support-filter
+  [{:keys [min-match-support]} new-matches p]
+  (or (empty? new-matches) (<= min-match-support (count (:support p)))))
+
+(defn decluster
+  [{:keys [re-clustering?]} support-filter new-matches patterns]
+  (when re-clustering?
+    (->> patterns
+         (remove #(support-filter new-matches %))
+         (mapcat :support))))
 

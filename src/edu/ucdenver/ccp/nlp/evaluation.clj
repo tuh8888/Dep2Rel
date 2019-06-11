@@ -6,8 +6,10 @@
             [incanter.stats :as inc-stats]
             [com.climate.claypoole :as cp]
             [ubergraph.core :as uber]
-            [edu.ucdenver.ccp.nlp.sentence :as sentence]
-            [uncomplicate-context-alg :as context]))
+            [edu.ucdenver.ccp.nlp.re-model :as sentence]
+            [uncomplicate-context-alg :as context]
+            [incanter.charts :as inc-charts]
+            [incanter.svg :as inc-svg]))
 
 (defn format-matches
   [model matches _]
@@ -65,29 +67,6 @@
 (defn context-path-filter
   [dep-filter coll]
   (filter #(<= (count (:context %)) dep-filter) coll))
-
-(defn frac-seeds
-  [property sentences frac seed]
-  (let [pot (->> sentences
-                 (filter #(= (:property %) property))
-                 (util/deterministic-shuffle seed))]
-    (-> pot
-        (count)
-        (* frac)
-        (take pot)
-        (set))))
-
-(defn split-train-test
-  "Splits model into train and test sets"
-  [sentences model frac properties seed]
-  (let [seeds (->> (group-by :property sentences)
-                   (filter #(properties (first %)))
-                   (map (fn [[property sentences]] (frac-seeds property sentences frac seed)))
-                   (apply clojure.set/union))]
-    (assoc model :samples (remove seeds sentences)
-                 :seeds (->> seeds
-                             (map #(assoc % :predicted (:property %)))
-                             (set)))))
 
 (defn sentences->entities
   [sentences]
@@ -175,16 +154,13 @@
        (vec)
        (incanter/to-dataset)))
 
-(defn sent-property
-  [{:keys [concept-graphs]} [id1 id2]]
-  (some
-    (fn [g]
-      (when-let [e (or (uber/find-edge g id2 id1) (uber/find-edge g id1 id2))]
-        (:value (uber/attrs g e))))
-    (vals concept-graphs)))
-
-(defn assign-property
-  "Assign the associated property with the sentence"
-  [model s]
-  (assoc s :property (or (sent-property model (vec (:entities s)))
-                         "NONE")))
+(defn pca-plot
+  [x groups {{:as save :keys [file]} :save :keys [view]}]
+  (let [plot (inc-charts/scatter-plot (get x 0) (get x 1)
+                                      :group-by groups
+                                      :legend true
+                                      :x-label "PC1"
+                                      :y-label "PC2"
+                                      :title "PCA")]
+    (when save (inc-svg/save-svg plot file))
+    (when view (incanter/view plot))))

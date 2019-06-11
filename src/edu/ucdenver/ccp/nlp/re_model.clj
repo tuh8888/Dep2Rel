@@ -1,12 +1,14 @@
-(ns edu.ucdenver.ccp.nlp.sentence
+(ns edu.ucdenver.ccp.nlp.re-model
   (:require [clojure.string :as str]
             [ubergraph.alg :as uber-alg]
+            [ubergraph.core :as uber]
             [graph :as graph]
             [math :as math]
             [util :as util]
             [word2vec :as word2vec]
             [taoensso.timbre :as log]
-            [uncomplicate-context-alg :as context])
+            [uncomplicate-context-alg :as context]
+            [edu.ucdenver.ccp.knowtator-clj :as k])
   (:import (clojure.lang PersistentArrayMap)))
 
 (extend-type PersistentArrayMap
@@ -170,9 +172,79 @@
     (assoc ann :tok id
                :sent sent)))
 
+(defn sent-property
+  [{:keys [concept-graphs]} [id1 id2]]
+  (some
+    (fn [g]
+      (when-let [e (or (uber/find-edge g id2 id1) (uber/find-edge g id1 id2))]
+        (:value (uber/attrs g e))))
+    (vals concept-graphs)))
+
+(defn assign-property
+  "Assign the associated property with the sentence"
+  [model s]
+  (assoc s :property (or (sent-property model (vec (:entities s)))
+                         "NONE")))
+
 (defn sentences-with-ann
   [sentences id]
   (filter
     (fn [{:keys [entities]}]
       (some #(= id %) entities))
     sentences))
+
+(defn make-model
+  [v factory]
+  (log/info "Making model")
+  (let [model (as-> (k/simple-model v) model
+                    (assoc model :factory factory)
+                    (update model :structure-annotations (fn [structure-annotations]
+                                                           (util/pmap-kv (fn [s]
+                                                                           (->> s
+                                                                                (assign-embedding model)
+                                                                                (assign-sent-id model)))
+                                                                         structure-annotations)))
+                    (update model :concept-annotations #(util/pmap-kv (partial assign-tok model) %)))]
+    (log/info "Model" (util/map-kv count (dissoc model :factory)))
+    model))
+
+(defn make-sentences
+  [model]
+  (let [sentences (->> model
+                       (concept-annotations->sentences)
+                       (pmap #(assign-property model %)))]
+    (log/info "Num sentences:" (count sentences))
+    (log/info "Num sentences with property:" (util/map-kv count (group-by :property sentences)))
+    sentences))
+
+(defn frac-seeds
+  [property sentences frac seed]
+  (let [pot (->> sentences
+                 (filter #(= (:property %) property))
+                 (util/deterministic-shuffle seed))]
+    (-> pot
+        (count)
+        (* frac)
+        (take pot)
+        (set))))
+
+(defn split-train-test
+  "Splits model into train and test sets"
+  [sentences model frac properties seed]
+  (let [seeds (->> (group-by :property sentences)
+                   (filter #(properties (first %)))
+                   (map (fn [[property sentences]] (frac-seeds property sentences frac seed)))
+                   (apply clojure.set/union))]
+
+    (-> model
+        (assoc :samples (remove seeds sentences)
+               :seeds (->> seeds
+                           (map #(assoc % :predicted (:property %)))
+                           (set)))
+        (update :samples (fn [samples] (->> samples
+                                            (map #(assign-embedding model %))
+                                            (doall))))
+        (update :seeds (fn [seeds] (->> seeds
+                                        (map #(assign-embedding model %))
+                                        (doall))))
+        (assoc :properties properties))))

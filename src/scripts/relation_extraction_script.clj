@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [taoensso.timbre :as log]
-            [edu.ucdenver.ccp.nlp.sentence :as sentence]
+            [edu.ucdenver.ccp.nlp.re-model :as sentence]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation])
   (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))
 
