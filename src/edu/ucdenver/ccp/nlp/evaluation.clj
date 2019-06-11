@@ -67,10 +67,10 @@
   (filter #(<= (count (:context %)) dep-filter) coll))
 
 (defn frac-seeds
-  [property sentences frac]
+  [property sentences frac seed]
   (let [pot (->> sentences
                  (filter #(= (:property %) property))
-                 (shuffle))]
+                 (util/deterministic-shuffle seed))]
     (-> pot
         (count)
         (* frac)
@@ -79,10 +79,10 @@
 
 (defn split-train-test
   "Splits model into train and test sets"
-  [sentences model frac properties]
+  [sentences model frac properties seed]
   (let [seeds (->> (group-by :property sentences)
                    (filter #(properties (first %)))
-                   (map (fn [[property sentences]] (frac-seeds property sentences frac)))
+                   (map (fn [[property sentences]] (frac-seeds property sentences frac seed)))
                    (apply clojure.set/union))]
     (assoc model :samples (remove seeds sentences)
                  :seeds (->> seeds
@@ -124,9 +124,9 @@
                                       context-path-length-cap
                                       context-thresh cluster-thresh
                                       min-seed-support min-match-support min-match-matches
-                                      seed-frac]}]
+                                      seed-frac rng]}]
   (cp/upfor (dec (cp/ncpus)) [seed-frac seed-frac
-                              :let [split-model (split-train-test sentences model seed-frac properties)]
+                              :let [split-model (split-train-test sentences model seed-frac properties rng)]
                               context-path-length-cap context-path-length-cap
                               context-thresh context-thresh
                               cluster-thresh cluster-thresh
