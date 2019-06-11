@@ -37,11 +37,12 @@
   (log/info "Making model")
   (let [model (as-> (k/simple-model v) model
                     (assoc model :factory factory)
-                    (update model :structure-annotations #(util/pmap-kv (fn [s]
-                                                                          (->> s
-                                                                               (sentence/assign-embedding model)
-                                                                               (sentence/assign-sent-id model)))
-                                                                        %))
+                    (update model :structure-annotations (fn [structure-annotations]
+                                                           (util/pmap-kv (fn [s]
+                                                                           (->> s
+                                                                                (sentence/assign-embedding model)
+                                                                                (sentence/assign-sent-id model)))
+                                                                         structure-annotations)))
                     (update model :concept-annotations #(util/pmap-kv (partial sentence/assign-tok model) %)))]
     (log/info "Model" (util/map-kv count (dissoc model :factory)))
     model))
@@ -82,6 +83,11 @@
 ;; #{"12871155-T7" "12871155-T20"} has a ridiculously long context due to the number of tokens in
 ;; 4-amino-6,7,8,9-tetrahydro-2,3-diphenyl-5H-cyclohepta[e]thieno[2,3-b]pyridine
 ;;(filter #(= 35 (count (:context %))) (make-all-seeds model property (:sentences model) 100))
+(first training-sentences)
+(reduce max (->> training-sentences
+                 (map :context)
+                 (map count)))
+
 
 ;;; CLUSTERING ;;;
 (def properties #{"INHIBITOR"} #_#{"PART-OF"
@@ -96,29 +102,29 @@
                                    "NOT"})
 
 ;;; PCA ;;;
+(comment
+  (def triples-dataset (->> training-sentences
+                            (filter #(or (= "NONE" (:property %))
+                                         (properties (:property %))))
+                            (evaluation/sentences->dataset training-model)))
 
-(def triples-dataset (->> training-sentences
-                          (filter #(or (nil? (:property %))
-                                       (properties (:property %))))
-                          (evaluation/sentences->dataset training-model)))
+  (def groups (incanter/sel triples-dataset :cols :property))
+  (def y (incanter/sel triples-dataset :cols (range 0 200)))
+  (def x (evaluation/pca-2 y))
 
-(def groups (incanter/sel triples-dataset :cols :property))
-(def y (incanter/sel triples-dataset :cols (range 0 200)))
-(def x (evaluation/pca-2 y))
+  (defn pca-plot
+    [x {{:as save :keys [file]} :save :keys [view]}]
+    (let [plot (inc-charts/scatter-plot (get x 0) (get x 1)
+                                        :group-by groups
+                                        :legend true
+                                        :x-label "PC1"
+                                        :y-label "PC2"
+                                        :title "PCA")]
+      (when save (inc-svg/save-svg plot file))
+      (when view (incanter/view plot))))
 
-(defn pca-plot
-  [x {{:as save :keys [file]} :save :keys [view]}]
-  (let [plot (inc-charts/scatter-plot (get x 0) (get x 1)
-                                      :group-by groups
-                                      :legend true
-                                      :x-label "PC1"
-                                      :y-label "PC2"
-                                      :title "PCA")]
-    (when save (inc-svg/save-svg plot file))
-    (when view (incanter/view plot))))
-
-(pca-plot x {:save {:file "pca-all.svg"}
-             :view true})
+  (pca-plot x {:save {:file "pca-all.svg"}
+               :view true}))
 
 (comment
   (def clusters (-> training-sentences
@@ -193,11 +199,16 @@
                                   rng 0.022894]
                               (-> training-sentences
                                   (evaluation/split-train-test training-model seed-frac properties rng)
-                                  (update :samples (fn [samples] (map #(sentence/assign-embedding training-model %)
-                                                                      samples)))
-                                  (update :seeds (fn [seeds] (map #(sentence/assign-embedding training-model %)
-                                                                  seeds)))))))
+                                  (update :samples (fn [samples] (->> samples
+                                                                      (map #(sentence/assign-embedding training-model %))
+                                                                      (doall))))
+                                  (update :seeds (fn [seeds] (->> seeds
+                                                                  (map #(sentence/assign-embedding training-model %))
+                                                                  (doall))))))))
 (log/set-level! :info)
+#_(get-in training-model [:concept-annotations "23532634-T26"])
+#_(get-in training-model [:structure-annotations "23541637-971272"])
+#_(remove #(context/context-vector % training-model) (:samples split-training-model))
 
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95

@@ -85,23 +85,67 @@
        (apply uber-alg/shortest-path undirected-sent)
        (uber-alg/nodes-in-path)))
 
+(defn min-start
+  [a]
+  (->> a
+       :spans
+       (vals)
+       (map :start)
+       (reduce min)))
+
+(defn max-end
+  [a]
+  (->> a
+       :spans
+       (vals)
+       (map :start)
+       (reduce min)))
+
+(defn overlap
+  "Finds overlap between two annotations"
+  [a1 a2]
+  (let [min-a1-start (min-start a1)
+        min-a2-start (min-start a2)
+        max-a1-end (max-end a1)
+        max-a2-end (max-end a2)]
+    (<= min-a1-start min-a2-start max-a2-end max-a1-end)))
+
+(defn remove-context-toks-in-entities
+  [{:keys [structure-annotations concept-annotations]} entities context]
+  (let [context-toks (map #(get structure-annotations %) context)
+        entity-anns (map #(get concept-annotations %) entities)]
+    (->> context-toks
+         (remove (fn [tok]
+                   (some (fn [ann]
+                           (overlap ann tok))
+                         entity-anns)))
+         (map :id))))
+
 
 (defn make-sentence
   "Make a sentence using the sentence graph and entities"
-  [undirected-sent anns]
+  [model undirected-sent anns]
   ;; TODO: Remove context toks that are part of the entities
-  (let [concepts (->> anns (map :concept) (map #(conj #{} %)) (set))
-        context (->> anns (map :tok) (make-context-path undirected-sent))
-        entities (->> anns (map :id) (set))]
+  (let [concepts (->> anns
+                      (map :concept)
+                      (map #(conj #{} %))
+                      (set))
+        entities (->> anns
+                      (map :id)
+                      (set))
+        context (->> anns
+                     (map :tok)
+                     (make-context-path undirected-sent)
+                     (remove-context-toks-in-entities model entities))]
     (->Sentence concepts entities context)))
 
 (defn make-sentences
-  [undirected-sent sent-annotations]
+  [model undirected-sent sent-annotations]
   (->> (clojure.math.combinatorics/combinations sent-annotations 2)
-       (map #(make-sentence undirected-sent %))))
+       (map #(make-sentence model undirected-sent %))))
 
 (defn concept-annotations->sentences
-  [{:keys [concept-annotations structure-graphs]}]
+  [{:keys [concept-annotations structure-graphs] :as model}]
   (log/info "Making sentences for concept annotations")
   (let [undirected-sents (util/map-kv graph/undirected-graph structure-graphs)]
     (->> concept-annotations
@@ -109,7 +153,7 @@
          (group-by :sent)
          (pmap (fn [[sent sent-annotations]]
                  (log/debug "Sentence:" sent)
-                 (make-sentences (get undirected-sents sent) sent-annotations)))
+                 (make-sentences model (get undirected-sents sent) sent-annotations)))
          (apply concat))))
 
 (defn assign-embedding
