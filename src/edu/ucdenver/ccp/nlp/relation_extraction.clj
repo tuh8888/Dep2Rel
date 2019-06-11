@@ -5,7 +5,7 @@
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
             [uncomplicate-context-alg :as context]
-            [edu.ucdenver.ccp.nlp.re-model :as sentence]))
+            [edu.ucdenver.ccp.nlp.re-model :as re-model]))
 
 (defrecord Pattern [support]
   context/ContextVector
@@ -25,7 +25,7 @@
 (defn add-to-pattern
   [model p s]
   (let [p (->Pattern (conj (set (:support p)) s))]
-    (sentence/assign-embedding model p)))
+    (re-model/assign-embedding model p)))
 
 (defn bootstrap
   [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn

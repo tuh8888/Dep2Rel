@@ -72,7 +72,8 @@
 (def split-training-model (word2vec/with-word2vec word2vec-db
                             (let [seed-frac 0.2
                                   rng 0.022894]
-                              (re-model/split-train-test training-sentences training-model seed-frac properties rng))))
+                              (re-model/split-train-test training-sentences training-model
+                                                         seed-frac properties rng))))
 
 
 (def results (let [context-path-length-cap 100

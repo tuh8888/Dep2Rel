@@ -5,11 +5,10 @@
             [incanter.core :as incanter]
             [incanter.stats :as inc-stats]
             [com.climate.claypoole :as cp]
-            [ubergraph.core :as uber]
-            [edu.ucdenver.ccp.nlp.re-model :as sentence]
             [uncomplicate-context-alg :as context]
             [incanter.charts :as inc-charts]
-            [incanter.svg :as inc-svg]))
+            [incanter.svg :as inc-svg]
+            [edu.ucdenver.ccp.nlp.re-model :as re-model]))
 
 (defn format-matches
   [model matches _]
@@ -19,10 +18,10 @@
                doc (:doc e1)
                sent (->> (get-in model [:structure-graphs (:sent e1) :node-map])
                          keys
-                         (sentence/pprint-sent model))
+                         (re-model/pprint-sent model))
                context (->> match
                             :context
-                            (sentence/pprint-sent model))
+                            (re-model/pprint-sent model))
                [e1-concept e2-concept] (->> entities
                                             (sort-by :concept)
                                             (map :concept)
@@ -105,7 +104,7 @@
                                       min-seed-support min-match-support min-match-matches
                                       seed-frac rng]}]
   (cp/upfor (dec (cp/ncpus)) [seed-frac seed-frac
-                              :let [split-model (split-train-test sentences model seed-frac properties rng)]
+                              :let [split-model (re-model/split-train-test sentences model seed-frac properties rng)]
                               context-path-length-cap context-path-length-cap
                               context-thresh context-thresh
                               cluster-thresh cluster-thresh

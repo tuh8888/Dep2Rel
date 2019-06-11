@@ -141,7 +141,7 @@
                      (remove-context-toks-in-entities model entities))]
     (->Sentence concepts entities context)))
 
-(defn make-sentences
+(defn combination-sentences
   [model undirected-sent sent-annotations]
   (->> (clojure.math.combinatorics/combinations sent-annotations 2)
        (map #(make-sentence model undirected-sent %))))
@@ -155,7 +155,7 @@
          (group-by :sent)
          (pmap (fn [[sent sent-annotations]]
                  (log/debug "Sentence:" sent)
-                 (make-sentences model (get undirected-sents sent) sent-annotations)))
+                 (combination-sentences model (get undirected-sents sent) sent-annotations)))
          (apply concat))))
 
 (defn assign-embedding

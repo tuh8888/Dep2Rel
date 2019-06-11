@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [taoensso.timbre :as log]
-            [edu.ucdenver.ccp.nlp.re-model :as sentence]
+            [edu.ucdenver.ccp.nlp.re-model :as re-model]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation])
   (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)))
 
@@ -34,14 +34,14 @@
   (zipmap (keys (:structure-annotations model))
           (word2vec/with-word2vec word2vec-db
             (doall
-              (pmap sentence/assign-word-embedding
+              (pmap re-model/assign-word-embedding
                     (vals (:structure-annotations model)))))))
 
 (def concepts-with-toks
   (zipmap (keys (:concept-annotations model))
           (pmap
-            #(let [tok-id (sentence/ann-tok model %)
-                   sent-id (sentence/tok-sent-id model tok-id)]
+            #(let [tok-id (re-model/ann-tok model %)
+                   sent-id (re-model/tok-sent-id model tok-id)]
                (assoc % :tok tok-id
                         :sent sent-id))
             (vals (:concept-annotations model)))))
@@ -60,7 +60,7 @@
 
 
 (def sentences (->>
-                 (sentence/concept-annotations->sentences model)
+                 (re-model/concept-annotations->sentences model)
                  (map
                    #(update % :concepts
                             (fn [concepts]
@@ -135,8 +135,8 @@
   (def param-results (evaluation/parameter-walk annotations
                                                 "has_location_in"
                                                 (clojure.set/intersection
-                                                  (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21741"))
-                                                  (set (sentence/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21947")))
+                                                  (set (re-model/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21741"))
+                                                  (set (re-model/sentences-with-ann sentences "CRAFT_aggregate_ontology_Instance_21947")))
                                                 sentences))
 
   (def p2 (map last (partition 4 param-results)))
