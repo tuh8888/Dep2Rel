@@ -1,33 +1,34 @@
 (ns edu.ucdenver.ccp.nlp.readers
   (:require [clojure.string :as s]
             [clojure.java.io :as io]
-            [edu.ucdenver.ccp.conll :as conll]
             [org.clojurenlp.core :as corenlp]
             [word2vec]
-            [taoensso.timbre :as log])
-  (:import (java.io File)
-           (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
-           (edu.ucdenver.ccp.knowtator.model.object TextSource ConceptAnnotation Span GraphSpace AnnotationNode Quantifier)))
+            [taoensso.timbre :as log]
+            [edu.ucdenver.ccp.knowtator-clj :as k]
+            [clojure.string :as str])
+  (:import (edu.ucdenver.ccp.knowtator.model KnowtatorModel)
+           (edu.ucdenver.ccp.knowtator.model.object TextSource ConceptAnnotation Span GraphSpace AnnotationNode Quantifier)
+           (edu.ucdenver.ccp.knowtator.io.conll ConllUtil)))
 
 (defn biocreative-read-abstracts
   [^KnowtatorModel annotations f]
   (let [lines (->> (io/reader f)
                    (line-seq)
                    (map #(s/split % #"\t")))]
-    (doall
-      (map
-        (fn [[id title abstract]]
-          (let [article-f (io/file (.getArticlesLocation annotations) (str id ".txt"))]
-            (spit article-f (str title "\n" abstract))
-            (let [text-sources (.getTextSources annotations)
-                  text-source (TextSource. annotations
-                                           (io/file (.getAnnotationsLocation annotations)
-                                                    (str id ".xml"))
-                                           (.getName article-f))]
-              (.add text-sources
-                    text-source))))
-        lines))
-    (log/info "Done")))
+    (map
+      (fn [[id title abstract]]
+        (log/debug "Article" id title)
+        (let [article-f (io/file (.getArticlesLocation annotations) (str id ".txt"))]
+          (spit article-f (str title "\n" abstract))
+          (let [text-sources (.getTextSources annotations)
+                text-source (TextSource. annotations
+                                         (io/file (.getAnnotationsLocation annotations)
+                                                  (str id ".xml"))
+                                         (.getName article-f))]
+            (.add text-sources
+                  text-source)
+            text-source)))
+      lines)))
 
 (defn sentenize
   [^KnowtatorModel annotations]
@@ -46,153 +47,110 @@
          (fn [[doc id _ property source target]]
            (let [text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
                  graph-space (GraphSpace. text-source nil)
-                 source (str doc "-" (second (s/split source #":")))
-
-                 source (AnnotationNode. (str "node_" source)
+                 src-ent (str doc "-" (second (s/split source #":")))
+                 src-id (str "node_" src-ent)
+                 source (AnnotationNode. src-id
                                          (.get (.get (.getConceptAnnotations text-source)
-                                                     source))
+                                                     src-ent))
                                          0
                                          0
                                          graph-space)
-                 target (str doc "-" (second (s/split target #":")))
-                 target (AnnotationNode. (str "node_" target)
-                                         (.get (.get (.getConceptAnnotations text-source)
-                                                     target))
-                                         0
-                                         0
-                                         graph-space)]
+                 dest-ent (str doc "-" (second (s/split target #":")))
+                 dest-id (str "node_" dest-ent)
+                 dest (AnnotationNode. dest-id
+                                       (.get (.get (.getConceptAnnotations text-source)
+                                                   dest-ent))
+                                       0
+                                       0
+                                       graph-space)
+                 id (str doc "-" id)]
+             (log/debug "Relation" id property src-ent dest-ent)
              (.removeModelListener annotations text-source)
              (.add text-source graph-space)
              (.addCellToGraph graph-space source)
-             (.addCellToGraph graph-space target)
+             (.addCellToGraph graph-space dest)
              (.addTriple graph-space
                          source
-                         target
-                         (str doc "-" id)
+                         dest
+                         id
                          (.getDefaultProfile annotations)
-                         nil
                          property
                          (Quantifier/some)
                          ""
                          false
                          "")
-             (log/info property)
-             (.addModelListener annotations text-source))))))
+             (.addModelListener annotations text-source)
+             graph-space)))))
 
 (defn biocreative-read-entities
   [^KnowtatorModel annotations f]
-  (doall
-    (->> (io/reader f)
-         (line-seq)
-         (map #(s/split % #"\t"))
-         (map
-           (fn [[doc id concept start end _]]
-             (log/debug doc)
-             (let [start (Integer/parseInt start)
-                   end (Integer/parseInt end)
-                   text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
-                   concept-annotation (ConceptAnnotation. text-source (str doc "-" id) nil (.getDefaultProfile annotations) concept nil)
-                   span (Span. concept-annotation nil start end)]
-               (.removeModelListener annotations text-source)
-               (.add ^ConceptAnnotation concept-annotation span)
-               (.add (.getConceptAnnotations text-source) concept-annotation)
-               (.addModelListener annotations text-source))))))
-  (log/info "Done"))
+  (->> (io/reader f)
+       (line-seq)
+       (map #(s/split % #"\t"))
+       (map
+         (fn [[doc id concept start end _]]
+           (let [id (str doc "-" id)
+                 start (Integer/parseInt start)
+                 end (Integer/parseInt end)
+                 text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
+                 concept-annotation (ConceptAnnotation. text-source id concept (.getDefaultProfile annotations) nil nil)
+                 span (Span. concept-annotation nil start end)]
+             (log/debug "Entity" id concept)
+             (.removeModelListener annotations text-source)
+             (.add ^ConceptAnnotation concept-annotation span)
+             (.add (.getConceptAnnotations text-source) concept-annotation)
+             (.addModelListener annotations text-source)
+             concept-annotation)))))
 
-(defn article-names-in-dir
-  [dir ext]
-  (->> (file-seq dir)
-       (filter #(.isFile ^File %))
-       (map #(.getName %))
-       (filter #(s/ends-with? % (str "." ext)))
-       (map #(s/replace % (re-pattern (str "\\." ext)) ""))))
+(defn read-biocreative-files
+  "Read biocreative files to model. Caches them by saving the model.
+  Only reads in files if the cache is empty."
+  [dir pat v]
+  (let [sent-dir (->> "sentences"
+                      (format pat)
+                      (io/file dir))]
+    (.setLoading (k/model v) true)
 
-(defn read-references
-  [articles references-dir]
-  (->> articles
-       (pmap
-         #(->> (str % ".txt")
-               (io/file references-dir)
-               (slurp)))
-       (into [])))
+    (when (empty? (rest (file-seq (io/file dir "Articles"))))
+      (log/info "Reading BioCreative abstracts")
+      (->> "abstracts"
+           (format (str pat ".tsv"))
+           (io/file dir)
+           (biocreative-read-abstracts (k/model v))
+           (doall)))
+    (when (empty? (rest (file-seq sent-dir)))
+      (log/info "Writing abstract sentences to" (str sent-dir))
+      (doseq [[id content] (sentenize (k/model v))]
+        (let [content (->> content
+                           (map :text)
+                           (interpose "\n")
+                           (apply str))
+              sentence-f (io/file sent-dir (str id ".txt"))]
+          (spit sentence-f content)))
+      (println "Run dependency parser, then continue")
+      (read-line))
+    (when (empty? (rest (file-seq (io/file dir "Annotations"))))
+      (log/info "Reading BioCreative entities")
+      (->> "entities"
+           (format (str pat ".tsv"))
+           (io/file dir)
+           (biocreative-read-entities (k/model v))
+           (doall))
+      (log/info "Reading BioCreative relations")
+      (->> "relations"
+           (format (str pat ".tsv"))
+           (io/file dir)
+           (biocreative-read-relations (k/model v))
+           (doall)))
+    (when (empty? (rest (file-seq (io/file dir "Structures"))))
+      (log/info "Reading BioCreative structures")
+      (let [conll-util (ConllUtil.)]
+        (doseq [f (->> sent-dir
+                       (file-seq)
+                       (filter #(str/ends-with? % ".conll")))]
+          (.readToStructureAnnotations conll-util (k/model v) f))))
 
-(defn assign-embedding
-  [m v embedding-fn]
-  (assoc m :VEC (embedding-fn v)))
+    (.setLoading (k/model v) false)
 
-(defn conll-with-embeddings
-  [k reference f]
-  (mapv
-    (fn [{lemma k :as tok}]
-      (assign-embedding tok
-                        (s/lower-case lemma)
-                        word2vec/word-embedding))
-    (try
-      (conll/read-conll reference true f)
-      (catch Throwable e
-        (println f)
-        (throw e)))))
-
-
-(defn read-dependency
-  [word2vec-db articles references dependency-dir & {:keys [ext tok-key] :or {tok-key :LEMMA}}]
-  (word2vec/with-word2vec word2vec-db
-    (zipmap articles
-            (->> articles
-                 (map
-                   #(str % "." ext))
-                 (map
-                   #(io/file dependency-dir %))
-                 (pmap
-                   (partial conll-with-embeddings tok-key)
-                   references)))))
-
-(defn biocreative-read-dependency
-  [annotations dir word2vec-db]
-  (let [references-dir (io/file dir "Articles")
-        articles
-        (article-names-in-dir references-dir "txt")
-
-        references (read-references articles references-dir)
-
-        dependency-dir (io/file dir "chemprot_training_sentences")
-        dependency (read-dependency word2vec-db articles references dependency-dir :ext "conll" :tok-key :FORM)]
-
-    (do
-      (doall
-        (map
-          (fn [[doc-id doc]]
-            (let [text-source ^TextSource (.get (.get (.getTextSources annotations) doc-id))]
-              (.removeModelListener annotations text-source)
-              (doall
-                (map
-                  (fn [[sent-idx sent]]
-                    (let [graph-space (GraphSpace. text-source (str "Sentence " sent-idx))]
-                      (.add (.getStructureGraphSpaces text-source) graph-space)
-                      (let [nodes (mapv
-                                    (fn [tok]
-                                      (let [ann (ConceptAnnotation. text-source nil nil (.getDefaultProfile annotations) (:DEPREL tok) "")
-                                            span (Span. ann nil (:START tok) (:END tok))
-                                            ann-node (AnnotationNode. nil ann 20 20 graph-space)]
-                                        (.add ann span)
-                                        (.add (.getStructureAnnotations text-source) ann)
-                                        (.addCellToGraph graph-space ann-node)
-                                        [ann-node tok]))
-                                    sent)]
-                        (doall
-                          (map
-                            (fn [[source tok]]
-                              (let [target-idx (:HEAD tok)]
-                                (cond (<= 0 target-idx) (let [target (first (get nodes target-idx))
-                                                              property nil]
-                                                          (.addTriple graph-space source target nil (.getDefaultProfile annotations)
-                                                                      property property Quantifier/some "", false, ""))
-                                      (not (= "ROOT" (:DEPREL tok))) (throw (Throwable. "Excluding root"))
-                                      :else nil)))
-                            nodes)))))
-                  (group-by :SENT doc)))
-              (.addModelListener annotations text-source)))
-          dependency))
-      nil)))
-
-
+    (log/info "Saving Knowtator model")
+    (.save ^KnowtatorModel (k/model v))))

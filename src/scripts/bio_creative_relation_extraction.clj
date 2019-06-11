@@ -1,109 +1,129 @@
 (ns scripts.bio-creative-relation-extraction
   (:require [clojure.java.io :as io]
-            [edu.ucdenver.ccp.nlp.readers :as rdr]
             [edu.ucdenver.ccp.knowtator-clj :as k]
-            [edu.ucdenver.ccp.nlp.sentence :as sentence]
+            [edu.ucdenver.ccp.nlp.re-model :as re-model]
             [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
-    #_[incanter.stats :as stats]
-    #_[incanter.core :as incanter]
-    #_[incanter.charts :as charts]
-            [org.clojurenlp.core :as corenlp]))
+            [incanter.core :as incanter]
+            [edu.ucdenver.ccp.nlp.readers :as rdr]
+            [uncomplicate-context-alg :as context]
+            [uncomplicate.neanderthal.native :as thal-native]))
 
+;; File naming patterns
+(def sep "_")
+(def training-prefix (apply str (interpose sep ["chemprot" "training"])))
+(def training-pattern (apply str (interpose sep [training-prefix "%s"])))
+(def testing-prefix (apply str (interpose sep ["chemprot" "test" "gs"])))
+(def testing-pattern (apply str (interpose sep ["chemprot" "test" "%s" "gs"])))
+
+;;; FILES ;;;
 (def home-dir (io/file "/" "home" "harrison"))
 #_(def home-dir (io/file "/" "media" "harrison" "Seagate Expansion Drive" "data"))
 (def biocreative-dir (io/file home-dir "BioCreative" "BCVI-2017" "ChemProt_Corpus"))
-(def training-dir (io/file biocreative-dir "chemprot_training"))
+(def training-dir (io/file biocreative-dir training-prefix))
+(def testing-dir (io/file biocreative-dir testing-prefix))
+(def results-dir (io/file training-dir "results"))
+
 (def word-vector-dir (io/file home-dir "WordVectors"))
-(def word2vec-db (.getAbsolutePath (io/file word-vector-dir "bio-word-vectors-clj.vec")))
+(def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
 
-;(comment
-;  (def sentences-dir (io/file training-dir "chem_prot_training_sentences"))
-;  (doseq [f (file-seq (io/file training-dir "Articles"))]
-;    (let [content (slurp f)
-;          content (->> content
-;                       (corenlp/sentenize)
-;                       (map :text)
-;                       (interpose "\n")
-;                       (apply str))
-;          (io/file sentences-dir (str (name k) ".txt"))]
-;      (spit sentence-f content))))
+(def factory thal-native/native-double)
 
-(def annotations (k/model training-dir nil))
+;;; MODELS ;;;
+(def training-knowtator-view (k/view training-dir))
+(rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
+(def training-model (word2vec/with-word2vec word2vec-db
+                      (re-model/make-model training-knowtator-view factory)))
+(def training-sentences (re-model/make-sentences training-model))
 
-#_(rdr/biocreative-read-abstracts (k/model annotations) (io/file training-dir "chemprot_training_abstracts.tsv"))
-#_(rdr/biocreative-read-entities (k/model annotations) (io/file training-dir "chemprot_training_entities.tsv"))
-#_(rdr/biocreative-read-relations (k/model annotations) (io/file training-dir "chemprot_training_relations.tsv"))
-;; Read from conll files
-;#_(rdr/biocreative-read-dependency annotations training-dir word2vec-db)
-#_(.save (k/model annotations))
-
-(def model (let [model (k/simple-model annotations)
-                 structures-annotations-with-embeddings (word2vec/with-word2vec word2vec-db
-                                                          (sentence/structures-annotations-with-embeddings model))
-
-                 concept-annotations-with-toks (sentence/concept-annotations-with-toks model)
-
-                 model (assoc model
-                         :concept-annotations concept-annotations-with-toks
-                         :structure-annotations structures-annotations-with-embeddings)
-                 sentences (sentence/concept-annotations->sentences model)]
-
-             (assoc model :sentences sentences)))
-
-(get (:concept-annotations model) "23402364-T2")
-(log/info "Num sentences:" (count (:sentences model)))
-
-(def property "INHIBITOR")
-(def dep-filt 10)
-
-;; #{"12871155-T7" "12871155-T20"} have a rediculously long context due to the number of tokens in 4-amino-6,7,8,9-tetrahydro-2,3-diphenyl-5H-cyclohepta[e]thieno[2,3-b]pyridine
-;;(filter #(= 35 (count (:context %))) (make-all-seeds model property (:sentences model) 100))
+#_(def testing-knowtator-view (k/view testing-dir))
+#_(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
+#_(def testing-model (word2vec/with-word2vec word2vec-db
+                       (make-model testing-knowtator-view)))
 
 ;;; CLUSTERING ;;;
+(def properties #_#{"INHIBITOR"} #{"PART-OF"
+                                   "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
+                                   "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
+                                   "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
+                                   "AGONIST" "AGONIST-ACTIVATOR" "AGONIST-INHIBITOR"
+                                   "ANTAGONIST"
+                                   "MODULATOR" "MODULATOR‐ACTIVATOR" "MODULATOR‐INHIBITOR"
+                                   "COFACTOR"
+                                   "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
+                                   "NOT"})
 
-(-> (evaluation/make-all-seeds model property (:sentences model))
-    (cluster-tools/single-pass-cluster #{}
-                                       {:cluster-merge-fn re/add-to-pattern
-                                        :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                             (and (< (or %3 0.75) score)
-                                                                  score))})
-    (count))
-#_(let [x (range -3 3 0.1)]
-    (incanter/view
-      (charts/dynamic-scatter-plot
-        [cluster-similarity-score-threshold (range 0 1 0.01)]
-        [x (cluster-tools/single-pass-cluster sentences #{}
-                                              {:cluster-merge-fn re/add-to-pattern
-                                               :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                                    (and (< (or %3 cluster-similarity-score-threshold) score)
-                                                                         score))})])))
+;;; PCA ;;;
+(def sentences-dataset (word2vec/with-word2vec word2vec-db
+                         (->> training-sentences
+                              (filter #(or (nil? (:property %))
+                                           (properties (:property %))))
+                              (evaluation/sentences->dataset training-model))))
 
-;;; RELATION EXTRACTION
+(def groups (map keyword (incanter/sel sentences-dataset :cols :property)))
 
-(def matches (let [sentences (evaluation/context-filt dep-filt (:sentences model))
-                   seeds (take (evaluation/make-all-seeds model property sentences) 100)
-                   ;seed-thresh 0.85
-                   context-thresh 0.9
-                   cluster-thresh 0.75
-                   min-support 10
-                   params {:seed             (first seeds)
-                           ;:seed-thresh      seed-thresh
-                           :context-thresh   context-thresh
-                           ;:seed-match-fn    #(and (re/concepts-match? %1 %2)
-                           ;                        (< seed-thresh (re/context-vector-cosine-sim %1 %2)))
-                           :context-match-fn #(< context-thresh (re/context-vector-cosine-sim %1 %2))
-                           :cluster-merge-fn re/add-to-pattern
-                           :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                (and (< (or %3 cluster-thresh) score)
-                                                     score))
-                           :min-support      min-support}
-                   matches (->> (re/cluster-bootstrap-extract-relations seeds sentences params)
-                                (map #(merge % params)))]
-               (log/info "Metrics:" (math/calc-metrics {:predicted-true (evaluation/predicted-true matches)
-                                                        :actual-true    (evaluation/actual-true model property)
-                                                        :all            (evaluation/all-triples model)}))
-               matches))
+(evaluation/pca-plot sentences-dataset groups
+                     {:save {:file (io/file results-dir "pca-all.svg")}
+                      :view true})
 
-(evaluation/format-matches model matches)
+;;; RELATION EXTRACTION ;;;
+(log/set-level! :info)
+
+;; This allows me to reset sentences if they get reloaded
+#_(def training-sentences (map #(re-model/map->Sentence %) training-sentences))
+
+(def split-training-model (word2vec/with-word2vec word2vec-db
+                            (let [seed-frac 0.2
+                                  rng 0.022894]
+                              (re-model/split-train-test training-sentences training-model
+                                                         seed-frac properties rng))))
+
+(def results (word2vec/with-word2vec word2vec-db
+               (let [context-path-length-cap 100
+                     params {:context-thresh    0.95
+                             :cluster-thresh    0.95
+                             :min-match-support 1
+                             :max-iterations    100
+                             :max-matches       3000
+                             :re-clustering?    true
+                             :factory           (:factory split-training-model)
+                             :vector-fn         #(context/context-vector % split-training-model)}
+                     context-match-fn (partial re/concept-context-match params)
+                     pattern-update-fn (partial re/pattern-update params training-model)
+                     terminate? (partial re/terminate? params)
+                     support-filter (partial re/support-filter params)
+                     decluster (partial re/decluster params support-filter)]
+                 (-> split-training-model
+                     (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
+                     (re/bootstrap {:terminate?        terminate?
+                                    :context-match-fn  context-match-fn
+                                    :pattern-update-fn pattern-update-fn
+                                    :support-filter    support-filter
+                                    :decluster         decluster})
+                     (doall)))))
+
+(def metrics (incanter/to-dataset (evaluation/calc-metrics results)))
+(evaluation/plot-metrics metrics (incanter/sel groups :cols :property)
+                         {:view true
+                          :save {:file (io/file results-dir "metrics.svg")}})
+
+(comment
+  #_(apply evaluation/format-matches training-model results)
+  (log/set-level! :info)
+  #_(def results (evaluation/parameter-walk properties training-sentences training-model
+                                            {:context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
+                                             :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
+                                             :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
+                                             :min-seed-support #_[3]  [0 5 25]
+                                             :min-match-support #_[0] [0 5 25]
+                                             :min-match-matches #_[0] [0 5 25]
+                                             :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
+                                             :terminate?              terminate?
+                                             :context-match-fn        concept-context-match
+                                             :pattern-update-fn       pattern-update}))
+  (def results-dataset (->> results
+                            (map #(apply dissoc % (keys training-model)))
+                            (incanter/to-dataset)))
+  (incanter/view results-dataset)
+  (spit (io/file results-dir "results.edn") results))
