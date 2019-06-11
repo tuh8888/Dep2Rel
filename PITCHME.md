@@ -4,20 +4,25 @@
 
 **Advisor:** Lawrence Hunter
 
-**Institution:** University of Colorado, Anschutz Medical Campus
+@snap[south span-100]
+@img[](resources/CUAnschutz_sl_clr.png)
+@snapend
 
 ---
 @title[Background]
 
-@snap[north-west span-100]
-## Problem
+@snap[north span-75]
+## Background
+@snapend
+
+@snap[north-west span-25]
+@img[](resources/CUAnschutz_sm_clr.png)
 @snapend
 
 @snap[west span-50]
 @ul[](false)
-- Syntax and Semantics &rarr; Context
-- Actual number of relations is unknown
-- Not enough training data
+- Gold standard data &rarr; not a lot
+- How many relations are there?
 @ulend
 @snapend
 
@@ -27,29 +32,43 @@
 
 ---
 @title[Method]
+
 ## Method
 
+---
+@title[Context]
+
+@snap[north-west span-100]
+### Context
+@snapend
+
 @snap[west span-50]
-@ul[spaced]
-- Dependency path between two entities -> context path
-- Combine word vectors -> context vectors
-- Bootstrapping
-  - Seeds
-  - Clustering -> patterns
-  - Context similarity
+@ul[](false)
+- Word vectors provide semantic and sytntactic information
+- Dependency paths between entities &rarr; *Context Paths
 @ulend
 @snapend
 
-@snap[east span-50]
+---
+@title[Relation Extraction]
+
+@snap[north-west span-100]
+### Relation Extraction
+@snapend
+
+@snap[center span-50]
 @img[](resources/algorithm.svg)
 @snapend
 
 ---
 @title[Results]
+
+@snap[north-west span-100]
 ## Results
+@snapend
 
 @snap[west span-50]
-@ul[spaced]
+@ul[](false)
 @ulend
 @snapend
 
@@ -59,11 +78,27 @@
 
 ---
 @title[Conclusion]
+
+@snap[north-west span-100]
 ## Conclusion
+@snapend
+
+---
+@title[Acknoledgements]
+
+@snap[north-west span-100]
+## Acknowledgements
+@snapend
 
 @snap[west span-50]
-### Contact
-@ul[spaced]
+@ul[](false)
+- Advisor: Lawrence Hunter
+- Funding: T15 LM009451
+@ulend
+@snapend
+
+@snap[east span-50]
+@ul[](false)
 - Email: Harrison.Pielke-Lombardo@ucdenver.edu
 - GitHub: https://github.com/tuh8888
 - Project: https://github.com/tuh8888/Dep2Rel
