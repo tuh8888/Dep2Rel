@@ -2,9 +2,9 @@
            com.google.cloud/google-cloud-bigquery {:mvn/version "1.64.0"}
            org.slf4j/slf4j-simple                 {:mvn/version "1.7.26"}
            github-tuh8888/hpl-utl                 {:git/url "git@github.com:tuh8888/hpl-util.git"
-                                                   :sha     "101b1b52beb68ad4ee3c62a5ed8d68fec6f4f719"}
+                                                   :sha     "581d25dc4d21f8815d03cd572161b5c99a473145"}
            github-tuh8888/Word2Vec-clj            {:git/url "git@github.com:tuh8888/Word2Vec-clj.git"
-                                                   :sha     "aff426af9d4491106d0523a6bc8b7473bc679bdf"}
+                                                   :sha     "a9ccf752bc5ff1231a0cbbcfe945eabe439d40d4"}
            edu.ucdenver.ccp/knowtator             {:local/root "lib/knowtator-2.1.6.jar"}
            org.clojurenlp/core                    {:mvn/version "3.7.0"}
            incanter/incanter-charts               {:mvn/version "1.9.3"}
