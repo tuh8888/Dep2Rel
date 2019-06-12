@@ -203,23 +203,24 @@
            rng]}]
   ;; parallelize with
   #_(cp/upfor (dec (cp/ncpus)))
-  (for [seed-frac seed-frac
-        :let [split-model (re-model/split-train-test sentences model seed-frac properties rng)]
-        context-path-length-cap context-path-length-cap
-        context-thresh context-thresh
-        cluster-thresh cluster-thresh
-        min-match-support min-match-support]
-    (let [params {:context-thresh          context-thresh
-                  :cluster-thresh          cluster-thresh
-                  :min-match-support       min-match-support
-                  :max-iterations          100
-                  :max-matches             3000
-                  :re-clustering?          true
-                  :context-path-length-cap context-path-length-cap
-                  :seed-frac               seed-frac
-                  :rng                     rng}]
-      (log/warn params)
-      (run-model params model word2vec-db sentences results-dir split-model))))
+  (doall
+    (for [seed-frac seed-frac
+          :let [split-model (re-model/split-train-test sentences model seed-frac properties rng)]
+          context-path-length-cap context-path-length-cap
+          context-thresh context-thresh
+          cluster-thresh cluster-thresh
+          min-match-support min-match-support]
+      (let [params {:context-thresh          context-thresh
+                    :cluster-thresh          cluster-thresh
+                    :min-match-support       min-match-support
+                    :max-iterations          100
+                    :max-matches             3000
+                    :re-clustering?          true
+                    :context-path-length-cap context-path-length-cap
+                    :seed-frac               seed-frac
+                    :rng                     rng}]
+        (log/warn params)
+        (run-model params model word2vec-db sentences results-dir split-model)))))
 
 (defn flatten-context-vector
   [s model]
