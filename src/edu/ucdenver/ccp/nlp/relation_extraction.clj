@@ -4,18 +4,10 @@
             [cluster-tools]
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
-            [uncomplicate-context-alg :as context]
             [incanter.core :as incanter]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]))
 
-(defrecord Pattern [support VEC]
-  context/ContextVector
-  (context-vector [self model]
-    (or (:VEC self)
-        (->> self
-             :support
-             (map #(context/context-vector % model))
-             (apply linear-algebra/vec-sum)))))
+
 
 (defn sent-pattern-concepts-match?
   [{:keys [concepts]} {:keys [support]}]
@@ -23,13 +15,6 @@
        (map :concepts)
        (some #(= concepts %))))
 
-(defn add-to-pattern
-  [model p s]
-  (->Pattern (conj (set (:support p)) s)
-             (if p
-               (linear-algebra/vec-sum (context/context-vector p model)
-                                       (context/context-vector s model))
-               (context/context-vector s model))))
 
 
 (defn log-starting-values
@@ -136,7 +121,7 @@
   (let [samples (->> new-matches
                      (filter #(= (:predicted %) property))
                      (set))
-        params (merge params {:cluster-merge-fn (partial add-to-pattern model)})]
+        params (merge params {:cluster-merge-fn (partial re-model/add-to-pattern model)})]
     (->> patterns
          (filter #(= (:predicted %) property))
          (set)

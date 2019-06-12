@@ -5,10 +5,9 @@
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
             [edu.ucdenver.ccp.nlp.readers :as rdr]
-            [uncomplicate-context-alg :as context]
             [uncomplicate.neanderthal.native :as thal-native]))
 
-(log/set-level! :info)
+(log/set-level! :debug)
 
 ;; File naming patterns
 (def sep "_")
@@ -27,7 +26,8 @@
 
 (def word-vector-dir (io/file home-dir "WordVectors"))
 (def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
-
+(word2vec/with-word2vec word2vec-db
+  (word2vec/word-embedding "low"))
 (def factory thal-native/native-double)
 
 ;;; MODELS ;;;
@@ -63,13 +63,9 @@
                                 (filter #(contains? properties (:property %)))
                                 (evaluation/sentences->dataset training-model))))
 
-  (def pca-pot (evaluation/pca-plot properties sentences-dataset (count (context/context-vector (first training-sentences) training-model))
+  (def pca-pot (evaluation/pca-plot properties sentences-dataset (count (re-model/context-vector (first training-sentences) training-model))
                                     {:save {:file (io/file results-dir "pca-all.svg")}
                                      :view true})))
-
-#_(evaluation/pca-plot properties sentences-dataset (count (context/context-vector (first training-sentences) training-model))
-                       {:save {:file (io/file results-dir "pca-all.svg")}
-                        :view true})
 
 ;;; RELATION EXTRACTION ;;;
 

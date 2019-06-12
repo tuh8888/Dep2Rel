@@ -6,7 +6,6 @@
             [incanter.stats :as inc-stats]
             [com.climate.claypoole :as cp]
             [math :as math]
-            [uncomplicate-context-alg :as context]
             [incanter.charts :as inc-charts]
             [incanter.svg :as inc-svg]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]
@@ -63,7 +62,7 @@
            #(when (< 1 (count (:support %)))
               %)
            (cluster-tools/single-pass-cluster sentences #{}
-             {:cluster-merge-fn re/add-to-pattern})))))
+             {:cluster-merge-fn re-model/add-to-pattern})))))
 
 (defn context-path-filter
   [dep-filter coll]
@@ -174,7 +173,7 @@
                           (re-model/split-train-test sentences model
                                                      seed-frac properties rng)))
         results (let [params (merge params {:factory   (:factory split-model)
-                                            :vector-fn #(context/context-vector % split-model)})
+                                            :vector-fn #(re-model/context-vector % split-model)})
                       context-match-fn (partial re/concept-context-match params)
                       pattern-update-fn (partial re/pattern-update params model)
                       terminate? (partial re/terminate? params)
@@ -226,13 +225,13 @@
 
 (defn flatten-context-vector
   [s model]
-  (let [v (vec (seq (context/context-vector s model)))]
+  (let [v (vec (seq (re-model/context-vector s model)))]
     (apply assoc s (interleave (range (count v)) v))))
 
 (defn sentences->dataset
   [model sentences]
   (->> sentences
-       (filter #(context/context-vector % model))
+       (filter #(re-model/context-vector % model))
        (pmap #(flatten-context-vector % model))
        (map #(dissoc % :entities :concepts :context))
        (vec)

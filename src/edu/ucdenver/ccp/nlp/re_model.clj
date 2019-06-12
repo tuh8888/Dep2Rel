@@ -7,7 +7,6 @@
             [util :as util]
             [word2vec :as word2vec]
             [taoensso.timbre :as log]
-            [uncomplicate-context-alg :as context]
             [clojure.math.combinatorics :as combo]
             [edu.ucdenver.ccp.knowtator-clj :as k])
   (:import (clojure.lang PersistentArrayMap)))
@@ -21,8 +20,11 @@
     (catch Exception _
       (log/debug "Word vector not found" word))))
 
+(defprotocol ContextVector
+  (context-vector [self model]))
+
 (extend-type PersistentArrayMap
-  context/ContextVector
+  ContextVector
   (context-vector [self _]
     (or (:VEC self)
         (->> self
@@ -36,7 +38,7 @@
              (apply linear-algebra/vec-sum)))))
 
 (defrecord Sentence [concepts entities context]
-  context/ContextVector
+  ContextVector
   (context-vector [self {:keys [structure-annotations concept-annotations] :as model}]
     (or (:VEC self)
         (let [context-toks (->> self
@@ -46,9 +48,27 @@
                :entities
                (map (fn [e] (get concept-annotations e)))
                (lazy-cat context-toks)
-               (map #(context/context-vector % model))
+               (map #(context-vector % model))
                (doall)
                (apply linear-algebra/vec-sum))))))
+
+(defrecord Pattern [support VEC]
+  ContextVector
+  (context-vector [self model]
+    (or (:VEC self)
+        (->> self
+             :support
+             (map #(context-vector % model))
+             (apply linear-algebra/vec-sum)))))
+
+
+(defn add-to-pattern
+  [model p s]
+  (->Pattern (conj (set (:support p)) s)
+             (if p
+               (linear-algebra/vec-sum (context-vector p model)
+                                       (context-vector s model))
+               (context-vector s model))))
 
 (defn pprint-sent
   [model sent]
@@ -169,7 +189,7 @@
 
 (defn assign-embedding
   [model tok]
-  (assoc tok :VEC (context/context-vector tok model)))
+  (assoc tok :VEC (context-vector tok model)))
 
 (defn assign-sent-id
   [model tok]
