@@ -13,4 +13,4 @@ pom.xml.asc
 .nrepl-port
 .cpcache/
 /dep2rel.jar
-/run_on_tantor.sh
+/run/
