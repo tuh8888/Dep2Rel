@@ -14,6 +14,13 @@
 
 (def NONE "NONE")
 
+(defn word-embedding-catch
+  [word]
+  (try
+    (word2vec/word-embedding word)
+    (catch Exception _
+      (log/debug "Word vector not found" word))))
+
 (extend-type PersistentArrayMap
   context/ContextVector
   (context-vector [self _]
@@ -24,7 +31,7 @@
              (keep :text)
              (mapcat #(str/split % #" |-"))
              (map str/lower-case)
-             (map word2vec/word-embedding)
+             (map word-embedding-catch)
              (doall)
              (apply linear-algebra/vec-sum)))))
 
