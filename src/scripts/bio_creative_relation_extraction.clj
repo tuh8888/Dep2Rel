@@ -65,9 +65,9 @@
 
 (def groups (map keyword (incanter/sel sentences-dataset :cols :property)))
 
-(evaluation/pca-plot sentences-dataset groups
-                     {:save {:file (io/file results-dir "pca-all.svg")}
-                      :view true})
+#(evaluation/pca-plot sentences-dataset groups
+                      {:save {:file (io/file results-dir "pca-all.svg")}
+                       :view true})
 
 ;;; RELATION EXTRACTION ;;;
 

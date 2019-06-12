@@ -4,6 +4,7 @@
             [ubergraph.core :as uber]
             [graph :as graph]
             [math :as math]
+            [linear-algebra :as linear-algebra]
             [util :as util]
             [word2vec :as word2vec]
             [taoensso.timbre :as log]
@@ -41,7 +42,7 @@
                (lazy-cat context-toks)
                (map #(context/context-vector % model))
                (doall)
-               (apply math/unit-vec-sum factory))))))
+               (apply linear-algebra/unit-vec-sum factory))))))
 
 (defn pprint-sent
   [model sent]

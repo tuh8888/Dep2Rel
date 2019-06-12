@@ -1,5 +1,5 @@
 (ns edu.ucdenver.ccp.nlp.relation-extraction
-  (:require [math :as math]
+  (:require [linear-algebra :as linear-algebra]
             [util :as util]
             [cluster-tools]
             [clojure.set :refer [subset? intersection]]
@@ -15,7 +15,7 @@
         (->> self
              :support
              (map #(context/context-vector % model))
-             (apply math/unit-vec-sum factory)))))
+             (apply linear-algebra/unit-vec-sum factory)))))
 
 (defn sent-pattern-concepts-match?
   [{:keys [concepts]} {:keys [support]}]
@@ -81,7 +81,7 @@
   #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
     (->> patterns
-         (math/find-best-row-matches params samples)
+         (linear-algebra/find-best-row-matches params samples)
          (map (fn [{:keys [score] :as best}] (if (< context-thresh score)
                                                best
                                                (dissoc best :match))))
