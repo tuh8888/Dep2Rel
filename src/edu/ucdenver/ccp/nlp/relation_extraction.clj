@@ -5,17 +5,16 @@
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
             [uncomplicate-context-alg :as context]
-            [edu.ucdenver.ccp.nlp.re-model :as re-model]
             [incanter.core :as incanter]))
 
-(defrecord Pattern [support]
+(defrecord Pattern [support VEC]
   context/ContextVector
-  (context-vector [self {:keys [factory] :as model}]
+  (context-vector [self model]
     (or (:VEC self)
         (->> self
              :support
              (map #(context/context-vector % model))
-             (apply linear-algebra/unit-vec-sum factory)))))
+             (apply linear-algebra/vec-sum)))))
 
 (defn sent-pattern-concepts-match?
   [{:keys [concepts]} {:keys [support]}]
@@ -24,9 +23,12 @@
        (some #(= concepts %))))
 
 (defn add-to-pattern
-  [model p s]
-  (let [p (->Pattern (conj (set (:support p)) s))]
-    (re-model/assign-embedding model p)))
+  [{:keys [factory] :as model} p s]
+  (->Pattern (conj (set (:support p)) s)
+             (if p
+               (linear-algebra/vec-sum (context/context-vector p model)
+                                       (context/context-vector s model))
+               (context/context-vector s model))))
 
 (defn bootstrap
   [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn
@@ -34,9 +36,9 @@
   (let [p1 (util/map-kv count (group-by :predicted seeds))]
     (->> properties
          (map (fn [property]
-                {:Seeds       (get p1 property)
-                 :Property    property
-                 :Samples (count samples)}))
+                {:Seeds    (get p1 property)
+                 :Property property
+                 :Samples  (count samples)}))
          (incanter/to-dataset)
          (log/info)))
   (loop [iteration 0
@@ -80,16 +82,28 @@
   [{:keys [context-thresh vector-fn] :as params} samples patterns]
   #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
-    (->> patterns
-         (linear-algebra/find-best-row-matches params samples)
-         (map (fn [{:keys [score] :as best}] (if (< context-thresh score)
-                                               best
-                                               (dissoc best :match))))
-         (map (fn [{:keys [sample match] :as best}] (if (sent-pattern-concepts-match? sample match)
-                                                      best
-                                                      (dissoc best :match))))
-         (map (fn [{:keys [sample match]}]
-                (assoc sample :predicted (:predicted match)))))))
+    (let [samples (vec samples)
+          patterns (vec patterns)
+          sample-vectors (->> samples
+                              (map vector-fn)
+                              (map #(linear-algebra/unit-vec params %))
+                              (vec))
+          pattern-vectors (->> patterns
+                               (map vector-fn)
+                               (map #(linear-algebra/unit-vec params %))
+                               (vec))]
+      (->> pattern-vectors
+           (linear-algebra/find-best-row-matches params sample-vectors)
+           (map #(assoc % :sample (get samples (:i %))))
+           (map #(assoc % :match (get patterns (:j %))))
+           (map (fn [{:keys [score] :as best}] (if (< context-thresh score)
+                                                 best
+                                                 (dissoc best :match))))
+           (map (fn [{:keys [sample match] :as best}] (if (sent-pattern-concepts-match? sample match)
+                                                        best
+                                                        (dissoc best :match))))
+           (map (fn [{:keys [sample match]}]
+                  (assoc sample :predicted (:predicted match))))))))
 
 (defn pattern-update
   [params model new-matches patterns property]

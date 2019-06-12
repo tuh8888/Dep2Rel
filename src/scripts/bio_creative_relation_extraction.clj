@@ -45,29 +45,30 @@
                        (make-model testing-knowtator-view)))
 
 ;;; CLUSTERING ;;;
-(def properties #{"INHIBITOR" re-model/NONE} #_#{"PART-OF"
-                                                 "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
-                                                 "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
-                                                 "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
-                                                 "AGONIST" "AGONIST-ACTIVATOR" "AGONIST-INHIBITOR"
-                                                 "ANTAGONIST"
-                                                 "MODULATOR" "MODULATOR‐ACTIVATOR" "MODULATOR‐INHIBITOR"
-                                                 "COFACTOR"
-                                                 "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
-                                                 "NOT"
-                                                 re-model/NONE})
+(def properties #{"INHIBITOR" #_re-model/NONE} #_#{"PART-OF"
+                                                   "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
+                                                   "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
+                                                   "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
+                                                   "AGONIST" "AGONIST-ACTIVATOR" "AGONIST-INHIBITOR"
+                                                   "ANTAGONIST"
+                                                   "MODULATOR" "MODULATOR‐ACTIVATOR" "MODULATOR‐INHIBITOR"
+                                                   "COFACTOR"
+                                                   "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
+                                                   "NOT"
+                                                   re-model/NONE})
 
 ;;; PCA ;;;
-(def sentences-dataset (word2vec/with-word2vec word2vec-db
-                         (->> training-sentences
-                              (filter #(contains? properties (:property %)))
-                              (evaluation/sentences->dataset training-model))))
+(comment
+  (def sentences-dataset (word2vec/with-word2vec word2vec-db
+                           (->> training-sentences
+                                (filter #(contains? properties (:property %)))
+                                (evaluation/sentences->dataset training-model))))
 
-(def groups (map keyword (incanter/sel sentences-dataset :cols :property)))
+  (def groups (map keyword (incanter/sel sentences-dataset :cols :property)))
 
-#(evaluation/pca-plot sentences-dataset groups
-                      {:save {:file (io/file results-dir "pca-all.svg")}
-                       :view true})
+  (evaluation/pca-plot sentences-dataset groups
+                       {:save {:file (io/file results-dir "pca-all.svg")}
+                        :view true}))
 
 ;;; RELATION EXTRACTION ;;;
 
@@ -80,6 +81,7 @@
                               (re-model/split-train-test training-sentences training-model
                                                          seed-frac properties rng))))
 
+#_(remove #(context/context-vector % split-training-model) (:samples split-training-model))
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
                            :cluster-thresh    0.95
@@ -105,7 +107,7 @@
 
 (def metrics (incanter/to-dataset (evaluation/calc-metrics results)))
 (incanter/data-table metrics)
-(evaluation/plot-metrics metrics (incanter/sel groups :cols :property)
+(evaluation/plot-metrics metrics (incanter/sel metrics :cols :property)
                          {:view true
                           :save {:file (io/file results-dir "metrics.svg")}})
 

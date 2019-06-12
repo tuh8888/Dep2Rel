@@ -27,11 +27,11 @@
              (map str/lower-case)
              (map word2vec/word-embedding)
              (doall)
-             (apply linear-algebra/unit-vec-sum factory)))))
+             (apply linear-algebra/vec-sum)))))
 
 (defrecord Sentence [concepts entities context]
   context/ContextVector
-  (context-vector [self {:keys [structure-annotations concept-annotations factory] :as model}]
+  (context-vector [self {:keys [structure-annotations concept-annotations] :as model}]
     (or (:VEC self)
         (let [context-toks (->> self
                                 :context
@@ -42,7 +42,7 @@
                (lazy-cat context-toks)
                (map #(context/context-vector % model))
                (doall)
-               (apply linear-algebra/unit-vec-sum factory))))))
+               (apply linear-algebra/vec-sum))))))
 
 (defn pprint-sent
   [model sent]
@@ -254,8 +254,10 @@
                            (set)))
         (update :samples (fn [samples] (->> samples
                                             (map #(assign-embedding model %))
+                                            (filter :VEC)
                                             (doall))))
         (update :seeds (fn [seeds] (->> seeds
                                         (map #(assign-embedding model %))
+                                        (filter :VEC)
                                         (doall))))
         (assoc :properties properties))))
