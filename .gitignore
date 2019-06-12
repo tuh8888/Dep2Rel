@@ -14,3 +14,4 @@ pom.xml.asc
 .cpcache/
 /dep2rel.jar
 /run/
+.attach_pid*

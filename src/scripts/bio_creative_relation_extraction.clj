@@ -102,7 +102,7 @@
 
 (evaluation/plot-metrics (get results 1) properties
                          {:view true
-                          :save})
+                          :save {:file (io/file results-dir "metrics-0.75.svg")}})
 
 
 #_(apply evaluation/format-matches training-model results)
