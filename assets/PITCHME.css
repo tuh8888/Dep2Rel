@@ -8,3 +8,8 @@
     box-shadow: none;
     background: none;
 }
+
+svg.scaled {
+    width: 200%;
+    height: 200%;
+}

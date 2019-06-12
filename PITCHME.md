@@ -59,17 +59,16 @@ scientific literature?
 ---
 @title[Results]
 
-@snap[north-west span-100]
-## Results
+@snap[north span-50]
+#### Results
 @snapend
 
 @snap[west span-50]
-@ul[](false)
-@ulend
+@img[clean-img](assets/pca-all.png)
 @snapend
 
 @snap[east span-50]
-![]()
+@img[clean-img](assets/metrics.svg)
 @snapend
 
 ---
