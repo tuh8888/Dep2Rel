@@ -128,8 +128,9 @@
             y (vec (keep (fn [[j p]] (when (= p property)
                                        (get y j)))
                          groups))]
-        (when (and x y)
-          (inc-charts/add-points plot x y :series-label property))))))
+        (if (and (seq x) (seq y))
+          (inc-charts/add-points plot x y :series-label property)
+          (log/warn "No points found"))))))
 
 (defn pca-plot
   [properties sentences-dataset cols {{:as save :keys [file]} :save :keys [view]}]
@@ -140,8 +141,8 @@
                                       :x-label "PC1"
                                       :y-label "PC2"
                                       :title "PCA")
-        x (get pca-components 0)
-        y (get pca-components 1)]
+        x (vec (get pca-components 0))
+        y (vec (get pca-components 1))]
     (add-property-series plot sentences-dataset x y properties)
     (when save (inc-svg/save-svg plot (str file)))
     (when view (incanter/view plot))

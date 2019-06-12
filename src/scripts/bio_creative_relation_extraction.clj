@@ -66,20 +66,9 @@
                               (filter #(contains? properties (:property %)))
                               (evaluation/sentences->dataset training-model))))
 
-(def numerical-data (incanter/sel sentences-dataset :cols (range 0 200)))
-(def pca-components (evaluation/pca-2 numerical-data))
-(def plot (inc-charts/scatter-plot [] []
-                                   :legend true
-                                   :x-label "PC1"
-                                   :y-label "PC2"
-                                   :title "PCA"))
-(def x (get pca-components 0))
-(def y (get pca-components 1))
-(inc-charts/add-points plot [(first x)] [(first y)] :series-label 'n)
-(first (map-indexed vector (incanter/sel sentences-dataset :cols :property)))
-(evaluation/add-property-series plot sentences-dataset x y properties)
-(inc-svg/save-svg plot (str (io/file results-dir "pca-all.svg")))
-(incanter/view plot)
+(def pca-pot (evaluation/pca-plot properties sentences-dataset (count (context/context-vector (first training-sentences) training-model))
+                                  {:save {:file (io/file results-dir "pca-all.svg")}
+                                   :view true}))
 
 #_(evaluation/pca-plot properties sentences-dataset (count (context/context-vector (first training-sentences) training-model))
                        {:save {:file (io/file results-dir "pca-all.svg")}
