@@ -57,6 +57,16 @@
          (incanter/to-dataset)
          (log/info))))
 
+(defn cap-nones
+  [matches]
+  (let [nones (filter #(= re-model/NONE (:property %)) matches)
+        others (remove #(= re-model/NONE (:property %)) matches)
+        num-nones-to-keep (->> others
+                               (group-by :predicted)
+                               (util/map-kv count)
+                               (reduce max))
+        nones (take num-nones-to-keep nones)]
+    (lazy-cat nones others)))
 
 (defn bootstrap
   [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn
@@ -74,7 +84,9 @@
           samples (remove :predicted new-matches)
           new-matches (filter :predicted new-matches)
           matches (into matches new-matches)
-          new-matches-and-unclustered (lazy-cat unclustered new-matches)]
+          new-matches-and-unclustered (->> new-matches
+                                           (cap-nones)
+                                           (lazy-cat unclustered))]
       (if-let [results (terminate? model {:iteration   iteration
                                           :seeds       seeds
                                           :new-matches new-matches
