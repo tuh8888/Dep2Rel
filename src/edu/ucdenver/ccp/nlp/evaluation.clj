@@ -64,8 +64,8 @@
              {:cluster-merge-fn re-model/add-to-pattern})))))
 
 (defn context-path-filter
-  [dep-filter coll]
-  (filter #(<= (count (:context %)) dep-filter) coll))
+  [{:keys [context-path-length-cap]} coll]
+  (filter #(<= (count (:context %)) context-path-length-cap) coll))
 
 (defn sentences->entities
   [sentences]
@@ -181,9 +181,9 @@
                            :support-filter re/support-filter
                            :terminate? re/terminate?
                            :decluster re/decluster)
-                    (update :samples (fn [samples] (context-path-filter context-path-length-cap samples)))
+                    (update :samples (fn [samples] (context-path-filter model samples)))
                     (re/bootstrap)
-                    (doall model))]
+                    (doall))]
     (assoc results :metrics (calc-metrics results)
                    :plot (plot-metrics results
                                        {:save {:file (->> results
