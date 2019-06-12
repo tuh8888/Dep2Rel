@@ -8,7 +8,8 @@
             [uncomplicate-context-alg :as context]
             [incanter.charts :as inc-charts]
             [incanter.svg :as inc-svg]
-            [edu.ucdenver.ccp.nlp.re-model :as re-model]))
+            [edu.ucdenver.ccp.nlp.re-model :as re-model]
+            [clojure.java.io :as io]))
 
 (defn format-matches
   [model matches _]
@@ -74,6 +75,17 @@
        (map set)
        (set)))
 
+(defn pca-2
+  [data]
+  (let [X (incanter/to-matrix data)
+        pca (inc-stats/principal-components X)
+        components (:rotation pca)
+        pc1 (incanter/sel components :cols 0)
+        pc2 (incanter/sel components :cols 1)
+        x1 (incanter/mmult X pc1)
+        x2 (incanter/mmult X pc2)]
+    [x1 x2]))
+
 
 (defn actual-true
   [property samples]
@@ -106,70 +118,6 @@
          (log/info))
     metrics))
 
-(defn parameter-walk
-  [properties sentences model {:keys [context-match-fn pattern-update-fn terminate?
-                                      support-filter decluster
-                                      context-path-length-cap
-                                      context-thresh cluster-thresh
-                                      min-match-support
-                                      seed-frac rng]}]
-  (cp/upfor (dec (cp/ncpus)) [seed-frac seed-frac
-                              :let [split-model (re-model/split-train-test sentences model seed-frac properties rng)]
-                              context-path-length-cap context-path-length-cap
-                              context-thresh context-thresh
-                              cluster-thresh cluster-thresh
-                              min-match-support min-match-support]
-            (let [context-path-length-cap context-path-length-cap
-                  params {:context-thresh          context-thresh
-                          :cluster-thresh          cluster-thresh
-                          :min-match-support       min-match-support
-                          :max-iterations          100
-                          :max-matches             3000
-                          :re-clustering?          true
-                          :context-path-length-cap context-path-length-cap
-                          :seed-frac               seed-frac
-                          :factory                 (:factory split-model)
-                          :vector-fn               #(context/context-vector % split-model)}
-                  context-match-fn (partial context-match-fn params)
-                  pattern-update-fn (partial pattern-update-fn params model)
-                  terminate? (partial terminate? params)
-                  support-filter (partial support-filter params)
-                  decluster (partial decluster params support-filter)]
-              (-> split-model
-                  (update :samples (fn [samples] (context-path-filter context-path-length-cap samples)))
-                  (re/bootstrap {:terminate?        terminate?
-                                 :context-match-fn  context-match-fn
-                                 :pattern-update-fn pattern-update-fn
-                                 :support-filter    support-filter
-                                 :decluster         decluster})
-                  (doall)
-                  (merge params)))))
-
-(defn pca-2
-  [data]
-  (let [X (incanter/to-matrix data)
-        pca (inc-stats/principal-components X)
-        components (:rotation pca)
-        pc1 (incanter/sel components :cols 0)
-        pc2 (incanter/sel components :cols 1)
-        x1 (incanter/mmult X pc1)
-        x2 (incanter/mmult X pc2)]
-    [x1 x2]))
-
-(defn flatten-context-vector
-  [s model]
-  (let [v (vec (seq (context/context-vector s model)))]
-    (apply assoc s (interleave (range (count v)) v))))
-
-(defn sentences->dataset
-  [model sentences]
-  (->> sentences
-       (filter #(context/context-vector % model))
-       (pmap #(flatten-context-vector % model))
-       (map #(dissoc % :entities :concepts :context))
-       (vec)
-       (incanter/to-dataset)))
-
 (defn add-property-series
   [plot dataset x y properties]
   (let [groups (map-indexed vector (incanter/sel dataset :cols :property))]
@@ -196,7 +144,8 @@
         y (get pca-components 1)]
     (add-property-series plot sentences-dataset x y properties)
     (when save (inc-svg/save-svg plot (str file)))
-    (when view (incanter/view plot))))
+    (when view (incanter/view plot))
+    plot))
 
 (defn plot-metrics
   [metrics-dataset properties {{:as save :keys [file]} :save :keys [view]}]
@@ -209,4 +158,79 @@
         y (vec (incanter/sel metrics-dataset :cols :recall))]
     (add-property-series plot metrics-dataset x y properties)
     (when save (inc-svg/save-svg plot (str file)))
-    (when view (incanter/view plot))))
+    (when view (incanter/view plot))
+    plot))
+
+
+(defn run-model
+  "Run model with parameters"
+  [{:keys [seed-frac rng context-path-length-cap] :as params} {:keys [properties] :as model}
+   word2vec-db sentences results-dir split-model]
+
+  (let [split-model (or split-model
+                        (word2vec/with-word2vec word2vec-db
+                          (re-model/split-train-test sentences model
+                                                     seed-frac properties rng)))
+        results (let [params (merge params {:factory   (:factory split-model)
+                                            :vector-fn #(context/context-vector % split-model)})
+                      context-match-fn (partial re/concept-context-match params)
+                      pattern-update-fn (partial re/pattern-update params model)
+                      terminate? (partial re/terminate? params)
+                      support-filter (partial re/support-filter params)
+                      decluster (partial re/decluster params support-filter)]
+                  (-> split-model
+                      (update :samples (fn [samples] (context-path-filter context-path-length-cap samples)))
+                      (re/bootstrap {:terminate?        terminate?
+                                     :context-match-fn  context-match-fn
+                                     :pattern-update-fn pattern-update-fn
+                                     :support-filter    support-filter
+                                     :decluster         decluster})
+                      (doall)))
+        metrics (calc-metrics results)
+        plot (plot-metrics (incanter/to-dataset metrics) properties
+                           {:save {:file (->> params
+                                              (format "metrics-%s.svg")
+                                              (io/file results-dir))}})]
+    [results metrics plot]))
+
+(defn parameter-walk
+  [word2vec-db results-dir properties sentences model
+   {:keys [context-path-length-cap
+           context-thresh
+           cluster-thresh
+           min-match-support
+           seed-frac
+           rng]}]
+  ;; parallelize with
+  #_(cp/upfor (dec (cp/ncpus)))
+  (for [seed-frac seed-frac
+        :let [split-model (re-model/split-train-test sentences model seed-frac properties rng)]
+        context-path-length-cap context-path-length-cap
+        context-thresh context-thresh
+        cluster-thresh cluster-thresh
+        min-match-support min-match-support]
+    (let [params {:context-thresh          context-thresh
+                  :cluster-thresh          cluster-thresh
+                  :min-match-support       min-match-support
+                  :max-iterations          100
+                  :max-matches             3000
+                  :re-clustering?          true
+                  :context-path-length-cap context-path-length-cap
+                  :seed-frac               seed-frac
+                  :rng                     rng}]
+      (log/warn params)
+      (run-model params model word2vec-db sentences results-dir split-model))))
+
+(defn flatten-context-vector
+  [s model]
+  (let [v (vec (seq (context/context-vector s model)))]
+    (apply assoc s (interleave (range (count v)) v))))
+
+(defn sentences->dataset
+  [model sentences]
+  (->> sentences
+       (filter #(context/context-vector % model))
+       (pmap #(flatten-context-vector % model))
+       (map #(dissoc % :entities :concepts :context))
+       (vec)
+       (incanter/to-dataset)))

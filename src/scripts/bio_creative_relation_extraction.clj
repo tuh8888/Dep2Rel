@@ -8,7 +8,9 @@
             [incanter.core :as incanter]
             [edu.ucdenver.ccp.nlp.readers :as rdr]
             [uncomplicate-context-alg :as context]
-            [uncomplicate.neanderthal.native :as thal-native]))
+            [uncomplicate.neanderthal.native :as thal-native]
+            [incanter.svg :as inc-svg]
+            [incanter.charts :as inc-charts]))
 
 (log/set-level! :info)
 
@@ -58,82 +60,69 @@
                                                    re-model/NONE})
 
 ;;; PCA ;;;
-(comment
-  (def sentences-dataset (word2vec/with-word2vec word2vec-db
-                           (->> training-sentences
-                                (filter #(contains? properties (:property %)))
-                                (evaluation/sentences->dataset training-model))))
 
-  (evaluation/pca-plot properties sentences-dataset (count (context/context-vector (first training-sentences) training-model))
+(def sentences-dataset (word2vec/with-word2vec word2vec-db
+                         (->> training-sentences
+                              (filter #(contains? properties (:property %)))
+                              (evaluation/sentences->dataset training-model))))
+
+(def numerical-data (incanter/sel sentences-dataset :cols (range 0 200)))
+(def pca-components (evaluation/pca-2 numerical-data))
+(def plot (inc-charts/scatter-plot [] []
+                                   :legend true
+                                   :x-label "PC1"
+                                   :y-label "PC2"
+                                   :title "PCA"))
+(def x (get pca-components 0))
+(def y (get pca-components 1))
+(inc-charts/add-points plot [(first x)] [(first y)] :series-label 'n)
+(first (map-indexed vector (incanter/sel sentences-dataset :cols :property)))
+(evaluation/add-property-series plot sentences-dataset x y properties)
+(inc-svg/save-svg plot (str (io/file results-dir "pca-all.svg")))
+(incanter/view plot)
+
+#_(evaluation/pca-plot properties sentences-dataset (count (context/context-vector (first training-sentences) training-model))
                        {:save {:file (io/file results-dir "pca-all.svg")}
-                        :view true}))
+                        :view true})
 
 ;;; RELATION EXTRACTION ;;;
 
 ;; This allows me to reset sentences if they get reloaded
 #_(def training-sentences (map #(re-model/map->Sentence %) training-sentences))
-(defn run-model
-  "Run model with parameters"
-  [{:keys [seed-frac rng context-path-length-cap] :as params} model sentences split-model]
 
-  (let [split-model (or split-model
-                        (word2vec/with-word2vec word2vec-db
-                          (re-model/split-train-test sentences model
-                                                     seed-frac properties rng)))
-        results (let [params (merge params {:factory   (:factory split-model)
-                                            :vector-fn #(context/context-vector % split-model)})
-                      context-match-fn (partial re/concept-context-match params)
-                      pattern-update-fn (partial re/pattern-update params training-model)
-                      terminate? (partial re/terminate? params)
-                      support-filter (partial re/support-filter params)
-                      decluster (partial re/decluster params support-filter)]
-                  (-> split-model
-                      (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
-                      (re/bootstrap {:terminate?        terminate?
-                                     :context-match-fn  context-match-fn
-                                     :pattern-update-fn pattern-update-fn
-                                     :support-filter    support-filter
-                                     :decluster         decluster})
-                      (doall)))]
-    (incanter/to-dataset (evaluation/calc-metrics results))
-    results))
 
 
 (def split-training-model (word2vec/with-word2vec word2vec-db
-                            (let [seed-frac 0.2
+                            (let [seed-frac 0.75
                                   rng 0.022894]
                               (re-model/split-train-test training-sentences training-model
                                                          seed-frac properties rng))))
 
-(def results (run-model {:seed-frac 0.2
-                         :rng 0.022894
-                         :context-path-length-cap 100
-                         :context-thresh          0.95
-                         :cluster-thresh          0.95
-                         :min-match-support       0
-                         :max-iterations          100
-                         :max-matches             3000
-                         :re-clustering?          true}
-                        training-sentences training-model split-training-model))
+(def results (evaluation/run-model {:seed-frac               0.2
+                                    :rng                     0.022894
+                                    :context-path-length-cap 100
+                                    :context-thresh          0.95
+                                    :cluster-thresh          0.95
+                                    :min-match-support       0
+                                    :max-iterations          100
+                                    :max-matches             3000
+                                    :re-clustering?          true}
+                                   training-model word2vec-db
+                                   training-sentences results-dir
+                                   split-training-model))
 
-(def metrics (incanter/to-dataset (evaluation/calc-metrics results)))
-(incanter/view (incanter/data-table metrics))
-(evaluation/plot-metrics metrics properties
+(evaluation/plot-metrics (get results 1) properties
                          {:view true
-                          :save {:file (io/file results-dir "metrics.svg")}})
+                          :save})
 
 
 #_(apply evaluation/format-matches training-model results)
 
-#_(def param-walk-results (evaluation/parameter-walk properties training-sentences training-model
-                                                     {:context-path-length-cap [100] #_[2 3 5 10 20 35 100]
-                                                      :context-thresh          [0.95] #_[0.975 0.95 0.925 0.9 0.85]
-                                                      :cluster-thresh          [0.95] #_[0.95 0.9 0.75 0.5]
-                                                      :min-match-support       [3] #_[0 5 25]
-                                                      :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
-                                                      :terminate?              re/terminate?
-                                                      :context-match-fn        re/concept-context-match
-                                                      :pattern-update-fn       re/pattern-update
-                                                      :support-filter          re/support-filter
-                                                      :decluster               re/support-filter
-                                                      :rng                     0.022894}))
+(def param-walk-results (evaluation/parameter-walk word2vec-db results-dir
+                                                   properties training-sentences training-model
+                                                   {:context-path-length-cap [100] #_[2 3 5 10 20 35 100]
+                                                    :context-thresh          [0.95] #_[0.975 0.95 0.925 0.9 0.85]
+                                                    :cluster-thresh          [0.95] #_[0.95 0.9 0.75 0.5]
+                                                    :min-match-support       [0] #_[0 5 25]
+                                                    :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
+                                                    :rng                     0.022894}))
