@@ -186,7 +186,7 @@
 (defn pca-plot
   [properties sentences-dataset cols {{:as save :keys [file]} :save :keys [view]}]
   (let [numerical-data (incanter/sel sentences-dataset :cols (range 0 cols))
-        pca-components (vec (map vec (pca-2 numerical-data)))
+        pca-components (pca-2 numerical-data)
         plot (inc-charts/scatter-plot [] []
                                       :legend true
                                       :x-label "PC1"
