@@ -64,6 +64,7 @@
         num-nones-to-keep (->> others
                                (group-by :predicted)
                                (util/map-kv count)
+                               (vals)
                                (reduce max))
         nones (take num-nones-to-keep nones)]
     (lazy-cat nones others)))
