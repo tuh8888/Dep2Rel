@@ -55,7 +55,7 @@
                                                    "COFACTOR"
                                                    "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
                                                    "NOT"
-                                                   #_re-model/NONE})
+                                                   re-model/NONE})
 
 ;;; PCA ;;;
 (comment
@@ -64,9 +64,7 @@
                                 (filter #(contains? properties (:property %)))
                                 (evaluation/sentences->dataset training-model))))
 
-  (def groups (map keyword (incanter/sel sentences-dataset :cols :property)))
-
-  (evaluation/pca-plot sentences-dataset groups
+  (evaluation/pca-plot properties sentences-dataset (count (context/context-vector (first training-sentences) training-model))
                        {:save {:file (io/file results-dir "pca-all.svg")}
                         :view true}))
 
@@ -74,6 +72,32 @@
 
 ;; This allows me to reset sentences if they get reloaded
 #_(def training-sentences (map #(re-model/map->Sentence %) training-sentences))
+(defn run-model
+  "Run model with parameters"
+  [{:keys [seed-frac rng context-path-length-cap] :as params} model sentences split-model]
+
+  (let [split-model (or split-model
+                        (word2vec/with-word2vec word2vec-db
+                          (re-model/split-train-test sentences model
+                                                     seed-frac properties rng)))
+        results (let [params (merge params {:factory   (:factory split-model)
+                                            :vector-fn #(context/context-vector % split-model)})
+                      context-match-fn (partial re/concept-context-match params)
+                      pattern-update-fn (partial re/pattern-update params training-model)
+                      terminate? (partial re/terminate? params)
+                      support-filter (partial re/support-filter params)
+                      decluster (partial re/decluster params support-filter)]
+                  (-> split-model
+                      (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
+                      (re/bootstrap {:terminate?        terminate?
+                                     :context-match-fn  context-match-fn
+                                     :pattern-update-fn pattern-update-fn
+                                     :support-filter    support-filter
+                                     :decluster         decluster})
+                      (doall)))]
+    (incanter/to-dataset (evaluation/calc-metrics results))
+    results))
+
 
 (def split-training-model (word2vec/with-word2vec word2vec-db
                             (let [seed-frac 0.2
@@ -81,33 +105,20 @@
                               (re-model/split-train-test training-sentences training-model
                                                          seed-frac properties rng))))
 
-#_(remove #(context/context-vector % split-training-model) (:samples split-training-model))
-(def results (let [context-path-length-cap 100
-                   params {:context-thresh    0.95
-                           :cluster-thresh    0.95
-                           :min-match-support 3
-                           :max-iterations    100
-                           :max-matches       3000
-                           :re-clustering?    true
-                           :factory           (:factory split-training-model)
-                           :vector-fn         #(context/context-vector % split-training-model)}
-                   context-match-fn (partial re/concept-context-match params)
-                   pattern-update-fn (partial re/pattern-update params training-model)
-                   terminate? (partial re/terminate? params)
-                   support-filter (partial re/support-filter params)
-                   decluster (partial re/decluster params support-filter)]
-               (-> split-training-model
-                   (update :samples (fn [samples] (evaluation/context-path-filter context-path-length-cap samples)))
-                   (re/bootstrap {:terminate?        terminate?
-                                  :context-match-fn  context-match-fn
-                                  :pattern-update-fn pattern-update-fn
-                                  :support-filter    support-filter
-                                  :decluster         decluster})
-                   (doall))))
+(def results (run-model {:seed-frac 0.2
+                         :rng 0.022894
+                         :context-path-length-cap 100
+                         :context-thresh          0.95
+                         :cluster-thresh          0.95
+                         :min-match-support       0
+                         :max-iterations          100
+                         :max-matches             3000
+                         :re-clustering?          true}
+                        training-sentences training-model split-training-model))
 
 (def metrics (incanter/to-dataset (evaluation/calc-metrics results)))
 (incanter/view (incanter/data-table metrics))
-(evaluation/plot-metrics metrics (incanter/sel metrics :cols :property)
+(evaluation/plot-metrics metrics properties
                          {:view true
                           :save {:file (io/file results-dir "metrics.svg")}})
 

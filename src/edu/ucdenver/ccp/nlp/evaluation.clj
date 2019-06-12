@@ -120,16 +120,16 @@
                               cluster-thresh cluster-thresh
                               min-match-support min-match-support]
             (let [context-path-length-cap context-path-length-cap
-                  params {:context-thresh    context-thresh
-                          :cluster-thresh    cluster-thresh
-                          :min-match-support min-match-support
-                          :max-iterations    100
-                          :max-matches       3000
-                          :re-clustering?    true
+                  params {:context-thresh          context-thresh
+                          :cluster-thresh          cluster-thresh
+                          :min-match-support       min-match-support
+                          :max-iterations          100
+                          :max-matches             3000
+                          :re-clustering?          true
                           :context-path-length-cap context-path-length-cap
-                          :seed-frac seed-frac
-                          :factory           (:factory split-model)
-                          :vector-fn         #(context/context-vector % split-model)}
+                          :seed-frac               seed-frac
+                          :factory                 (:factory split-model)
+                          :vector-fn               #(context/context-vector % split-model)}
                   context-match-fn (partial context-match-fn params)
                   pattern-update-fn (partial pattern-update-fn params model)
                   terminate? (partial terminate? params)
@@ -170,27 +170,43 @@
        (vec)
        (incanter/to-dataset)))
 
+(defn add-property-series
+  [plot dataset x y properties]
+  (let [groups (map-indexed vector (incanter/sel dataset :cols :property))]
+    (doseq [property properties]
+      (let [x (vec (keep (fn [[i p]] (when (= p property)
+                                       (get x i)))
+                         groups))
+            y (vec (keep (fn [[j p]] (when (= p property)
+                                       (get y j)))
+                         groups))]
+        (when (and x y)
+          (inc-charts/add-points plot x y :series-label property))))))
+
 (defn pca-plot
-  [sentences-dataset groups {{:as save :keys [file]} :save :keys [view]}]
-  (let [y (incanter/sel sentences-dataset :cols (range 0 200))
-        x (pca-2 y)
-        plot (inc-charts/scatter-plot (get x 0) (get x 1)
-                                      :group-by groups
+  [properties sentences-dataset cols {{:as save :keys [file]} :save :keys [view]}]
+  (let [numerical-data (incanter/sel sentences-dataset :cols (range 0 cols))
+        pca-components (vec (map vec (pca-2 numerical-data)))
+        plot (inc-charts/scatter-plot [] []
                                       :legend true
                                       :x-label "PC1"
                                       :y-label "PC2"
-                                      :title "PCA")]
+                                      :title "PCA")
+        x (get pca-components 0)
+        y (get pca-components 1)]
+    (add-property-series plot sentences-dataset x y properties)
     (when save (inc-svg/save-svg plot (str file)))
     (when view (incanter/view plot))))
 
 (defn plot-metrics
-  [metrics-dataset groups {{:as save :keys [file]} :save :keys [view]}]
-  (let [plot (inc-charts/scatter-plot (incanter/sel metrics-dataset :cols :precision)
-                                      (incanter/sel metrics-dataset :cols :recall)
-                                      :group-by groups
+  [metrics-dataset properties {{:as save :keys [file]} :save :keys [view]}]
+  (let [plot (inc-charts/scatter-plot [] []
                                       :legend true
                                       :x-label "Precision"
                                       :y-label "Recall"
-                                      :title "Relation Extraction Results")]
+                                      :title "Relation Extraction Results")
+        x (vec (incanter/sel metrics-dataset :cols :precision))
+        y (vec (incanter/sel metrics-dataset :cols :recall))]
+    (add-property-series plot metrics-dataset x y properties)
     (when save (inc-svg/save-svg plot (str file)))
     (when view (incanter/view plot))))
