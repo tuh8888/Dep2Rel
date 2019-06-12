@@ -2,15 +2,11 @@
   (:require [clojure.java.io :as io]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]
-            [edu.ucdenver.ccp.nlp.relation-extraction :as re]
             [taoensso.timbre :as log]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
-            [incanter.core :as incanter]
             [edu.ucdenver.ccp.nlp.readers :as rdr]
             [uncomplicate-context-alg :as context]
-            [uncomplicate.neanderthal.native :as thal-native]
-            [incanter.svg :as inc-svg]
-            [incanter.charts :as inc-charts]))
+            [uncomplicate.neanderthal.native :as thal-native]))
 
 (log/set-level! :info)
 
@@ -61,14 +57,15 @@
 
 ;;; PCA ;;;
 
-(def sentences-dataset (word2vec/with-word2vec word2vec-db
-                         (->> training-sentences
-                              (filter #(contains? properties (:property %)))
-                              (evaluation/sentences->dataset training-model))))
+(comment
+  (def sentences-dataset (word2vec/with-word2vec word2vec-db
+                           (->> training-sentences
+                                (filter #(contains? properties (:property %)))
+                                (evaluation/sentences->dataset training-model))))
 
-(def pca-pot (evaluation/pca-plot properties sentences-dataset (count (context/context-vector (first training-sentences) training-model))
-                                  {:save {:file (io/file results-dir "pca-all.svg")}
-                                   :view true}))
+  (def pca-pot (evaluation/pca-plot properties sentences-dataset (count (context/context-vector (first training-sentences) training-model))
+                                    {:save {:file (io/file results-dir "pca-all.svg")}
+                                     :view true})))
 
 #_(evaluation/pca-plot properties sentences-dataset (count (context/context-vector (first training-sentences) training-model))
                        {:save {:file (io/file results-dir "pca-all.svg")}
@@ -86,32 +83,32 @@
                                   rng 0.022894]
                               (re-model/split-train-test training-sentences training-model
                                                          seed-frac properties rng))))
+(comment
+  (def results (evaluation/run-model {:seed-frac               0.2
+                                      :rng                     0.022894
+                                      :context-path-length-cap 100
+                                      :context-thresh          0.95
+                                      :cluster-thresh          0.95
+                                      :min-match-support       0
+                                      :max-iterations          100
+                                      :max-matches             3000
+                                      :re-clustering?          true}
+                                     training-model word2vec-db
+                                     training-sentences results-dir
+                                     split-training-model))
 
-(def results (evaluation/run-model {:seed-frac               0.2
-                                    :rng                     0.022894
-                                    :context-path-length-cap 100
-                                    :context-thresh          0.95
-                                    :cluster-thresh          0.95
-                                    :min-match-support       0
-                                    :max-iterations          100
-                                    :max-matches             3000
-                                    :re-clustering?          true}
-                                   training-model word2vec-db
-                                   training-sentences results-dir
-                                   split-training-model))
-
-(evaluation/plot-metrics (get results 1) properties
-                         {:view true
-                          :save {:file (io/file results-dir "metrics-0.75.svg")}})
+  (evaluation/plot-metrics (get results 1) properties
+                           {:view true
+                            :save {:file (io/file results-dir "metrics-0.75.svg")}})
 
 
-#_(apply evaluation/format-matches training-model results)
+  #_(apply evaluation/format-matches training-model results)
 
-(def param-walk-results (evaluation/parameter-walk word2vec-db results-dir
-                                                   properties training-sentences training-model
-                                                   {:context-path-length-cap [100] #_[2 3 5 10 20 35 100]
-                                                    :context-thresh          [0.95] #_[0.975 0.95 0.925 0.9 0.85]
-                                                    :cluster-thresh          [0.95] #_[0.95 0.9 0.75 0.5]
-                                                    :min-match-support       [0] #_[0 5 25]
-                                                    :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
-                                                    :rng                     0.022894}))
+  (def param-walk-results (evaluation/parameter-walk word2vec-db results-dir
+                                                     properties training-sentences training-model
+                                                     {:context-path-length-cap [100] #_[2 3 5 10 20 35 100]
+                                                      :context-thresh          [0.95] #_[0.975 0.95 0.925 0.9 0.85]
+                                                      :cluster-thresh          [0.95] #_[0.95 0.9 0.75 0.5]
+                                                      :min-match-support       [0] #_[0 5 25]
+                                                      :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
+                                                      :rng                     0.022894})))

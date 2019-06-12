@@ -8,6 +8,7 @@
             [word2vec :as word2vec]
             [taoensso.timbre :as log]
             [uncomplicate-context-alg :as context]
+            [clojure.math.combinatorics :as combo]
             [edu.ucdenver.ccp.knowtator-clj :as k])
   (:import (clojure.lang PersistentArrayMap)))
 
@@ -145,7 +146,7 @@
 
 (defn combination-sentences
   [model undirected-sent sent-annotations]
-  (->> (clojure.math.combinatorics/combinations sent-annotations 2)
+  (->> (combo/combinations sent-annotations 2)
        (map #(make-sentence model undirected-sent %))))
 
 (defn concept-annotations->sentences

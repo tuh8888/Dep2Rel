@@ -5,6 +5,7 @@
             [incanter.core :as incanter]
             [incanter.stats :as inc-stats]
             [com.climate.claypoole :as cp]
+            [math :as math]
             [uncomplicate-context-alg :as context]
             [incanter.charts :as inc-charts]
             [incanter.svg :as inc-svg]
