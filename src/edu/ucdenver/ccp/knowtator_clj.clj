@@ -28,6 +28,7 @@
      v
      (.get (.getModel v))))
   ([f owl-workspace]
+   (log/info "Reading Knowtator model from" f)
    (let [k (KnowtatorModel. f owl-workspace)]
      (.load k)
      k)))

@@ -33,7 +33,7 @@
 (def factory thal-native/native-double)
 
 ;;; MODELS ;;;
-(def training-knowtator-view (k/view training-dir))
+(def training-knowtator-view (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
 (def training-model (word2vec/with-word2vec word2vec-db
                       (re-model/make-model training-knowtator-view factory)))
