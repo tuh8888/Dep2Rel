@@ -171,32 +171,25 @@
   "Run model with parameters"
   [results-dir
    {:keys [context-path-length-cap word2vec-db] :as model}]
-  (let [model (or (:samples model)
-                  (word2vec/with-word2vec word2vec-db
-                    (re-model/split-train-test model)))
-        results (let [model (merge model {:factory   (:factory model)
-                                          :vector-fn #(re-model/context-vector % model)})
-                      context-match-fn (partial re/concept-context-match model)
-                      pattern-update-fn (partial re/pattern-update model model)
-                      terminate? (partial re/terminate? model)
-                      support-filter (partial re/support-filter model)
-                      decluster (partial re/decluster model support-filter)]
-                  (-> model
-                      (update :samples (fn [samples] (context-path-filter context-path-length-cap samples)))
-                      (re/bootstrap {:terminate?        terminate?
-                                     :context-match-fn  context-match-fn
-                                     :pattern-update-fn pattern-update-fn
-                                     :support-filter    support-filter
-                                     :decluster         decluster})
-                      (doall)))
-        metrics (calc-metrics results)
-        plot (plot-metrics results
-                           {:save {:file (->> model
-                                              (re/model-params)
-                                              (format "metrics-%s.svg")
-                                              (io/file results-dir))}})]
-    (assoc results :metrics metrics
-                   :plot plot)))
+  (let [results (-> (or (:samples model)
+                        (word2vec/with-word2vec word2vec-db
+                          (re-model/split-train-test model)))
+                    (assoc :vector-fn #(re-model/context-vector % model)
+                           :context-match-fn re/concept-context-match
+                           :cluster-merge-fn re-model/add-to-pattern
+                           :pattern-update-fn re/pattern-update
+                           :support-filter re/support-filter
+                           :terminate? re/terminate?
+                           :decluster re/decluster)
+                    (update :samples (fn [samples] (context-path-filter context-path-length-cap samples)))
+                    (re/bootstrap)
+                    (doall model))]
+    (assoc results :metrics (calc-metrics results)
+                   :plot (plot-metrics results
+                                       {:save {:file (->> results
+                                                          (re/model-params)
+                                                          (format "metrics-%s.svg")
+                                                          (io/file results-dir))}}))))
 
 (defn parameter-walk
   [results-dir model {:keys [context-path-length-cap

@@ -70,18 +70,20 @@
     (lazy-cat nones others)))
 
 (defn bootstrap
-  [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn
-                                                        support-filter decluster]}]
+  [{:keys [properties seeds samples
+           terminate? context-match-fn pattern-update-fn
+           support-filter decluster]
+    :as model}]
   (log-starting-values model)
   (loop [iteration 0
          new-matches (set seeds)
          matches #{}
          patterns #{}
          samples samples]
-    (let [patterns (mapcat #(pattern-update-fn new-matches patterns %) properties)
-          unclustered (decluster new-matches patterns)
-          patterns (filter #(support-filter new-matches %) patterns)
-          new-matches (context-match-fn samples patterns)
+    (let [patterns (mapcat #(pattern-update-fn model new-matches patterns %) properties)
+          unclustered (decluster model new-matches patterns)
+          patterns (filter #(support-filter model new-matches %) patterns)
+          new-matches (context-match-fn model samples patterns)
           samples (remove :predicted new-matches)
           new-matches (filter :predicted new-matches)
           matches (into matches new-matches)
@@ -132,19 +134,18 @@
                   (assoc sample :predicted (:predicted match))))))))
 
 (defn pattern-update
-  [params model new-matches patterns property]
+  [model new-matches patterns property]
   (let [samples (->> new-matches
                      (filter #(= (:predicted %) property))
-                     (set))
-        params (merge params {:cluster-merge-fn (partial re-model/add-to-pattern model)})]
+                     (set))]
     (->> patterns
          (filter #(= (:predicted %) property))
          (set)
-         (cluster-tools/single-pass-cluster params samples)
+         (cluster-tools/single-pass-cluster model samples)
          (map #(assoc % :predicted property)))))
 
 (defn terminate?
-  [{:keys [max-iterations max-matches]} model
+  [{:keys [max-iterations max-matches] :as model}
    {:keys [iteration seeds new-matches matches patterns samples]}]
   (let [success-model (assoc model :matches matches
                                    :patterns patterns)]
@@ -172,7 +173,7 @@
   (or (empty? new-matches) (<= min-match-support (count (:support p)))))
 
 (defn decluster
-  [{:keys [re-clustering?]} support-filter new-matches patterns]
+  [{:keys [re-clustering? support-filter]} new-matches patterns]
   (when re-clustering?
     (->> patterns
          (remove #(support-filter new-matches %))
