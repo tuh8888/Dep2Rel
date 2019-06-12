@@ -223,24 +223,26 @@
     sentences))
 
 (defn make-model
-  [v factory]
+  [v factory word2vec-db]
   (log/info "Making model")
-  (let [model (as-> (k/simple-model v) model
-                    (assoc model :factory factory)
-                    (update model :structure-annotations (fn [structure-annotations]
-                                                           (log/info "Making structure annotations")
+  (word2vec/with-word2vec word2vec-db
+    (let [model (as-> (k/simple-model v) model
+                      (assoc model :factory factory
+                                   :wod2vec-db word2vec-db)
+                      (update model :structure-annotations (fn [structure-annotations]
+                                                             (log/info "Making structure annotations")
+                                                             (util/pmap-kv (fn [s]
+                                                                             (->> s
+                                                                                  (assign-embedding model)
+                                                                                  (assign-sent-id model)))
+                                                                           structure-annotations)))
+                      (update model :concept-annotations (fn [concept-annotations]
+                                                           (log/info "Making concept annotations")
                                                            (util/pmap-kv (fn [s]
-                                                                           (->> s
-                                                                                (assign-embedding model)
-                                                                                (assign-sent-id model)))
-                                                                         structure-annotations)))
-                    (update model :concept-annotations (fn [concept-annotations]
-                                                         (log/info "Making concept annotations")
-                                                         (util/pmap-kv (fn [s]
-                                                                         (assign-tok model s))
-                                                                       concept-annotations))))]
-    (log/info "Model" (util/map-kv count (dissoc model :factory)))
-    model))
+                                                                           (assign-tok model s))
+                                                                         concept-annotations))))]
+      (log/info "Model" (util/map-kv count (dissoc model :factory)))
+      model)))
 
 (defn make-sentences
   [model]
@@ -255,47 +257,48 @@
     sentences))
 
 (defn frac-seeds
-  [property sentences frac seed]
-  (let [pot (->> sentences
+  [property {:keys [sentences seed-frac rng]}]
+  (let [
+        pot (->> sentences
                  (filter #(= (:property %) property))
-                 (util/deterministic-shuffle seed))]
+                 (filter #(= (:property %) property))
+                 (util/deterministic-shuffle rng))]
     (-> pot
         (count)
-        (* frac)
+        (* seed-frac)
         (take pot)
         (set))))
 
 (defn split-train-test
   "Splits model into train and test sets"
-  [sentences model frac properties seed]
-  (let [seed-properties (disj properties NONE)
-        seeds (->> (group-by :property sentences)
-                   (filter #(seed-properties (first %)))
-                   (map (fn [[property sentences]] (frac-seeds property sentences frac seed)))
+  [{:keys [sentences properties word2vec-db]:as model}]
+  (let [seeds (->> (disj properties NONE)
+                   (map (fn [property] (frac-seeds property model)))
                    (apply clojure.set/union))
         NONE-num (->> seeds
                       (group-by :property)
                       (vals)
                       (map count)
                       (reduce max))
-        NONE-frac (->> sentences
-                       (filter #(= NONE (:property %)))
-                       (count)
-                       (/ NONE-num))
-        seeds (clojure.set/union seeds (frac-seeds NONE sentences NONE-frac seed))]
-
-
-    (-> model
-        (assoc :samples (remove seeds sentences)
-               :seeds (->> seeds
-                           (map #(assoc % :predicted (:property %)))
-                           (set)))
-        (update :samples (fn [samples] (->> samples
-                                            (map #(assign-embedding model %))
-                                            (filter :VEC)
-                                            (doall))))
-        (update :seeds (fn [seeds] (->> seeds
-                                        (map #(assign-embedding model %))
-                                        (filter :VEC)
-                                        (doall))))
-        (assoc :properties properties))))
+        seeds (->> sentences
+                   (filter #(= NONE (:property %)))
+                   (count)
+                   (/ NONE-num)
+                   (assoc model :seed-frac)
+                   (frac-seeds NONE)
+                   (clojure.set/union seeds))]
+    (word2vec/with-word2vec word2vec-db
+      (-> model
+          (assoc :samples (remove seeds sentences)
+                 :seeds (->> seeds
+                             (map #(assoc % :predicted (:property %)))
+                             (set)))
+          (update :samples (fn [samples] (->> samples
+                                              (map #(assign-embedding model %))
+                                              (filter :VEC)
+                                              (doall))))
+          (update :seeds (fn [seeds] (->> seeds
+                                          (map #(assign-embedding model %))
+                                          (filter :VEC)
+                                          (doall))))
+          (assoc :properties properties)))))

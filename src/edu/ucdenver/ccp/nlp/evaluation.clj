@@ -4,7 +4,6 @@
             [taoensso.timbre :as log]
             [incanter.core :as incanter]
             [incanter.stats :as inc-stats]
-            [com.climate.claypoole :as cp]
             [math :as math]
             [incanter.charts :as inc-charts]
             [incanter.svg :as inc-svg]
@@ -133,8 +132,12 @@
           (log/warn "No points found"))))))
 
 (defn pca-plot
-  [properties sentences-dataset cols {{:as save :keys [file]} :save :keys [view]}]
-  (let [numerical-data (incanter/sel sentences-dataset :cols (range 0 cols))
+  [{:keys [sentences-dataset properties sentences] :as model} {{:as save :keys [file]} :save :keys [view]}]
+  (let [cols (->> model
+                  (re-model/context-vector (first sentences))
+                  (count)
+                  (range 0))
+        numerical-data (incanter/sel sentences-dataset :cols cols)
         pca-components (pca-2 numerical-data)
         plot (inc-charts/scatter-plot [] []
                                       :legend true
@@ -149,8 +152,9 @@
     plot))
 
 (defn plot-metrics
-  [metrics-dataset properties {{:as save :keys [file]} :save :keys [view]}]
-  (let [plot (inc-charts/scatter-plot [] []
+  [{:keys [metrics properties]} {{:as save :keys [file]} :save :keys [view]}]
+  (let [metrics-dataset (incanter/to-dataset metrics)
+        plot (inc-charts/scatter-plot [] []
                                       :legend true
                                       :x-label "Precision"
                                       :y-label "Recall"
@@ -165,21 +169,19 @@
 
 (defn run-model
   "Run model with parameters"
-  [{:keys [seed-frac rng context-path-length-cap] :as params} {:keys [properties] :as model}
-   word2vec-db sentences results-dir split-model]
-
-  (let [split-model (or split-model
-                        (word2vec/with-word2vec word2vec-db
-                          (re-model/split-train-test sentences model
-                                                     seed-frac properties rng)))
-        results (let [params (merge params {:factory   (:factory split-model)
-                                            :vector-fn #(re-model/context-vector % split-model)})
-                      context-match-fn (partial re/concept-context-match params)
-                      pattern-update-fn (partial re/pattern-update params model)
-                      terminate? (partial re/terminate? params)
-                      support-filter (partial re/support-filter params)
-                      decluster (partial re/decluster params support-filter)]
-                  (-> split-model
+  [results-dir
+   {:keys [context-path-length-cap word2vec-db] :as model}]
+  (let [model (or (:samples model)
+                  (word2vec/with-word2vec word2vec-db
+                    (re-model/split-train-test model)))
+        results (let [model (merge model {:factory   (:factory model)
+                                          :vector-fn #(re-model/context-vector % model)})
+                      context-match-fn (partial re/concept-context-match model)
+                      pattern-update-fn (partial re/pattern-update model model)
+                      terminate? (partial re/terminate? model)
+                      support-filter (partial re/support-filter model)
+                      decluster (partial re/decluster model support-filter)]
+                  (-> model
                       (update :samples (fn [samples] (context-path-filter context-path-length-cap samples)))
                       (re/bootstrap {:terminate?        terminate?
                                      :context-match-fn  context-match-fn
@@ -188,40 +190,41 @@
                                      :decluster         decluster})
                       (doall)))
         metrics (calc-metrics results)
-        plot (plot-metrics (incanter/to-dataset metrics) properties
-                           {:save {:file (->> params
+        plot (plot-metrics results
+                           {:save {:file (->> model
+                                              (re/model-params)
                                               (format "metrics-%s.svg")
                                               (io/file results-dir))}})]
-    [results metrics plot]))
+    (assoc results :metrics metrics
+                   :plot plot)))
 
 (defn parameter-walk
-  [word2vec-db results-dir properties sentences model
-   {:keys [context-path-length-cap
-           context-thresh
-           cluster-thresh
-           min-match-support
-           seed-frac
-           rng]}]
+  [results-dir model {:keys [context-path-length-cap
+                             context-thresh
+                             cluster-thresh
+                             min-match-support
+                             seed-frac
+                             rng]}]
   ;; parallelize with
   #_(cp/upfor (dec (cp/ncpus)))
   (doall
     (for [seed-frac seed-frac
-          :let [split-model (re-model/split-train-test sentences model seed-frac properties rng)]
+          :let [split-model (re-model/split-train-test model)]
           context-path-length-cap context-path-length-cap
           context-thresh context-thresh
           cluster-thresh cluster-thresh
           min-match-support min-match-support]
-      (let [params {:context-thresh          context-thresh
-                    :cluster-thresh          cluster-thresh
-                    :min-match-support       min-match-support
-                    :max-iterations          100
-                    :max-matches             3000
-                    :re-clustering?          true
-                    :context-path-length-cap context-path-length-cap
-                    :seed-frac               seed-frac
-                    :rng                     rng}]
-        (log/warn params)
-        (run-model params model word2vec-db sentences results-dir split-model)))))
+      (let [model (merge split-model {:context-thresh          context-thresh
+                                      :cluster-thresh          cluster-thresh
+                                      :min-match-support       min-match-support
+                                      :max-iterations          100
+                                      :max-matches             3000
+                                      :re-clustering?          true
+                                      :context-path-length-cap context-path-length-cap
+                                      :seed-frac               seed-frac
+                                      :rng                     rng})]
+        (log/warn (re/model-params model))
+        (run-model results-dir split-model)))))
 
 (defn flatten-context-vector
   [s model]
@@ -229,10 +232,13 @@
     (apply assoc s (interleave (range (count v)) v))))
 
 (defn sentences->dataset
-  [model sentences]
-  (->> sentences
-       (filter #(re-model/context-vector % model))
-       (pmap #(flatten-context-vector % model))
-       (map #(dissoc % :entities :concepts :context))
-       (vec)
-       (incanter/to-dataset)))
+  [{:keys [properties sentences word2vec-db] :as model}]
+  (word2vec/with-word2vec word2vec-db
+    (assoc model
+      :sentences-dataset (->> sentences
+                              (filter #(contains? properties (:property %)))
+                              (filter #(re-model/context-vector % model))
+                              (pmap #(flatten-context-vector % model))
+                              (map #(dissoc % :entities :concepts :context))
+                              (vec)
+                              (incanter/to-dataset)))))

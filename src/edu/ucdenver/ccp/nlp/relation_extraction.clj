@@ -7,7 +7,22 @@
             [incanter.core :as incanter]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]))
 
+(def PARAM-KEYS [:context-thresh
+                 :cluster-thresh
+                 :context-path-length-cap
+                 :rng
+                 :seed-frac
+                 :min-match-support
+                 :re-clustering?
+                 :max-iterations          100
+                 :max-matches             3000])
 
+(defn model-params
+  [model]
+  (->> model
+       (juxt PARAM-KEYS)
+       (interpose PARAM-KEYS)
+       (into {})))
 
 (defn sent-pattern-concepts-match?
   [{:keys [concepts]} {:keys [support]}]
