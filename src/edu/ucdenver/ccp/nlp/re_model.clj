@@ -3,21 +3,19 @@
             [ubergraph.alg :as uber-alg]
             [ubergraph.core :as uber]
             [graph :as graph]
-            [math :as math]
             [linear-algebra :as linear-algebra]
             [util :as util]
             [word2vec :as word2vec]
             [taoensso.timbre :as log]
             [uncomplicate-context-alg :as context]
-            [edu.ucdenver.ccp.knowtator-clj :as k]
-            [incanter.core :as incanter])
+            [edu.ucdenver.ccp.knowtator-clj :as k])
   (:import (clojure.lang PersistentArrayMap)))
 
 (def NONE "NONE")
 
 (extend-type PersistentArrayMap
   context/ContextVector
-  (context-vector [self {:keys [factory]}]
+  (context-vector [self _]
     (or (:VEC self)
         (->> self
              :spans
@@ -242,10 +240,22 @@
 (defn split-train-test
   "Splits model into train and test sets"
   [sentences model frac properties seed]
-  (let [seeds (->> (group-by :property sentences)
-                   (filter #(properties (first %)))
+  (let [seed-properties (disj properties NONE)
+        seeds (->> (group-by :property sentences)
+                   (filter #(seed-properties (first %)))
                    (map (fn [[property sentences]] (frac-seeds property sentences frac seed)))
-                   (apply clojure.set/union))]
+                   (apply clojure.set/union))
+        NONE-num (->> seeds
+                      (group-by :property)
+                      (vals)
+                      (map count)
+                      (reduce max))
+        NONE-frac (->> sentences
+                       (filter #(= NONE (:property %)))
+                       (count)
+                       (/ NONE-num))
+        seeds (clojure.set/union seeds (frac-seeds NONE sentences NONE-frac seed))]
+
 
     (-> model
         (assoc :samples (remove seeds sentences)

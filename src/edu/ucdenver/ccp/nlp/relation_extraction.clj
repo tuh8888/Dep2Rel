@@ -5,7 +5,8 @@
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
             [uncomplicate-context-alg :as context]
-            [incanter.core :as incanter]))
+            [incanter.core :as incanter]
+            [edu.ucdenver.ccp.nlp.re-model :as re-model]))
 
 (defrecord Pattern [support VEC]
   context/ContextVector
@@ -23,7 +24,7 @@
        (some #(= concepts %))))
 
 (defn add-to-pattern
-  [{:keys [factory] :as model} p s]
+  [model p s]
   (->Pattern (conj (set (:support p)) s)
              (if p
                (linear-algebra/vec-sum (context/context-vector p model)
@@ -32,7 +33,7 @@
 
 
 (defn log-starting-values
-  [{:keys [properties seeds samples] :as model}]
+  [{:keys [properties seeds samples]}]
   (let [p1 (util/map-kv count (group-by :predicted seeds))]
     (->> properties
          (map (fn [property]
@@ -94,11 +95,11 @@
           patterns (vec patterns)
           sample-vectors (->> samples
                               (map vector-fn)
-                              (map #(linear-algebra/unit-vec params %))
+                              (pmap #(linear-algebra/unit-vec params %))
                               (vec))
           pattern-vectors (->> patterns
                                (map vector-fn)
-                               (map #(linear-algebra/unit-vec params %))
+                               (pmap #(linear-algebra/unit-vec params %))
                                (vec))]
       (->> sample-vectors
            (linear-algebra/find-best-row-matches params pattern-vectors)
@@ -134,16 +135,24 @@
    {:keys [iteration seeds new-matches matches patterns samples]}]
   (let [success-model (assoc model :matches matches
                                    :patterns patterns)]
-    (cond (<= max-iterations iteration) (do (log/info "Max iteration reached")
-                                            success-model)
-          (empty? new-matches) (do (log/info "No new matches")
-                                   success-model)
-          (empty? samples) (do (log/info "No more samples")
-                               success-model)
-          (<= max-matches (count matches)) (do (log/info "Too many matches")
-                                               model)
-          (empty? seeds) (do (log/info "No seeds")
-                             model))))
+    (cond (<= max-iterations iteration)
+          (do (log/info "Max iteration reached")
+              success-model)
+          (empty? new-matches)
+          (do (log/info "No new matches")
+              success-model)
+          (empty? samples)
+          (do (log/info "No more samples")
+              success-model)
+          (<= max-matches (count (remove #(= re-model/NONE (:property %)) matches)))
+          (do (log/info "Too many matches")
+              model)
+          (empty? seeds)
+          (do (log/info "No seeds")
+              model)
+          (empty? (remove #(= re-model/NONE %) (map :property samples)))
+          (do (log/info "Only negative examples left")
+              success-model))))
 
 (defn support-filter
   [{:keys [min-match-support]} new-matches p]
