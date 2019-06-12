@@ -75,17 +75,25 @@
        (set)))
 
 
+(defn actual-true
+  [property samples]
+  (->> samples
+       (filter #(= property (:property %)))
+       (sentences->entities)))
+
+(defn predicted-true
+  [property matches]
+  (->> matches
+       (filter #(= property (:predicted %)))
+       (sentences->entities)))
+
 (defn calc-metrics
   [{:keys [matches properties samples]}]
   (let [all (sentences->entities samples)
         metrics (map (fn [property]
-                       (let [actual-true (->> samples
-                                              (filter #(= property (:property %)))
-                                              (sentences->entities))
-                             predicted-true (->> matches
-                                                 (filter #(= property (:predicted %)))
-                                                 (sentences->entities))]
-                         #_(log/debug "ALL" (count all) "AT" (count actual-true) "PT" (count predicted-true))
+                       (let [actual-true (actual-true property samples)
+                             predicted-true (predicted-true property matches)]
+                         #_(log/info property "ALL" (count all) "AT" (count actual-true) "PT" (count predicted-true))
                          (-> (try
                                (math/calc-metrics {:actual-true    actual-true
                                                    :predicted-true predicted-true

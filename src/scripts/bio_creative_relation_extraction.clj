@@ -45,7 +45,7 @@
                        (make-model testing-knowtator-view)))
 
 ;;; CLUSTERING ;;;
-(def properties #{"INHIBITOR" #_re-model/NONE} #_#{"PART-OF"
+(def properties #_#{"INHIBITOR" #_re-model/NONE} #{"PART-OF"
                                                    "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
                                                    "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
                                                    "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
@@ -55,7 +55,7 @@
                                                    "COFACTOR"
                                                    "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
                                                    "NOT"
-                                                   re-model/NONE})
+                                                   #_re-model/NONE})
 
 ;;; PCA ;;;
 (comment
@@ -85,7 +85,7 @@
 (def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
                            :cluster-thresh    0.95
-                           :min-match-support 1
+                           :min-match-support 3
                            :max-iterations    100
                            :max-matches       3000
                            :re-clustering?    true
@@ -106,7 +106,7 @@
                    (doall))))
 
 (def metrics (incanter/to-dataset (evaluation/calc-metrics results)))
-(incanter/data-table metrics)
+(incanter/view (incanter/data-table metrics))
 (evaluation/plot-metrics metrics (incanter/sel metrics :cols :property)
                          {:view true
                           :save {:file (io/file results-dir "metrics.svg")}})

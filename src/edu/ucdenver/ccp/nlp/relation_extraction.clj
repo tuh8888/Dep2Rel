@@ -30,9 +30,9 @@
                                        (context/context-vector s model))
                (context/context-vector s model))))
 
-(defn bootstrap
-  [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn
-                                                        support-filter decluster]}]
+
+(defn log-starting-values
+  [{:keys [properties seeds samples] :as model}]
   (let [p1 (util/map-kv count (group-by :predicted seeds))]
     (->> properties
          (map (fn [property]
@@ -40,7 +40,27 @@
                  :Property property
                  :Samples  (count samples)}))
          (incanter/to-dataset)
-         (log/info)))
+         (log/info))))
+
+(defn log-current-values
+  [properties new-matches matches patterns]
+  (let [p1 (util/map-kv count (group-by :predicted patterns))
+        p2 (util/map-kv count (group-by :predicted new-matches))
+        p3 (util/map-kv count (group-by :predicted matches))]
+    (->> properties
+         (map (fn [property]
+                {:Patterns    (get p1 property)
+                 :New-Matches (get p2 property)
+                 :Matches     (get p3 property)
+                 :Property    property}))
+         (incanter/to-dataset)
+         (log/info))))
+
+
+(defn bootstrap
+  [{:keys [properties seeds samples] :as model} {:keys [terminate? context-match-fn pattern-update-fn
+                                                        support-filter decluster]}]
+  (log-starting-values model)
   (loop [iteration 0
          new-matches (set seeds)
          matches #{}
@@ -49,33 +69,21 @@
     (let [patterns (mapcat #(pattern-update-fn new-matches patterns %) properties)
           unclustered (decluster new-matches patterns)
           patterns (filter #(support-filter new-matches %) patterns)
-          last-new-matches new-matches
-          new-matches (-> samples
-                          (context-match-fn patterns)
-                          (lazy-cat unclustered))
+          new-matches (context-match-fn samples patterns)
           samples (remove :predicted new-matches)
           new-matches (filter :predicted new-matches)
-          matches (into matches new-matches)]
-      (let [p1 (util/map-kv count (group-by :predicted patterns))
-            p2 (util/map-kv count (group-by :predicted new-matches))
-            p3 (util/map-kv count (group-by :predicted matches))]
-        (->> properties
-             (map (fn [property]
-                    {:Patterns    (get p1 property)
-                     :New-Matches (get p2 property)
-                     :Matches     (get p3 property)
-                     :Property    property}))
-             (incanter/to-dataset)
-             (log/info)))
-      (if-let [results (terminate? model {:iteration        iteration
-                                          :seeds            seeds
-                                          :new-matches      new-matches
-                                          :matches          matches
-                                          :patterns         patterns
-                                          :samples          samples
-                                          :last-new-matches last-new-matches})]
+          matches (into matches new-matches)
+          new-matches-and-unclustered (lazy-cat unclustered new-matches)]
+      (if-let [results (terminate? model {:iteration   iteration
+                                          :seeds       seeds
+                                          :new-matches new-matches
+                                          :matches     matches
+                                          :patterns    patterns
+                                          :samples     samples})]
         results
-        (recur (inc iteration) new-matches matches patterns samples)))))
+        (do
+          (log-current-values properties new-matches matches patterns)
+          (recur (inc iteration) new-matches-and-unclustered matches patterns samples))))))
 
 
 (defn concept-context-match
@@ -92,10 +100,14 @@
                                (map vector-fn)
                                (map #(linear-algebra/unit-vec params %))
                                (vec))]
-      (->> pattern-vectors
-           (linear-algebra/find-best-row-matches params sample-vectors)
-           (map #(assoc % :sample (get samples (:i %))))
-           (map #(assoc % :match (get patterns (:j %))))
+      (->> sample-vectors
+           (linear-algebra/find-best-row-matches params pattern-vectors)
+           (map #(let [s (get samples (:i %))]
+                   (when-not s (log/warn (:i %) "sample not found"))
+                   (assoc % :sample s)))
+           (map #(let [p (get patterns (:j %))]
+                   (when-not p (log/warn (:j %) "pattern not found"))
+                   (assoc % :match p)))
            (map (fn [{:keys [score] :as best}] (if (< context-thresh score)
                                                  best
                                                  (dissoc best :match))))
@@ -119,13 +131,13 @@
 
 (defn terminate?
   [{:keys [max-iterations max-matches]} model
-   {:keys [iteration seeds new-matches matches patterns samples last-new-matches]}]
+   {:keys [iteration seeds new-matches matches patterns samples]}]
   (let [success-model (assoc model :matches matches
                                    :patterns patterns)]
     (cond (<= max-iterations iteration) (do (log/info "Max iteration reached")
                                             success-model)
-          (= last-new-matches new-matches) (do (log/info "No new matches")
-                                               success-model)
+          (empty? new-matches) (do (log/info "No new matches")
+                                   success-model)
           (empty? samples) (do (log/info "No more samples")
                                success-model)
           (<= max-matches (count matches)) (do (log/info "Too many matches")
