@@ -172,7 +172,7 @@
                                       :x-label "PC1"
                                       :y-label "PC2"
                                       :title "PCA")]
-    (when save (inc-svg/save-svg plot file))
+    (when save (inc-svg/save-svg plot (str file)))
     (when view (incanter/view plot))))
 
 (defn plot-metrics
@@ -184,5 +184,5 @@
                                       :x-label "Precision"
                                       :y-label "Recall"
                                       :title "Relation Extraction Results")]
-    (when save (inc-svg/save-svg plot file))
+    (when save (inc-svg/save-svg plot (str file)))
     (when view (incanter/view plot))))

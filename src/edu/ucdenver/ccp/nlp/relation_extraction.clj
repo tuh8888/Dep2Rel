@@ -6,8 +6,7 @@
             [taoensso.timbre :as log]
             [uncomplicate-context-alg :as context]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]
-            [incanter.core :as incanter])
-  (:import (org.tukaani.xz.lz Matches)))
+            [incanter.core :as incanter]))
 
 (defrecord Pattern [support]
   context/ContextVector

@@ -12,6 +12,8 @@
             [incanter.core :as incanter])
   (:import (clojure.lang PersistentArrayMap)))
 
+(def NONE "NONE")
+
 (extend-type PersistentArrayMap
   context/ContextVector
   (context-vector [self {:keys [factory]}]
@@ -24,7 +26,7 @@
              (map str/lower-case)
              (map word2vec/word-embedding)
              (doall)
-             (apply math/unit-vec-sum factory)))))
+             (apply linear-algebra/unit-vec-sum factory)))))
 
 (defrecord Sentence [concepts entities context]
   context/ContextVector
@@ -183,7 +185,8 @@
 (defn assign-property
   "Assign the associated property with the sentence"
   [model s]
-  (assoc s :property (sent-property model (vec (:entities s)))))
+  (assoc s :property (or (sent-property model (vec (:entities s)))
+                         NONE)))
 
 (defn sentences-with-ann
   [sentences id]

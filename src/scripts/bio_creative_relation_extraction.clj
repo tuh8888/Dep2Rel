@@ -45,22 +45,22 @@
                        (make-model testing-knowtator-view)))
 
 ;;; CLUSTERING ;;;
-(def properties #_#{"INHIBITOR"} #{"PART-OF"
-                                   "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
-                                   "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
-                                   "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
-                                   "AGONIST" "AGONIST-ACTIVATOR" "AGONIST-INHIBITOR"
-                                   "ANTAGONIST"
-                                   "MODULATOR" "MODULATOR‐ACTIVATOR" "MODULATOR‐INHIBITOR"
-                                   "COFACTOR"
-                                   "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
-                                   "NOT"})
+(def properties #{"INHIBITOR" re-model/NONE} #_#{"PART-OF"
+                                                 "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
+                                                 "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
+                                                 "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
+                                                 "AGONIST" "AGONIST-ACTIVATOR" "AGONIST-INHIBITOR"
+                                                 "ANTAGONIST"
+                                                 "MODULATOR" "MODULATOR‐ACTIVATOR" "MODULATOR‐INHIBITOR"
+                                                 "COFACTOR"
+                                                 "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
+                                                 "NOT"
+                                                 re-model/NONE})
 
 ;;; PCA ;;;
 (def sentences-dataset (word2vec/with-word2vec word2vec-db
                          (->> training-sentences
-                              (filter #(or (nil? (:property %))
-                                           (properties (:property %))))
+                              (filter #(contains? properties (:property %)))
                               (evaluation/sentences->dataset training-model))))
 
 (def groups (map keyword (incanter/sel sentences-dataset :cols :property)))
@@ -80,7 +80,7 @@
                               (re-model/split-train-test training-sentences training-model
                                                          seed-frac properties rng))))
 
-(def results (let [context-path-length-cap 2
+(def results (let [context-path-length-cap 100
                    params {:context-thresh    0.95
                            :cluster-thresh    0.95
                            :min-match-support 1
@@ -107,20 +107,20 @@
 (incanter/data-table metrics)
 (evaluation/plot-metrics metrics (incanter/sel groups :cols :property)
                          {:view true
-                          #_:save #_{:file (io/file results-dir "metrics.svg")}})
+                          :save {:file (io/file results-dir "metrics.svg")}})
 
 
 #_(apply evaluation/format-matches training-model results)
 
-#_(def results (evaluation/parameter-walk properties training-sentences training-model
-                                          {:context-path-length-cap [2 10 100] #_[2 3 5 10 20 35 100]
-                                           :context-thresh #_[0.95] [0.975 0.95 0.925 0.9 0.85]
-                                           :cluster-thresh #_[0.95] [0.95 0.9 0.75 0.5]
-                                           :min-match-support #_[0] [0 5 25]
-                                           :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
-                                           :terminate?              re/terminate?
-                                           :context-match-fn        re/concept-context-match
-                                           :pattern-update-fn       re/pattern-update
-                                           :support-filter          re/support-filter
-                                           :decluster               re/support-filter
-                                           :rng                     0.022894}))
+#_(def param-walk-results (evaluation/parameter-walk properties training-sentences training-model
+                                                     {:context-path-length-cap [100] #_[2 3 5 10 20 35 100]
+                                                      :context-thresh          [0.95] #_[0.975 0.95 0.925 0.9 0.85]
+                                                      :cluster-thresh          [0.95] #_[0.95 0.9 0.75 0.5]
+                                                      :min-match-support       [3] #_[0 5 25]
+                                                      :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
+                                                      :terminate?              re/terminate?
+                                                      :context-match-fn        re/concept-context-match
+                                                      :pattern-update-fn       re/pattern-update
+                                                      :support-filter          re/support-filter
+                                                      :decluster               re/support-filter
+                                                      :rng                     0.022894}))
