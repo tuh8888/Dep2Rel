@@ -191,8 +191,8 @@
 
 (defn run-model
   "Run model with parameters"
-  [results-dir
-   {:keys [word2vec-db] :as model}]
+  [{:keys [word2vec-db] :as model}
+   results-dir]
   (let [results (-> (or (:all-samples model)
                         (word2vec/with-word2vec word2vec-db
                           (re-model/split-train-test model)))
@@ -240,7 +240,7 @@
                                       :seed-frac               seed-frac
                                       :rng                     rng})]
         (log/warn (re/re-params model))
-        (run-model results-dir split-model)))))
+        (run-model split-model results-dir)))))
 
 (defn flatten-context-vector
   [s model]
@@ -249,7 +249,6 @@
 
 (defn sentences->dataset
   [{:keys [properties sentences word2vec-db] :as model}]
-  (log/warn word2vec-db)
   (word2vec/with-word2vec word2vec-db
     (assoc model
       :sentences-dataset (->> sentences

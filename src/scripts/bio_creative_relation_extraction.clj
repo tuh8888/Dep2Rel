@@ -27,29 +27,30 @@
 
 (def word-vector-dir (io/file home-dir "WordVectors"))
 (def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
-(word2vec/with-word2vec word2vec-db
-  (word2vec/word-embedding "low"))
 
 (def factory thal-native/native-double)
+(def properties #{"PART-OF"
+                  "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
+                  "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
+                  "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
+                  "AGONIST" "AGONIST-ACTIVATOR" "AGONIST-INHIBITOR"
+                  "ANTAGONIST"
+                  "MODULATOR" "MODULATOR‐ACTIVATOR" "MODULATOR‐INHIBITOR"
+                  "COFACTOR"
+                  "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
+                  "NOT"
+                  re-model/NONE}
+  #_#{"INHIBITOR" #_re-model/NONE})
 
 ;;; MODELS ;;;
 (def training-knowtator-view (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
 (def training-model (re-model/make-model training-knowtator-view factory word2vec-db))
 (def training-model-with-sents (assoc training-model :sentences (re-model/make-sentences training-model)))
-(def training-model-with-props (->> #{"PART-OF"
-                                      "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
-                                      "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
-                                      "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
-                                      "AGONIST" "AGONIST-ACTIVATOR" "AGONIST-INHIBITOR"
-                                      "ANTAGONIST"
-                                      "MODULATOR" "MODULATOR‐ACTIVATOR" "MODULATOR‐INHIBITOR"
-                                      "COFACTOR"
-                                      "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
-                                      "NOT"
-                                      re-model/NONE}
-                                    #_#{"INHIBITOR" #_re-model/NONE}
-                                    (assoc training-model-with-sents :properties)))
+(def training-model-with-props (->> properties
+                                    (assoc training-model-with-sents
+                                      :word2vec-db word2vec-db
+                                      :properties)))
 
 #_(def testing-knowtator-view (k/view testing-dir))
 #_(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
@@ -77,17 +78,15 @@
                               (re-model/split-train-test)))
 
 (comment
-  (def results (evaluation/run-model results-dir
-                                     (merge split-training-model
-                                            {:seed-frac               0.2
-                                             :rng                     0.022894
-                                             :context-path-length-cap 100
-                                             :context-thresh          0.95
-                                             :cluster-thresh          0.95
-                                             :min-match-support       0
-                                             :max-iterations          100
-                                             :max-matches             3000
-                                             :re-clustering?          true})))
+  (def results (-> prepared-model
+                   (assoc :context-path-length-cap 100
+                          :context-thresh 0.95
+                          :cluster-thresh 0.95
+                          :min-match-support 0
+                          :max-iterations 100
+                          :max-matches 3000
+                          :re-clustering? true)
+                   (evaluation/run-model results-dir)))
   (incanter/view (:plot results))
 
   #_(apply evaluation/format-matches training-model results)

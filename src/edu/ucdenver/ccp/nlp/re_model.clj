@@ -252,20 +252,23 @@
                                                            (util/pmap-kv (fn [s]
                                                                            (assign-tok model s))
                                                                          concept-annotations))))]
-      ;(log/info "Model" (util/map-kv count (model-params model)))
+      (log/info "Model" (util/map-kv count (model-params model)))
       model)))
 
 (defn make-sentences
-  [model]
+  [{:keys [word2vec-db] :as model}]
   (log/info "Making sentences")
-  (let [sentences (->> model
-                       (concept-annotations->sentences)
-                       (pmap #(assign-property model %)))]
-    (log/info "Num sentences:" (count sentences))
-    (log/info "Num sentences with property:" (->> sentences
-                                                  (group-by :property)
-                                                  (util/map-kv count)))
-    sentences))
+  (word2vec/with-word2vec word2vec-db
+    (let [sentences (->> model
+                         (concept-annotations->sentences)
+                         (pmap #(assign-embedding model %))
+                         (pmap #(assign-property model %))
+                         (doall))]
+      (log/info "Num sentences:" (count sentences))
+      (log/info "Num sentences with property:" (->> sentences
+                                                    (group-by :property)
+                                                    (util/map-kv count)))
+      sentences)))
 
 (defn frac-seeds
   [property {:keys [sentences seed-frac rng]}]
@@ -282,7 +285,7 @@
 
 (defn split-train-test
   "Splits model into train and test sets"
-  [{:keys [sentences properties word2vec-db]:as model}]
+  [{:keys [sentences properties word2vec-db] :as model}]
   (let [seeds (->> (disj properties NONE)
                    (map (fn [property] (frac-seeds property model)))
                    (apply clojure.set/union))
@@ -311,5 +314,4 @@
           (update :seeds (fn [seeds] (->> seeds
                                           (map #(assign-embedding model %))
                                           (filter :VEC)
-                                          (doall))))
-          (assoc :properties properties)))))
+                                          (doall))))))))
