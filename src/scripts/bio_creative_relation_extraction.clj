@@ -46,9 +46,9 @@
 (def training-knowtator-view (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
 (def training-model (re-model/make-model training-knowtator-view factory word2vec-db))
-(def training-model-with-sents (assoc training-model :sentences (re-model/make-sentences training-model)))
+(def training-model-with-sentences (assoc training-model :sentences (re-model/make-sentences training-model)))
 (def training-model-with-props (->> properties
-                                    (assoc training-model-with-sents
+                                    (assoc training-model-with-sentences
                                       :word2vec-db word2vec-db
                                       :properties)))
 
