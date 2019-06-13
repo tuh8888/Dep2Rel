@@ -7,8 +7,7 @@
             [edu.ucdenver.ccp.nlp.readers :as rdr]
             [uncomplicate.neanderthal.native :as thal-native]
             [incanter.core :as incanter]
-            [incanter.charts :as inc-charts]
-            [incanter.svg :as inc-svg]))
+            [incanter.io :as inc-io]))
 
 (log/set-level! :debug)
 
@@ -66,16 +65,9 @@
 ;;; PCA ;;;
 
 (def model-with-sentences-dataset (evaluation/sentences->dataset training-model-with-props))
-
-(def pca-plots (evaluation/pca-plots model-with-sentences-dataset {:save {:file (io/file results-dir "%s")}}))
-
-(let [plot (first pca-plots)
-      p "SUBSTRATE"
-      title (format "PCA for NONE and %s" p)
-      file-name (format (str (io/file results-dir "%s" ) ".svg") title)]
-  (inc-charts/set-title plot title)
-  (inc-svg/save-svg plot file-name))
-
+#_(incanter/save (:sentences-dataset model-with-sentences-dataset) (str (io/file training-dir "sentences-dataset.csv")))
+(def pca-plots (evaluation/pca-plots model-with-sentences-dataset
+                                     {:save {:file (io/file results-dir "%s")}}))
 
 ;;; RELATION EXTRACTION ;;;
 
