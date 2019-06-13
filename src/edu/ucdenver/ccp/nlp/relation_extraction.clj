@@ -68,7 +68,7 @@
     (lazy-cat nones others)))
 
 (defn bootstrap
-  [{:keys [properties seeds all-samples
+  [{:keys [seeds all-samples
            terminate? context-match-fn pattern-update-fn
            context-path-filter-fn
            support-filter decluster]
