@@ -95,10 +95,10 @@
        (sentences->entities)))
 
 (defn calc-metrics
-  [{:keys [matches properties samples]}]
-  (let [all (sentences->entities samples)
+  [{:keys [matches properties all-samples]}]
+  (let [all (sentences->entities all-samples)
         metrics (map (fn [property]
-                       (let [actual-true (actual-true property samples)
+                       (let [actual-true (actual-true property all-samples)
                              predicted-true (predicted-true property matches)]
                          #_(log/info property "ALL" (count all) "AT" (count actual-true) "PT" (count predicted-true))
                          (-> (try
