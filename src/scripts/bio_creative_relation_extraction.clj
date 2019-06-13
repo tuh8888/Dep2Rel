@@ -47,19 +47,13 @@
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
 (def training-model (re-model/make-model training-knowtator-view factory word2vec-db))
 (def training-model-with-sentences (assoc training-model :sentences (re-model/make-sentences training-model)))
-(def training-model-with-props (->> properties
-                                    (assoc training-model-with-sentences
-                                      :word2vec-db word2vec-db
-                                      :properties)))
+(def training-model-with-props (assoc training-model-with-sentences :properties properties))
 
 (def testing-knowtator-view (k/view testing-dir))
 (rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
 (def testing-model (re-model/make-model training-knowtator-view factory word2vec-db))
-(def testing-model-with-sents (assoc testing-model :sentences (re-model/make-sentences testing-model)))
-(def testing-model-with-props (->> properties
-                                   (assoc testing-model-with-sents
-                                     :word2vec-db word2vec-db
-                                     :properties)))
+(def testing-model-with-sentences (assoc testing-model :sentences (re-model/make-sentences testing-model)))
+(def testing-model-with-props (assoc testing-model-with-sentences :properties properties))
 ;; This allows me to reset sentences if they get reloaded
 #_(def training-model-with-props (update training-model-with-props
                                          :sentences (fn [sentences]
