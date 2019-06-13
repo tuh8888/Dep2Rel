@@ -40,16 +40,15 @@
 (extend-type PersistentArrayMap
   ContextVector
   (context-vector [self _]
-    (or (:VEC self)
-        (->> self
-             :spans
-             vals
-             (keep :text)
-             (mapcat #(str/split % #" |-"))
-             (map str/lower-case)
-             (map word-embedding-catch)
-             (doall)
-             (apply linear-algebra/vec-sum)))))
+    (->> self
+         :spans
+         vals
+         (keep :text)
+         (mapcat #(str/split % #" |-"))
+         (map str/lower-case)
+         (map word-embedding-catch)
+         (doall)
+         (apply linear-algebra/vec-sum))))
 
 (defrecord Sentence [concepts entities context]
   ContextVector
@@ -95,8 +94,7 @@
        (apply str)))
 
 (defn ann-tok
-  [model {:keys [doc spans id] :as ann}]
-  (log/debug "Ann:" id)
+  [model {:keys [doc spans] :as ann}]
   (let [{concept-start :start concept-end :end} (first (vals spans))
         tok-id (->> model
                     :structure-annotations
@@ -247,9 +245,7 @@
                       (update model :structure-annotations (fn [structure-annotations]
                                                              (log/info "Making structure annotations")
                                                              (util/pmap-kv (fn [s]
-                                                                             (->> s
-                                                                                  (assign-embedding model)
-                                                                                  (assign-sent-id model)))
+                                                                             (assign-sent-id model s))
                                                                            structure-annotations)))
                       (update model :concept-annotations (fn [concept-annotations]
                                                            (log/info "Making concept annotations")
