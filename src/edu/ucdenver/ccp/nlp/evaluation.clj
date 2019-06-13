@@ -178,7 +178,7 @@
 
 (defn plot-metrics
   [{:keys [metrics] :as model} {:keys [view] :as params}]
-  (let [metrics-dataset (incanter/to-dataset metrics)
+  (let [metrics-dataset (incanter/to-dataset (or metrics (calc-metrics model)))
         x (vec (incanter/sel metrics-dataset :cols :precision))
         y (vec (incanter/sel metrics-dataset :cols :recall))
         plot (property-plot model metrics-dataset x y (assoc params :x-label "Precision"
@@ -205,9 +205,10 @@
                            :context-path-filter-fn re/context-path-filter)
 
                     (re/bootstrap)
-                    (doall))]
-    (assoc results :metrics (calc-metrics results)
-                   :plot (plot-metrics results
+                    (doall))
+        results (assoc results :metrics (calc-metrics results)
+                               :plot)]
+    (assoc results :plot (plot-metrics results
                                        {:save {:file (->> results
                                                           (re/re-params)
                                                           (format "metrics-%s.svg")
