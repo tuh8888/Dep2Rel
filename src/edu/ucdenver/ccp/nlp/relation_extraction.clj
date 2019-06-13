@@ -197,10 +197,10 @@
 
 
 (defn decluster
-  [{:keys [re-clustering? support-filter new-matches patterns]}]
+  [{:keys [re-clustering? support-filter patterns] :as model}]
   (when re-clustering?
     (->> patterns
-         (remove #(support-filter new-matches %))
+         (remove #(support-filter model %))
          (mapcat :support))))
 
 (defn context-path-filter
