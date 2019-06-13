@@ -50,8 +50,8 @@
                                    (util/map-kv count))))]
     (->> properties
          (map (fn [property]
-                (util/map-kv #(get % property)
-                             p1)))
+                (assoc (util/map-kv #(get % property) p1)
+                  :property property)))
          (incanter/to-dataset)
          (log/info))))
 
