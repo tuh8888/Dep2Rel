@@ -118,8 +118,8 @@
                                (map vector-fn)
                                (pmap #(linear-algebra/unit-vec params %))
                                (vec))]
-      (->> sample-vectors
-           (linear-algebra/find-best-row-matches params pattern-vectors)
+      (->> pattern-vectors
+           (linear-algebra/find-best-row-matches params sample-vectors)
            (map #(let [s (get samples (:i %))]
                    (when-not s (log/warn (:i %) "sample not found"))
                    (assoc % :sample s)))
