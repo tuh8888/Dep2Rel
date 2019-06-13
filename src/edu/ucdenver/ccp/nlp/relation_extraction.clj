@@ -41,7 +41,7 @@
          (log/info))))
 
 (defn log-current-values
-  [{:keys [properties] :as model}]
+  [{:keys [properties samples] :as model}]
   (let [p1 (->> [:patterns :new-matches :matches :patterns]
                 (map #(find model %))
                 (into {})
@@ -51,7 +51,8 @@
     (->> properties
          (map (fn [property]
                 (assoc (util/map-kv #(get % property) p1)
-                  :property property)))
+                  :property property
+                  :samples (count samples))))
          (incanter/to-dataset)
          (log/info))))
 
@@ -85,9 +86,10 @@
           unclustered (decluster model)
           model (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))
           model (assoc model :new-matches (context-match-fn model))
-          model (assoc model :samples (->> model
-                                           :new-matches
-                                           (remove :predicted)))
+          model (update model :samples (fn [samples] (let [new-matches (:new-matches model)]
+                                                       (if (seq new-matches)
+                                                         (remove :predicted new-matches)
+                                                         samples))))
           model (update model :new-matches (fn [new-matches] (filter :predicted new-matches)))
           model (update model :matches (fn [matches] (->> model
                                                           :new-matches
