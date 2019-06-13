@@ -63,7 +63,8 @@
                                (group-by :predicted)
                                (util/map-kv count)
                                (vals)
-                               (reduce max))
+                               (reduce max 0))
+
         nones (take num-nones-to-keep nones)]
     (lazy-cat nones others)))
 
