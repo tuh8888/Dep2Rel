@@ -146,6 +146,7 @@
 (defn pattern-update
   [{:keys [properties new-matches] :as model} patterns]
   (mapcat (fn [property]
+            (log/info "Clustering" property)
             (let [samples (filter #(= (:predicted %) property) new-matches)
                   patterns (->> patterns
                                 (filter #(= (:predicted %) property))
