@@ -72,11 +72,11 @@
 ;;; RELATION EXTRACTION ;;;
 
 (def prepared-model (-> training-model-with-props
-                        (assoc :seed-frac 0.75
+                        (assoc :seed-frac 0.2
                                :rng 0.022894)
                         (re-model/split-train-test)))
 
-(def prepared-model (re-model/test-train testing-model-with-props prepared-model))
+#_(def prepared-model (re-model/test-train testing-model-with-props prepared-model))
 
 (comment
   (def results (-> prepared-model

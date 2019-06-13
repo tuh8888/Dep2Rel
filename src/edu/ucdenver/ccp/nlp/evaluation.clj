@@ -190,11 +190,11 @@
 
 (defn run-model
   "Run model with parameters"
-  [{:keys [word2vec-db] :as model}
-   results-dir]
-  (let [results (-> (or (:all-samples model)
-                        (word2vec/with-word2vec word2vec-db
-                          (re-model/split-train-test model)))
+  [model results-dir]
+  (let [model (if (contains? model :all-samples)
+                model
+                (re-model/split-train-test model))
+        results (-> model
                     (assoc :vector-fn #(re-model/context-vector % model)
                            :context-match-fn re/concept-context-match
                            :cluster-merge-fn re-model/add-to-pattern
