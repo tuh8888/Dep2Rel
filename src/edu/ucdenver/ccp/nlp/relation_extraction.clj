@@ -146,14 +146,17 @@
 (defn pattern-update
   [{:keys [properties new-matches] :as model} patterns]
   (mapcat (fn [property]
-            (let [samples (->> new-matches
-                               (filter #(= (:predicted %) property))
-                               (set))]
-              (->> patterns
-                   (filter #(= (:predicted %) property))
-                   (set)
-                   (cluster-tools/single-pass-cluster model samples)
-                   (map #(assoc % :predicted property)))))
+            (let [samples (filter #(= (:predicted %) property) new-matches)
+                  patterns (->> patterns
+                                (filter #(= (:predicted %) property))
+                                (set))]
+              (->> samples
+                   (partition-all 1000)
+                   (map set)
+                   (mapcat (fn [sample-part]
+                             (->> patterns
+                                  (cluster-tools/single-pass-cluster model sample-part)
+                                  (map #(assoc % :predicted property))))))))
           properties))
 
 (defn terminate?
