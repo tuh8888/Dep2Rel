@@ -7,7 +7,12 @@
             [edu.ucdenver.ccp.nlp.readers :as rdr]
             [uncomplicate.neanderthal.native :as thal-native]
             [incanter.core :as incanter]
-            [incanter.io :as inc-io]))
+            [incanter.io :as inc-io]
+            [incanter.charts :as inc-charts]
+            [edu.ucdenver.ccp.nlp.relation-extraction :as re]
+            [clojure.string :as str]
+            [ubergraph.alg :as uber-alg]
+            [incanter.svg :as inc-svg]))
 
 (log/set-level! :debug)
 
@@ -44,12 +49,15 @@
   #_#{"INHIBITOR" #_re-model/NONE})
 
 ;;; MODELS ;;;
+
 (def training-knowtator-view (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
 (def training-model (re-model/make-model training-knowtator-view factory word2vec-db))
 (def training-model-with-sentences (assoc training-model :sentences (re-model/make-sentences training-model)))
-(def training-model-with-props (assoc training-model-with-sentences :properties properties))
 
+(evaluation/plot-context-lengths training-model-with-sentences results-dir)
+
+(def training-model-with-props (assoc training-model-with-sentences :properties properties))
 (def testing-knowtator-view (k/view testing-dir))
 (rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
 (def testing-model (re-model/make-model training-knowtator-view factory word2vec-db))
@@ -78,25 +86,27 @@
 
 #_(def prepared-model (re-model/test-train testing-model-with-props prepared-model))
 
-(comment
-  (def results (-> prepared-model
-                   (assoc :context-path-length-cap 100
-                          :context-thresh 0.95
-                          :cluster-thresh 0.95
-                          :min-match-support 0
-                          :max-iterations 100
-                          :max-matches 3000
-                          :re-clustering? true)
-                   (evaluation/run-model results-dir)))
-  (incanter/view (:plot results))
 
-  #_(apply evaluation/format-matches training-model results)
+(def results (-> prepared-model
+                 (assoc :context-path-length-cap 100
+                        :context-thresh 0.95
+                        :cluster-thresh 0.95
+                        :min-match-support 0
+                        :max-iterations 100
+                        :max-matches 3000
+                        :re-clustering? true)
+                 (evaluation/run-model results-dir)))
+(incanter/view (:plot results))
 
-  (def param-walk-results (evaluation/parameter-walk results-dir
-                                                     training-model
-                                                     {:context-path-length-cap [100] #_[2 3 5 10 20 35 100]
-                                                      :context-thresh          [0.95] #_[0.975 0.95 0.925 0.9 0.85]
-                                                      :cluster-thresh          [0.95] #_[0.95 0.9 0.75 0.5]
-                                                      :min-match-support       [0] #_[0 5 25]
-                                                      :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
-                                                      :rng                     0.022894})))
+(count (:samples results))
+
+#_(apply evaluation/format-matches training-model results)
+
+(def param-walk-results (evaluation/parameter-walk results-dir
+                                                   training-model
+                                                   {:context-path-length-cap [100] #_[2 3 5 10 20 35 100]
+                                                    :context-thresh          [0.95] #_[0.975 0.95 0.925 0.9 0.85]
+                                                    :cluster-thresh          [0.95] #_[0.95 0.9 0.75 0.5]
+                                                    :min-match-support       [0] #_[0 5 25]
+                                                    :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
+                                                    :rng                     0.022894}))
