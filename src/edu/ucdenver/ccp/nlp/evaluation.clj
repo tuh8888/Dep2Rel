@@ -129,7 +129,7 @@
                              :legend true)))
 
 (defn add-property-series
-  [plot p groups x y]
+  [plot p groups x y {{:as save :keys [file]} :save :keys [title]}]
   (let [p2-xy (->> groups
                    (filter #(= (second %) p))
                    (keep #(vector (get x (first %)) (get y (first %))))
@@ -137,32 +137,32 @@
     (if (seq p2-xy)
       (let [p2-x (vec (map first p2-xy))
             p2-y (vec (map second p2-xy))]
-
         (inc-charts/add-points plot p2-x p2-y :series-label p)
+        (when save (inc-svg/save-svg plot (format (str file ".svg") title)))
         plot)
       (log/warn "No points found for" p))))
 
 (defn property-plot
-  ([{:keys [properties]} dataset x y params]
+  ([{:keys [properties]} dataset x y {{:as save :keys [file]} :save :as params}]
    (let [groups (map-indexed vector (incanter/sel dataset :cols :property))]
      (let [property (first properties)
            plot (make-property-plot params property groups x y)]
-       (doseq [property (rest properties)] (add-property-series plot property groups x y))
+       (doseq [property (rest properties)] (add-property-series plot property groups x y (assoc params :save false)))
+       (when save (inc-svg/save-svg plot (str file)))
        plot)))
   ([{:keys [properties]} dataset p1 x y params]
    (let [properties (disj properties p1)
          groups (map-indexed vector (incanter/sel dataset :cols :property))]
      (->> properties
           (keep (fn [p2]
-                  (-> params
-                      (update :title (fn [title] (format "%s for %s ans %s" title p1 p2)))
-                      (make-property-plot p1 groups x y)
-                      (add-property-series p2 groups x y))))
-
+                  (let [params (update params :title (fn [title] (format "%s for %s and %s" title p1 p2)))]
+                    (-> params
+                        (make-property-plot p1 groups x y)
+                        (add-property-series p2 groups x y params)))))
           (doall)))))
 
 (defn pca-plots
-  [{:keys [sentences-dataset sentences] :as model} {{:as save :keys [file]} :save}]
+  [{:keys [sentences-dataset sentences] :as model} params]
   (let [cols (->> model
                   (re-model/context-vector (first sentences))
                   (count)
@@ -171,21 +171,19 @@
         pca-components (pca-2 numerical-data)
         x (vec (get pca-components 0))
         y (vec (get pca-components 1))
-        plots (property-plot model sentences-dataset re-model/NONE x y {:x-label       "PC1"
-                                                                        :y-label "PC2"
-                                                                        :title   "PCA"})]
-    (when save (doseq [plot plots] (inc-svg/save-svg plot (str file))))
+        plots (property-plot model sentences-dataset re-model/NONE x y (assoc params :x-label "PC1"
+                                                                                     :y-label "PC2"
+                                                                                     :title "PCA"))]
     plots))
 
 (defn plot-metrics
-  [{:keys [metrics] :as model} {{:as save :keys [file]} :save :keys [view]}]
+  [{:keys [metrics] :as model} {:keys [view] :as params}]
   (let [metrics-dataset (incanter/to-dataset metrics)
         x (vec (incanter/sel metrics-dataset :cols :precision))
         y (vec (incanter/sel metrics-dataset :cols :recall))
-        plot (property-plot model metrics-dataset x y {:x-label       "Precision"
-                                                       :y-label "Recall"
-                                                       :title   "Relation Extraction Results"})]
-    (when save (inc-svg/save-svg plot (str file)))
+        plot (property-plot model metrics-dataset x y (assoc params :x-label "Precision"
+                                                                    :y-label "Recall"
+                                                                    :title "Relation Extraction Results"))]
     (when view (incanter/view plot))
     plot))
 

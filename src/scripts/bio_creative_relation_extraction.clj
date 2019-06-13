@@ -65,7 +65,7 @@
 
 (def model-with-sentences-dataset (evaluation/sentences->dataset training-model-with-props))
 
-(def pca-plots (evaluation/pca-plots model-with-sentences-dataset {:save {:file (io/file results-dir "pca-all.svg")}}))
+(def pca-plots (evaluation/pca-plots model-with-sentences-dataset {:save {:file (io/file results-dir "%s")}}))
 
 ;;; RELATION EXTRACTION ;;;
 
