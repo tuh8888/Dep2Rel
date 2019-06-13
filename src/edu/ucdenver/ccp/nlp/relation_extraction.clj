@@ -87,7 +87,7 @@
                              :iteration iteration)
           model (update model :patterns (fn [patterns] (pattern-update-fn model patterns)))
           unclustered (decluster model)
-          model (update model :patterns (fn [patterns] (support-filter model patterns)))
+          model (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))
           model (assoc model :new-matches (context-match-fn model))
           model (assoc model :samples (->> model
                                            :new-matches
@@ -188,13 +188,12 @@
               success-model))))
 
 (defn support-filter
-  [{:keys [min-match-support new-matches]} patterns]
-  (filter (fn [p]
-            (or (empty? new-matches)
-                (->> p :support
-                     (count)
-                     (<= min-match-support))))
-          patterns))
+  [{:keys [min-match-support new-matches]} pattern]
+  (or (empty? new-matches)
+      (->> pattern
+           :support
+           (count)
+           (<= min-match-support))))
 
 
 (defn decluster
