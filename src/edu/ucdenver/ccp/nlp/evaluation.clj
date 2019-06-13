@@ -63,10 +63,6 @@
            (cluster-tools/single-pass-cluster sentences #{}
              {:cluster-merge-fn re-model/add-to-pattern})))))
 
-(defn context-path-filter
-  [{:keys [context-path-length-cap]} coll]
-  (filter #(<= (count (:context %)) context-path-length-cap) coll))
-
 (defn sentences->entities
   [sentences]
   (->> sentences
@@ -170,8 +166,8 @@
 (defn run-model
   "Run model with parameters"
   [results-dir
-   {:keys [context-path-length-cap word2vec-db] :as model}]
-  (let [results (-> (or (:samples model)
+   {:keys [word2vec-db] :as model}]
+  (let [results (-> (or (:all-samples model)
                         (word2vec/with-word2vec word2vec-db
                           (re-model/split-train-test model)))
                     (assoc :vector-fn #(re-model/context-vector % model)
@@ -180,14 +176,15 @@
                            :pattern-update-fn re/pattern-update
                            :support-filter re/support-filter
                            :terminate? re/terminate?
-                           :decluster re/decluster)
-                    (update :samples (fn [samples] (context-path-filter model samples)))
+                           :decluster re/decluster
+                           :context-path-filter-fn re/context-path-filter)
+
                     (re/bootstrap)
                     (doall))]
     (assoc results :metrics (calc-metrics results)
                    :plot (plot-metrics results
                                        {:save {:file (->> results
-                                                          (re/model-params)
+                                                          (re/re-params)
                                                           (format "metrics-%s.svg")
                                                           (io/file results-dir))}}))))
 
@@ -216,7 +213,7 @@
                                       :context-path-length-cap context-path-length-cap
                                       :seed-frac               seed-frac
                                       :rng                     rng})]
-        (log/warn (re/model-params model))
+        (log/warn (re/re-params model))
         (run-model results-dir split-model)))))
 
 (defn flatten-context-vector
@@ -226,6 +223,7 @@
 
 (defn sentences->dataset
   [{:keys [properties sentences word2vec-db] :as model}]
+  (log/warn word2vec-db)
   (word2vec/with-word2vec word2vec-db
     (assoc model
       :sentences-dataset (->> sentences

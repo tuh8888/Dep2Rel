@@ -14,14 +14,13 @@
                  :seed-frac
                  :min-match-support
                  :re-clustering?
-                 :max-iterations          100
-                 :max-matches             3000])
+                 :max-iterations 100
+                 :max-matches 3000])
 
-(defn model-params
+(defn re-params
   [model]
-  (->> model
-       (juxt PARAM-KEYS)
-       (interpose PARAM-KEYS)
+  (->> PARAM-KEYS
+       (map #(find model %))
        (into {})))
 
 (defn sent-pattern-concepts-match?
@@ -30,30 +29,29 @@
        (map :concepts)
        (some #(= concepts %))))
 
-
-
 (defn log-starting-values
-  [{:keys [properties seeds samples]}]
+  [{:keys [properties seeds all-samples]}]
   (let [p1 (util/map-kv count (group-by :predicted seeds))]
     (->> properties
          (map (fn [property]
                 {:Seeds    (get p1 property)
                  :Property property
-                 :Samples  (count samples)}))
+                 :Samples  (count all-samples)}))
          (incanter/to-dataset)
          (log/info))))
 
 (defn log-current-values
-  [properties new-matches matches patterns]
-  (let [p1 (util/map-kv count (group-by :predicted patterns))
-        p2 (util/map-kv count (group-by :predicted new-matches))
-        p3 (util/map-kv count (group-by :predicted matches))]
+  [{:keys [properties] :as model}]
+  (let [p1 (->> [:patterns :new-matches :matches :patterns]
+                (map #(find model %))
+                (into {})
+                (util/map-kv #(->> %
+                                   (group-by :predicted)
+                                   (util/map-kv count))))]
     (->> properties
          (map (fn [property]
-                {:Patterns    (get p1 property)
-                 :New-Matches (get p2 property)
-                 :Matches     (get p3 property)
-                 :Property    property}))
+                (util/map-kv #(get % property)
+                             p1)))
          (incanter/to-dataset)
          (log/info))))
 
@@ -70,40 +68,44 @@
     (lazy-cat nones others)))
 
 (defn bootstrap
-  [{:keys [properties seeds samples
+  [{:keys [properties seeds all-samples
            terminate? context-match-fn pattern-update-fn
+           context-path-filter-fn
            support-filter decluster]
-    :as model}]
+
+    :as   model}]
   (log-starting-values model)
   (loop [iteration 0
          new-matches (set seeds)
          matches #{}
          patterns #{}
-         samples samples]
-    (let [patterns (mapcat #(pattern-update-fn model new-matches patterns %) properties)
-          unclustered (decluster model new-matches patterns)
-          patterns (filter #(support-filter model new-matches %) patterns)
-          new-matches (context-match-fn model samples patterns)
-          samples (remove :predicted new-matches)
-          new-matches (filter :predicted new-matches)
-          matches (into matches new-matches)
-          new-matches-and-unclustered (->> new-matches
-                                           (cap-nones)
-                                           (lazy-cat unclustered))]
-      (if-let [results (terminate? model {:iteration   iteration
-                                          :seeds       seeds
-                                          :new-matches new-matches
-                                          :matches     matches
-                                          :patterns    patterns
-                                          :samples     samples})]
+         samples (context-path-filter-fn model all-samples)]
+    (let [model (assoc model :patterns patterns
+                             :matches matches
+                             :new-matches new-matches
+                             :samples samples
+                             :iteration iteration)
+          model (update model :patterns (fn [patterns] (pattern-update-fn model patterns)))
+          unclustered (decluster model)
+          model (update model :patterns (fn [patterns] (support-filter model patterns)))
+          model (assoc model :new-matches (context-match-fn model))
+          model (assoc model :samples (->> model
+                                           :new-matches
+                                           (remove :predicted)))
+          model (update model :new-matches (fn [new-matches] (filter :predicted new-matches)))
+          model (update model :matches (fn [matches] (->> model :new-matches
+                                                          (into matches))))]
+      (if-let [results (terminate? model)]
         results
         (do
-          (log-current-values properties new-matches matches patterns)
-          (recur (inc iteration) new-matches-and-unclustered matches patterns samples))))))
+          (log-current-values model)
+          (recur (inc iteration) (->> new-matches
+                                      (cap-nones)
+                                      (lazy-cat unclustered)) matches patterns samples))))))
 
 
 (defn concept-context-match
-  [{:keys [context-thresh vector-fn] :as params} samples patterns]
+  [{:keys [context-thresh vector-fn samples patterns] :as params}]
   #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
     (let [samples (vec samples)
@@ -134,19 +136,22 @@
                   (assoc sample :predicted (:predicted match))))))))
 
 (defn pattern-update
-  [model new-matches patterns property]
-  (let [samples (->> new-matches
-                     (filter #(= (:predicted %) property))
-                     (set))]
-    (->> patterns
-         (filter #(= (:predicted %) property))
-         (set)
-         (cluster-tools/single-pass-cluster model samples)
-         (map #(assoc % :predicted property)))))
+  [{:keys [properties new-matches] :as model} patterns]
+  (mapcat (fn [property]
+            (let [samples (->> new-matches
+                               (filter #(= (:predicted %) property))
+                               (set))]
+              (->> patterns
+                   (filter #(= (:predicted %) property))
+                   (set)
+                   (cluster-tools/single-pass-cluster model samples)
+                   (map #(assoc % :predicted property)))))
+          properties))
 
 (defn terminate?
-  [{:keys [max-iterations max-matches] :as model}
-   {:keys [iteration seeds new-matches matches patterns samples]}]
+  [{:keys [max-iterations max-matches
+           iteration seeds
+           new-matches matches patterns samples] :as model}]
   (let [success-model (assoc model :matches matches
                                    :patterns patterns)]
     (cond (<= max-iterations iteration)
@@ -169,13 +174,23 @@
               success-model))))
 
 (defn support-filter
-  [{:keys [min-match-support]} new-matches p]
-  (or (empty? new-matches) (<= min-match-support (count (:support p)))))
+  [{:keys [min-match-support new-matches]} patterns]
+  (filter (fn [p]
+            (or (empty? new-matches)
+                (->> p :support
+                     (count)
+                     (<= min-match-support)))
+            patterns)))
+
 
 (defn decluster
-  [{:keys [re-clustering? support-filter]} new-matches patterns]
+  [{:keys [re-clustering? support-filter new-matches patterns]}]
   (when re-clustering?
     (->> patterns
          (remove #(support-filter new-matches %))
          (mapcat :support))))
+
+(defn context-path-filter
+  [{:keys [context-path-length-cap]} coll]
+  (filter #(<= (count (:context %)) context-path-length-cap) coll))
 

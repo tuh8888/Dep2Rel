@@ -13,6 +13,17 @@
 
 (def NONE "NONE")
 
+(def MODEL-KEYs [:concept-annotations
+                 :concept-graphs
+                 :structure-annotations
+                 :structure-graphs])
+
+(defn model-params
+  [model]
+  (->> MODEL-KEYs
+       (map #(find model %))
+       (into {})))
+
 (defn word-embedding-catch
   [word]
   (try
@@ -228,7 +239,7 @@
   (word2vec/with-word2vec word2vec-db
     (let [model (as-> (k/simple-model v) model
                       (assoc model :factory factory
-                                   :wod2vec-db word2vec-db)
+                                   :word2vec-db word2vec-db)
                       (update model :structure-annotations (fn [structure-annotations]
                                                              (log/info "Making structure annotations")
                                                              (util/pmap-kv (fn [s]
@@ -241,7 +252,7 @@
                                                            (util/pmap-kv (fn [s]
                                                                            (assign-tok model s))
                                                                          concept-annotations))))]
-      (log/info "Model" (util/map-kv count (dissoc model :factory)))
+      ;(log/info "Model" (util/map-kv count (model-params model)))
       model)))
 
 (defn make-sentences
@@ -289,14 +300,14 @@
                    (clojure.set/union seeds))]
     (word2vec/with-word2vec word2vec-db
       (-> model
-          (assoc :samples (remove seeds sentences)
+          (assoc :all-samples (remove seeds sentences)
                  :seeds (->> seeds
                              (map #(assoc % :predicted (:property %)))
                              (set)))
-          (update :samples (fn [samples] (->> samples
-                                              (map #(assign-embedding model %))
-                                              (filter :VEC)
-                                              (doall))))
+          (update :all-samples (fn [samples] (->> samples
+                                                  (map #(assign-embedding model %))
+                                                  (filter :VEC)
+                                                  (doall))))
           (update :seeds (fn [seeds] (->> seeds
                                           (map #(assign-embedding model %))
                                           (filter :VEC)
