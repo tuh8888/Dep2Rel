@@ -103,37 +103,46 @@
                                       (cap-nones)
                                       (lazy-cat unclustered)) matches patterns samples))))))
 
+(defn concept-filter
+  "Filter samples that don't share pattern concepts"
+  [samples patterns]
+  (filter (fn [s]
+            (some (fn [p]
+                    (sent-pattern-concepts-match? s p))
+                  patterns))
+          samples))
 
 (defn concept-context-match
   [{:keys [context-thresh vector-fn samples patterns] :as params}]
   #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
-    (let [samples (vec samples)
+    (let [filtered-samples (-> samples
+                               (concept-filter patterns)
+                               (vec))
           patterns (vec patterns)
-          sample-vectors (->> samples
+          sample-vectors (->> filtered-samples
                               (map vector-fn)
                               (pmap #(linear-algebra/unit-vec params %))
                               (vec))
           pattern-vectors (->> patterns
                                (map vector-fn)
                                (pmap #(linear-algebra/unit-vec params %))
-                               (vec))]
-      (->> pattern-vectors
-           (linear-algebra/find-best-row-matches params sample-vectors)
-           (map #(let [s (get samples (:i %))]
-                   (when-not s (log/warn (:i %) "sample not found"))
-                   (assoc % :sample s)))
-           (map #(let [p (get patterns (:j %))]
-                   (when-not p (log/warn (:j %) "pattern not found"))
-                   (assoc % :match p)))
-           (map (fn [{:keys [score] :as best}] (if (< context-thresh score)
-                                                 best
-                                                 (dissoc best :match))))
-           (map (fn [{:keys [sample match] :as best}] (if (sent-pattern-concepts-match? sample match)
-                                                        best
-                                                        (dissoc best :match))))
-           (map (fn [{:keys [sample match]}]
-                  (assoc sample :predicted (:predicted match))))))))
+                               (vec))
+          matches (->> pattern-vectors
+                       (linear-algebra/find-best-row-matches params sample-vectors)
+                       (filter (fn [{:keys [score]}] (< context-thresh score)))
+                       (map #(let [s (get filtered-samples (:i %))]
+                               (when-not s (log/warn (:i %) "sample not found"))
+                               (assoc % :sample s)))
+                       (map #(let [p (get patterns (:j %))]
+                               (when-not p (log/warn (:j %) "pattern not found"))
+                               (assoc % :match p))))
+          matches-map (zipmap (map :sample matches)
+                              (map :match matches))]
+      (map (fn [s]
+             (let [match (get matches-map s)]
+               (assoc s :predicted (:predicted match))))
+           samples))))
 
 (defn pattern-update
   [{:keys [properties new-matches] :as model} patterns]
