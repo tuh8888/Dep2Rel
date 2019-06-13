@@ -52,10 +52,18 @@
                                       :word2vec-db word2vec-db
                                       :properties)))
 
-#_(def testing-knowtator-view (k/view testing-dir))
-#_(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
-#_(def testing-model (word2vec/with-word2vec word2vec-db
-                       (make-model testing-knowtator-view)))
+(def testing-knowtator-view (k/view testing-dir))
+(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
+(def testing-model (re-model/make-model training-knowtator-view factory word2vec-db))
+(def testing-model-with-sents (assoc testing-model :sentences (re-model/make-sentences testing-model)))
+(def testing-model-with-props (->> properties
+                                   (assoc testing-model-with-sents
+                                     :word2vec-db word2vec-db
+                                     :properties)))
+;; This allows me to reset sentences if they get reloaded
+#_(def training-model-with-props (update training-model-with-props
+                                         :sentences (fn [sentences]
+                                                      (map #(re-model/map->Sentence %) sentences))))
 
 ;;; CLUSTERING ;;;
 
@@ -67,15 +75,12 @@
 
 ;;; RELATION EXTRACTION ;;;
 
-;; This allows me to reset sentences if they get reloaded
-#_(def training-sentences (map #(re-model/map->Sentence %) training-sentences))
+(def prepared-model (-> training-model-with-props
+                        (assoc :seed-frac 0.75
+                               :rng 0.022894)
+                        (re-model/split-train-test)))
 
-
-
-(def split-training-model (-> training-model-with-props
-                              (merge {:seed-frac 0.75
-                                      :rng       0.022894})
-                              (re-model/split-train-test)))
+(def prepared-model (re-model/test-train testing-model-with-props prepared-model))
 
 (comment
   (def results (-> prepared-model

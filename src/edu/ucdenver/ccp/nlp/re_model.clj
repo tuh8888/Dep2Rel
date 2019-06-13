@@ -283,6 +283,15 @@
         (take pot)
         (set))))
 
+(defn test-train
+  [testing-model training-model]
+  (assoc testing-model :seeds (:seeds training-model)
+                       :all-samples (->> testing-model
+                                         :sentences
+                                         (map #(assign-embedding testing-model %))
+                                         (filter :VEC)
+                                         (doall))))
+
 (defn split-train-test
   "Splits model into train and test sets"
   [{:keys [sentences properties word2vec-db] :as model}]
