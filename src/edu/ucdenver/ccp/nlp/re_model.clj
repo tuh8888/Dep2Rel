@@ -9,7 +9,7 @@
             [taoensso.timbre :as log]
             [clojure.math.combinatorics :as combo]
             [edu.ucdenver.ccp.knowtator-clj :as k])
-  (:import (clojure.lang PersistentArrayMap)))
+  (:import (clojure.lang PersistentArrayMap ExceptionInfo)))
 
 (def NONE "NONE")
 
@@ -28,8 +28,11 @@
   [word]
   (try
     (word2vec/word-embedding word)
-    (catch Exception _
-      (log/debug "Word vector not found" word))))
+
+    (catch ExceptionInfo e
+      (if (= :word-not-found (-> e (ex-data) :cause))
+        (log/debug (-> e (ex-message)))
+        (throw e)))))
 
 (defprotocol ContextVector
   (context-vector [self model]))
