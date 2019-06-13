@@ -152,7 +152,11 @@
   [{:keys [max-iterations max-matches
            iteration seeds
            new-matches matches patterns samples] :as model}]
-  (let [success-model (assoc model :matches matches
+
+  ;; Remaining matches added to negative group
+  (let [success-model (assoc model :matches (->> samples
+                                                 (map #(assoc % :predicted re-model/NONE))
+                                                 (into matches))
                                    :patterns patterns)]
     (cond (<= max-iterations iteration)
           (do (log/info "Max iteration reached")
