@@ -128,7 +128,7 @@
                              :title title
                              :legend true)))
 
-(defn add-series
+(defn add-property-series
   [plot p groups x y]
   (let [p2-xy (->> groups
                    (filter #(= (second %) p))
@@ -142,12 +142,12 @@
         plot)
       (log/warn "No points found for" p))))
 
-(defn add-property-series
+(defn property-plot
   ([{:keys [properties]} dataset x y params]
    (let [groups (map-indexed vector (incanter/sel dataset :cols :property))]
      (let [property (first properties)
            plot (make-property-plot params property groups x y)]
-       (doseq [property (rest properties)] (add-series plot property groups x y))
+       (doseq [property (rest properties)] (add-property-series plot property groups x y))
        plot)))
   ([{:keys [properties]} dataset p1 x y params]
    (let [properties (disj properties p1)
@@ -157,7 +157,7 @@
                   (-> params
                       (update :title (fn [title] (format "%s for %s ans %s" title p1 p2)))
                       (make-property-plot p1 groups x y)
-                      (add-series p2 groups x y))))
+                      (add-property-series p2 groups x y))))
 
           (doall)))))
 
@@ -171,9 +171,9 @@
         pca-components (pca-2 numerical-data)
         x (vec (get pca-components 0))
         y (vec (get pca-components 1))
-        plots (add-property-series model sentences-dataset re-model/NONE x y {:x-label "PC1"
-                                                                              :y-label "PC2"
-                                                                              :title   "PCA"})]
+        plots (property-plot model sentences-dataset re-model/NONE x y {:x-label       "PC1"
+                                                                        :y-label "PC2"
+                                                                        :title   "PCA"})]
     (when save (doseq [plot plots] (inc-svg/save-svg plot (str file))))
     plots))
 
@@ -182,9 +182,9 @@
   (let [metrics-dataset (incanter/to-dataset metrics)
         x (vec (incanter/sel metrics-dataset :cols :precision))
         y (vec (incanter/sel metrics-dataset :cols :recall))
-        plot (add-property-series model metrics-dataset x y {:x-label "Precision"
-                                                             :y-label "Recall"
-                                                             :title   "Relation Extraction Results"})]
+        plot (property-plot model metrics-dataset x y {:x-label       "Precision"
+                                                       :y-label "Recall"
+                                                       :title   "Relation Extraction Results"})]
     (when save (inc-svg/save-svg plot (str file)))
     (when view (incanter/view plot))
     plot))
