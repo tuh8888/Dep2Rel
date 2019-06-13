@@ -156,10 +156,10 @@
      (->> properties
           (keep (fn [p2]
                   (let [params (update params :title (fn [title] (format "%s for %s and %s" title p1 p2)))]
-                    (-> params
-                        (make-property-plot p1 groups x y)
-                        (add-property-series p2 groups x y params)))))
-          (doall)))))
+                    [[p1 p2] (-> params
+                                 (make-property-plot p1 groups x y)
+                                 (add-property-series p2 groups x y params))])))
+          (into {})))))
 
 (defn pca-plots
   [{:keys [sentences-dataset sentences] :as model} params]
@@ -174,7 +174,9 @@
         plots (property-plot model sentences-dataset re-model/NONE x y (assoc params :x-label "PC1"
                                                                                      :y-label "PC2"
                                                                                      :title "PCA"))]
-    plots))
+    (assoc plots "ALL" (property-plot model sentences-dataset x y (assoc params :x-label "PC1"
+                                                                                :y-label "PC2"
+                                                                                :title "PCA")))))
 
 (defn plot-metrics
   [{:keys [metrics] :as model} {:keys [view] :as params}]
