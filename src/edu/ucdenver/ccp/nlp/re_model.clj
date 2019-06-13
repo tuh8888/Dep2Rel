@@ -166,6 +166,12 @@
                   ann])))
            nil)
          (first)
+         (remove #(empty? (str/replace (->> %
+                                            :spans
+                                            (vals)
+                                            (map :text)
+                                            (str/join))
+                                       #"\)|\(" "")))
          (map :id))))
 
 (defn make-sentence
