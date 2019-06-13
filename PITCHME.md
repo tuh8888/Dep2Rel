@@ -46,6 +46,11 @@ scientific literature?
 @snapend
 
 ---
+@title[Context Path Lengths]
+
+@img[clean-img](/assets/Context%20Path%20Lengths.svg) 
+
+---
 @title[Relation Extraction]
 
 @snap[west span-50]
