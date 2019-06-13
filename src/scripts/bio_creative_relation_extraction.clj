@@ -58,14 +58,11 @@
 
 ;;; CLUSTERING ;;;
 
-
-
 ;;; PCA ;;;
 
 (def model-with-sentences-dataset (evaluation/sentences->dataset training-model-with-props))
 
-(def pca-plot (evaluation/pca-plot model-with-sentences-dataset {:save {:file (io/file results-dir "pca-all.svg")}
-                                                                 :view            true}))
+(def pca-plots (evaluation/pca-plots model-with-sentences-dataset {:save {:file (io/file results-dir "pca-all.svg")}}))
 
 ;;; RELATION EXTRACTION ;;;
 
