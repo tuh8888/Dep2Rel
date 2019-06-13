@@ -258,3 +258,20 @@
                               (map #(dissoc % :entities :concepts :context))
                               (vec)
                               (incanter/to-dataset)))))
+
+(defn plot-context-lengths
+  [{:keys [sentences]} results-dir]
+  (incanter/with-data (incanter/$order :count :asc
+                                       (incanter/to-dataset (->> sentences
+                                                                 (map #(count (:context %)))
+                                                                 (frequencies)
+                                                                 (map (fn [[cnt n]]
+                                                                        {:count cnt
+                                                                         :num   n})))))
+                      (let [title "Context Path Lengths"
+                            plot (inc-charts/bar-chart :count :num
+                                                       :title title
+                                                       :x-label "Context Path Length"
+                                                       :y-label "Frequency")]
+                        (inc-svg/save-svg plot (str (io/file results-dir title) ".svg") :width 1000)
+                        (incanter/view plot))))
