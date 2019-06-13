@@ -140,7 +140,7 @@
 
         (inc-charts/add-points plot p2-x p2-y :series-label p)
         plot)
-      (log/warn "No points found"))))
+      (log/warn "No points found for" p))))
 
 (defn add-property-series
   ([{:keys [properties]} dataset x y params]
