@@ -122,12 +122,6 @@
         sent-id))
     structure-graphs))
 
-(defn make-context-path
-  [undirected-sent toks]
-  (->> toks
-       (apply uber-alg/shortest-path undirected-sent)
-       (uber-alg/nodes-in-path)))
-
 (defn min-start
   [a]
   (->> a
@@ -141,8 +135,8 @@
   (->> a
        :spans
        (vals)
-       (map :start)
-       (reduce min)))
+       (map :end)
+       (reduce max)))
 
 (defn overlap
   "Finds overlap between two annotations"
@@ -153,21 +147,29 @@
         max-a2-end (max-end a2)]
     (<= min-a1-start min-a2-start max-a2-end max-a1-end)))
 
-(defn remove-context-toks-in-entities
-  [{:keys [structure-annotations concept-annotations]} entities context]
-  (let [context-toks (map #(get structure-annotations %) context)
-        entity-anns (map #(get concept-annotations %) entities)]
-    (->> context-toks
-         (remove (fn [tok]
-                   (some (fn [ann]
-                           (overlap ann tok))
-                         entity-anns)))
+(defn make-context-path
+  [{:keys [structure-annotations concept-annotations]} undirected-sent sent-id toks]
+  (let [sent-anns (filter #(= (:sent %) sent-id) (vals concept-annotations))]
+    (->> toks
+         (apply uber-alg/shortest-path undirected-sent)
+         (uber-alg/nodes-in-path)
+         (map #(get structure-annotations %))
+         (reduce
+           (fn [[toks ann :as x] tok]
+             (if (and ann (overlap ann tok))
+               x
+               (let [ann (first (filter #(overlap % tok) sent-anns))]
+                 [(conj toks (if ann
+                               (assoc tok :spans (:spans ann))
+                               tok))
+                  ann])))
+           nil)
+         (first)
          (map :id))))
-
 
 (defn make-sentence
   "Make a sentence using the sentence graph and entities"
-  [model undirected-sent anns]
+  [model undirected-sent sent-id anns]
   ;; TODO: Remove context toks that are part of the entities
   (let [concepts (->> anns
                       (map :concept)
@@ -178,14 +180,13 @@
                       (set))
         context (->> anns
                      (map :tok)
-                     (make-context-path undirected-sent)
-                     (remove-context-toks-in-entities model entities))]
+                     (make-context-path model undirected-sent sent-id))]
     (->Sentence concepts entities context)))
 
 (defn combination-sentences
-  [model undirected-sent sent-annotations]
+  [model undirected-sent sent-id sent-annotations]
   (->> (combo/combinations sent-annotations 2)
-       (map #(make-sentence model undirected-sent %))))
+       (map #(make-sentence model undirected-sent sent-id %))))
 
 (defn concept-annotations->sentences
   [{:keys [concept-annotations structure-graphs] :as model}]
@@ -193,9 +194,9 @@
     (->> concept-annotations
          (vals)
          (group-by :sent)
-         (pmap (fn [[sent sent-annotations]]
-                 (log/debug "Sentence:" sent)
-                 (combination-sentences model (get undirected-sents sent) sent-annotations)))
+         (pmap (fn [[sent-id sent-annotations]]
+                 (log/debug "Sentence:" sent-id)
+                 (combination-sentences model (get undirected-sents sent-id) sent-id sent-annotations)))
          (apply concat))))
 
 (defn assign-embedding
