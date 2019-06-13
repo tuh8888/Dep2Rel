@@ -75,17 +75,12 @@
 
     :as   model}]
   (log-starting-values model)
-  (loop [iteration 0
-         new-matches (set seeds)
-         matches #{}
-         patterns #{}
-         samples (context-path-filter-fn model all-samples)]
-    (let [model (assoc model :patterns patterns
-                             :matches matches
-                             :new-matches new-matches
-                             :samples samples
-                             :iteration iteration)
-          model (update model :patterns (fn [patterns] (pattern-update-fn model patterns)))
+  (loop [model (assoc model :patterns #{}
+                            :matches #{}
+                            :new-matches (set seeds)
+                            :samples (context-path-filter-fn model all-samples)
+                            :iteration 0)]
+    (let [model (update model :patterns (fn [patterns] (pattern-update-fn model patterns)))
           unclustered (decluster model)
           model (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))
           model (assoc model :new-matches (context-match-fn model))
@@ -93,15 +88,18 @@
                                            :new-matches
                                            (remove :predicted)))
           model (update model :new-matches (fn [new-matches] (filter :predicted new-matches)))
-          model (update model :matches (fn [matches] (->> model :new-matches
+          model (update model :matches (fn [matches] (->> model
+                                                          :new-matches
                                                           (into matches))))]
       (if-let [results (terminate? model)]
         results
         (do
           (log-current-values model)
-          (recur (inc iteration) (->> new-matches
-                                      (cap-nones)
-                                      (lazy-cat unclustered)) matches patterns samples))))))
+          (let [model (update model :iteration inc)
+                model (update model :new-matches (fn [new-matches] (->> new-matches
+                                                                        (cap-nones)
+                                                                        (lazy-cat unclustered))))]
+            (recur model)))))))
 
 (defn concept-filter
   "Filter samples that don't share pattern concepts"
