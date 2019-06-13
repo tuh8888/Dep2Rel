@@ -128,17 +128,16 @@
                                (map vector-fn)
                                (pmap #(linear-algebra/unit-vec params %))
                                (vec))
-          matches (->> pattern-vectors
-                       (linear-algebra/find-best-row-matches params sample-vectors)
-                       (filter (fn [{:keys [score]}] (< context-thresh score)))
-                       (map #(let [s (get filtered-samples (:i %))]
-                               (when-not s (log/warn (:i %) "sample not found"))
-                               (assoc % :sample s)))
-                       (map #(let [p (get patterns (:j %))]
-                               (when-not p (log/warn (:j %) "pattern not found"))
-                               (assoc % :match p))))
-          matches-map (zipmap (map :sample matches)
-                              (map :match matches))]
+          matches-map (->> pattern-vectors
+                           (linear-algebra/find-best-row-matches params sample-vectors)
+                           (filter (fn [{:keys [score]}] (< context-thresh score)))
+                           (map #(let [s (get filtered-samples (:i %))
+                                       p (get patterns (:j %))]
+                                   (when-not s (log/warn (:i %) "sample not found"))
+                                   (when-not p (log/warn (:j %) "pattern not found"))
+                                   [s p]))
+                           (filter (fn [[s p]] (sent-pattern-concepts-match? s p)))
+                           (into {}))]
       (map (fn [s]
              (let [match (get matches-map s)]
                (assoc s :predicted (:predicted match))))
