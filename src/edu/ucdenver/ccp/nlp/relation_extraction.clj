@@ -83,6 +83,7 @@
   [{:keys [context-thresh vector-fn samples patterns factory]}]
   #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
+    (log/info "Finding matches")
     (let [filtered-samples (-> samples
                                (concept-filter patterns)
                                (vec))

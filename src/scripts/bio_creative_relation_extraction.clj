@@ -140,25 +140,31 @@
                              :sentences (fn [sentences]
                                           (map #(re-model/map->Sentence %) sentences))))
 
-(def prepared-model (let [negatives (filter #(= re-model/NONE (:property %)) (:sentences training-model))
-                          others    (remove #(= re-model/NONE (:property %)) (:sentences training-model))
-                          seeds     (lazy-cat others (take 2000 negatives))]
+(def prepared-model (let [seeds (->> training-model
+                                     :sentences
+                                     (re-model/actual-negative)
+                                     (take 2000)
+                                     (lazy-cat (->> training-model
+                                                    :sentences
+                                                    (re-model/actual-positive)))
+                                     (map #(assoc % :predicted (:property %))))]
                       (-> training-model
-                          (assoc :s 1
+                          (assoc :seed-frac 1
                                  :rng 0.022894)
-                          (assoc :seeds (map #(assoc % :predicted (:property %)) seeds #_(:sentences training-model)))
+                          (assoc :seeds seeds)
                           #_(re-model/split-train-test)
                           (re-model/train-test testing-model))))
 
 (def results (-> prepared-model
                  (assoc :context-path-length-cap 100
-                        :context-thresh 0.9
+                        :context-thresh 0.85
                         :cluster-thresh 0.95
                         :min-match-support 0
                         :max-iterations 100
                         :max-matches 3000
                         :re-clustering? true)
                  (evaluation/run-model results-dir)))
+
 #_(incanter/view (:plot results))
 
 #_(util/map-kv count (group-by :property (:seeds results)))
