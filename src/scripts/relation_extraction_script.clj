@@ -85,8 +85,8 @@
 
 (defn c-metrics
   [matches]
-  (math/calc-metrics {:predicted-true
-                      :actual-true    actual-true
+  (math/calc-metrics {:predicted-positive
+                      :actual-positive    actual-true
                       :all            all-triples}))
 
 (comment
@@ -124,8 +124,8 @@
 
   (log/info "Metrics" metrics)
 
-  (def params {:predicted-true
-               :actual-true    actual-true
+  (def params {:predicted-positive
+               :actual-positive    actual-true
                :all            all-triples}))
 
 (comment

@@ -82,13 +82,13 @@
     [x1 x2]))
 
 
-(defn actual-true
+(defn actual-positive
   [property samples]
   (->> samples
        (filter #(= property (:property %)))
        (sentences->entities)))
 
-(defn predicted-true
+(defn predicted-positive
   [property matches]
   (->> matches
        (filter #(= property (:predicted %)))
@@ -98,12 +98,12 @@
   [{:keys [matches properties all-samples]}]
   (let [all     (sentences->entities all-samples)
         metrics (map (fn [property]
-                       (let [actual-true    (actual-true property all-samples)
-                             predicted-true (predicted-true property matches)]
-                         #_(log/info property "ALL" (count all) "AT" (count actual-true) "PT" (count predicted-true))
+                       (let [actual-positive    (actual-positive property all-samples)
+                             predicted-positive (predicted-positive property matches)]
+                         #_(log/info property "ALL" (count all) "AT" (count actual-positive) "PT" (count predicted-positive))
                          (-> (try
-                               (math/calc-metrics {:actual-true    actual-true
-                                                   :predicted-true predicted-true
+                               (math/calc-metrics {:actual-positive    actual-positive
+                                                   :predicted-positive predicted-positive
                                                    :all            all})
                                (catch ArithmeticException _ {}))
                              (assoc :property property))))
