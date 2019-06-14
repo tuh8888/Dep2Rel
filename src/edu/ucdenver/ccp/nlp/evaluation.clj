@@ -15,13 +15,13 @@
   (map (fn [match]
          (let [[e1 _ :as entities] (map #(get-in model [:concept-annotations %]) (:entities match))
 
-               doc     (:doc e1)
-               sent    (->> (get-in model [:structure-graphs (:sent e1) :node-map])
-                            keys
-                            (re-model/pprint-sent model))
-               context (->> match
-                            :context
-                            (re-model/pprint-sent model))
+               doc          (:doc e1)
+               sent-text    (->> (:sent-id e1)
+                                 (keys)
+                                 (re-model/pprint-sent-text model))
+               context-text (->> match
+                                 :context
+                                 (re-model/pprint-toks-text model))
                [e1-concept e2-concept] (->> entities
                                             (sort-by :concept)
                                             (map :concept)
@@ -30,18 +30,18 @@
                                     (map :tok)
                                     (map #(get-in model [:structure-annotations %]))
                                     (map (comp :text first vals :spans)))
-               seed    (->> (get match :seed)
-                            :concepts
-                            (mapcat identity)
-                            (interpose ", "))]
+               seed         (->> (get match :seed)
+                                 :concepts
+                                 (mapcat identity)
+                                 (interpose ", "))]
            {:doc        doc
-            :context    context
+            :context    context-text
             :e1-concept e1-concept
             :e1-tok     e1-tok
             :e2-concept e2-concept
             :e2-tok     e2-tok
             :seed       (apply str seed)
-            :sentence   (str "\"" sent "\"")}))
+            :sentence   (str "\"" sent-text "\"")}))
 
        matches))
 
@@ -282,7 +282,7 @@
                               (filter #(contains? properties (:property %)))
                               (filter #(re-model/context-vector % model))
                               (pmap #(flatten-context-vector % model))
-                              (map #(dissoc % :entities :concepts :context))
+                              (map #(dissoc % :entities :concepts :context :support))
                               (vec)
                               (incanter/to-dataset)))))
 

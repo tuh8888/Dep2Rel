@@ -51,7 +51,7 @@
          (doall)
          (apply linear-algebra/vec-sum))))
 
-(defrecord Sentence [concepts entities context sent]
+(defrecord Sentence [concepts entities context sent-id full-sentence-text context-text]
   ContextVector
   (context-vector [self {:keys [structure-annotations concept-annotations] :as model}]
     (or (:VEC self)
@@ -84,15 +84,23 @@
                                        (context-vector s model))
                (context-vector s model))))
 
-(defn pprint-sent
-  [model sent]
-  (->> sent
-       (map #(get-in model [:structure-annotations %]))
+(defn pprint-toks-text
+  [{:keys [structure-annotations]} toks]
+  (->> toks
+       (map #(get structure-annotations %))
        (map (comp first vals :spans))
        (sort-by :start)
        (map :text)
        (interpose " ")
        (apply str)))
+
+(defn pprint-sent-text
+  [{:keys [structure-graphs] :as model} sent-id]
+  (->> sent-id
+       (get structure-graphs)
+       :node-map
+       (keys)
+       (pprint-toks-text model)))
 
 (defn predicted-positive
   [samples]
@@ -176,7 +184,7 @@
 
 (defn make-context-path
   [{:keys [structure-annotations concept-annotations]} undirected-sent sent-id toks]
-  (let [sent-anns (filter #(= (:sent %) sent-id) (vals concept-annotations))]
+  (let [sent-anns (filter #(= (:sent-id %) sent-id) (vals concept-annotations))]
     (->> toks
          (apply uber-alg/shortest-path undirected-sent)
          (uber-alg/nodes-in-path)
@@ -204,17 +212,19 @@
   "Make a sentence using the sentence graph and entities"
   [model undirected-sent sent-id anns]
   ;; TODO: Remove context toks that are part of the entities
-  (let [concepts (->> anns
-                      (map :concept)
-                      (map #(conj #{} %))
-                      (set))
-        entities (->> anns
-                      (map :id)
-                      (set))
-        context  (->> anns
-                      (map :tok)
-                      (make-context-path model undirected-sent sent-id))]
-    (->Sentence concepts entities context sent-id)))
+  (let [concepts           (->> anns
+                                (map :concept)
+                                (map #(conj #{} %))
+                                (set))
+        entities           (->> anns
+                                (map :id)
+                                (set))
+        context            (->> anns
+                                (map :tok)
+                                (make-context-path model undirected-sent sent-id))
+        full-sentence-text (pprint-sent-text model sent-id)
+        context-text       (pprint-toks-text model context)]
+    (->Sentence concepts entities context sent-id full-sentence-text context-text)))
 
 (defn combination-sentences
   [model undirected-sent sent-id sent-annotations]
@@ -226,7 +236,7 @@
   (let [undirected-sents (util/map-kv graph/undirected-graph structure-graphs)]
     (->> concept-annotations
          (vals)
-         (group-by :sent)
+         (group-by :sent-id)
          (pmap (fn [[sent-id sent-annotations]]
                  (log/debug "Sentence:" sent-id)
                  (combination-sentences model (get undirected-sents sent-id) sent-id sent-annotations)))
@@ -238,13 +248,13 @@
 
 (defn assign-sent-id
   [model tok]
-  (assoc tok :sent (tok-sent-id model tok)))
+  (assoc tok :sent-id (tok-sent-id model tok)))
 
 (defn assign-tok
   [model ann]
-  (let [{:keys [sent id]} (ann-tok model ann)]
+  (let [{:keys [sent-id id]} (ann-tok model ann)]
     (assoc ann :tok id
-               :sent sent)))
+               :sent-id sent-id)))
 
 (defn sent-property
   [{:keys [concept-graphs]} [id1 id2]]

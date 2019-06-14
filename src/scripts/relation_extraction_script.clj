@@ -43,7 +43,7 @@
             #(let [tok-id (re-model/ann-tok model %)
                    sent-id (re-model/tok-sent-id model tok-id)]
                (assoc % :tok tok-id
-                        :sent sent-id))
+                        :sent-id sent-id))
             (vals (:concept-annotations model)))))
 
 (def reasoner (k/reasoner annotations))

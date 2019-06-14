@@ -57,32 +57,36 @@
 (def training-knowtator-view (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
 (def base-training-model (re-model/make-model training-knowtator-view factory word2vec-db))
-(def training-sentences (->> (re-model/make-sentences base-training-model)
-                             (filter (fn [s]
-                                       (->> s
-                                            :entities
-                                            (map #(get-in base-training-model [:concept-annotations % :concept]))
-                                            (set)
-                                            (allowed-concept-pairs))))
-                             (map #(update % :property (fn [property] (or (get property-map property)
-                                                                          re-model/NONE))))))
-(def training-model (assoc base-training-model :sentences training-sentences
+(def training-sentences (re-model/make-sentences base-training-model))
+(spit (io/file training-dir "sentences.edn") (pr-str training-sentences))
+(def training-sentences-filtered (->> training-sentences-filtered
+                                      (filter (fn [s]
+                                                (->> s
+                                                     :entities
+                                                     (map #(get-in base-training-model [:concept-annotations % :concept]))
+                                                     (set)
+                                                     (allowed-concept-pairs))))
+                                      (map #(update % :property (fn [property] (or (get property-map property)
+                                                                                   re-model/NONE))))))
+(def training-model (assoc base-training-model :sentences training-sentences-filtered
                                                :properties properties))
 
 (def testing-knowtator-view (k/model testing-dir nil))
 (rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
 (def base-testing-model (re-model/make-model testing-knowtator-view factory word2vec-db))
-(def testing-sentences (->> (re-model/make-sentences base-testing-model)
-                            (filter (fn [s]
-                                      (->> s
-                                           :entities
-                                           (map #(get-in base-testing-model [:concept-annotations % :concept]))
-                                           (set)
-                                           (allowed-concept-pairs))))
-                            (map #(update % :property (fn [property] (or (get property-map property)
-                                                                         re-model/NONE))))))
+(def testing-sentences (re-model/make-sentences base-testing-model))
+(spit (io/file testing-sentences "sentences.edn") (pr-str testing-sentences))
+(def testing-sentences-filtered (->> testing-sentences
+                                     (filter (fn [s]
+                                               (->> s
+                                                    :entities
+                                                    (map #(get-in base-testing-model [:concept-annotations % :concept]))
+                                                    (set)
+                                                    (allowed-concept-pairs))))
+                                     (map #(update % :property (fn [property] (or (get property-map property)
+                                                                                  re-model/NONE))))))
 (def testing-model (-> base-testing-model
-                       (assoc :sentences testing-sentences)
+                       (assoc :sentences testing-sentences-filtered)
                        (assoc :properties properties)))
 
 ;;; SENTENCE STATS ;;;
@@ -172,14 +176,14 @@
 
 #_(incanter/view (:plot results))
 
-#_(def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir
-                                                     {:context-path-length-cap          [10 20 100] #_[2 3 5 10 20 35 100]
-                                                      :context-thresh          #_[0.95] [0.975 0.95 0.925 0.9 0.85]
-                                                      :cluster-thresh          #_[0.95] [0.95 0.9 0.75 0.5]
-                                                      :min-match-support                [0] #_[0 5 25]
-                                                      :seed-frac                        [1] #_[0.05 0.25 0.5 0.75]
-                                                      :rng                              0.022894
-                                                      :negative-cap                     2000}))
+(def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir
+                                                   {:context-path-length-cap          [10 20 100] #_[2 3 5 10 20 35 100]
+                                                    :context-thresh          #_[0.95] [0.975 0.95 0.925 0.9 0.85]
+                                                    :cluster-thresh          #_[0.95] [0.95 0.9 0.75 0.5]
+                                                    :min-match-support                [0] #_[0 5 25]
+                                                    :seed-frac                        [1] #_[0.05 0.25 0.5 0.75]
+                                                    :rng                              0.022894
+                                                    :negative-cap                     2000}))
 
 (def baseline-results {:precision 0.4544
                        :recall    0.5387
