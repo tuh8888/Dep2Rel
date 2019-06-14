@@ -266,7 +266,8 @@
   [{:keys [sentences]} results-dir fmt]
   (incanter/with-data (incanter/$order :count :asc
                                        (incanter/to-dataset (->> sentences
-                                                                 (map #(count (:context %)))
+                                                                 (map :context)
+                                                                 (map count)
                                                                  (frequencies)
                                                                  (map (fn [[cnt n]]
                                                                         {:count cnt
