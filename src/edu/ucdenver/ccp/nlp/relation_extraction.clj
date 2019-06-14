@@ -36,7 +36,8 @@
          (map (fn [property]
                 {:Seeds    (get p1 property)
                  :Property property
-                 :Samples  (count all-samples)}))
+                 :Samples  (count all-samples)
+                 :Actual (count (filter #(= property (:property)) all-samples))}))
          (incanter/to-dataset)
          (log/info))))
 
