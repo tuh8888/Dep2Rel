@@ -66,6 +66,6 @@
     <orderEntry type="library" name="Deps: com.google.javascript/closure-compiler:v20151015" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/core.cache:0.6.5" level="project" />
     <orderEntry type="library" name="Deps: org.clojure/google-closure-library-third-party:0.0-20151016-61277aea" level="project" />
-    <orderEntry type="library" name="Deps: github-tuh8888/hpl-utl:581d25" level="project" />
+    <orderEntry type="library" name="Deps: github-tuh8888/hpl-utl:561fa7" level="project" />
   </component>
 </module>

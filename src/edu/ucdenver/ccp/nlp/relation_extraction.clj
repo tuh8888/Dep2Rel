@@ -69,42 +69,6 @@
         nones             (take num-nones-to-keep nones)]
     (lazy-cat nones others)))
 
-(defn bootstrap
-  [{:keys [seeds all-samples
-           terminate? context-match-fn pattern-update-fn
-           context-path-filter-fn
-           support-filter decluster]
-
-    :as   model}]
-  (log/info (re-params model))
-  (log-starting-values model)
-  (loop [model (assoc model :patterns #{}
-                            :matches #{}
-                            :new-matches (set seeds)
-                            :samples (context-path-filter-fn model all-samples)
-                            :iteration 0)]
-    (let [model       (update model :patterns (fn [patterns] (pattern-update-fn model patterns)))
-          unclustered (decluster model)
-          model       (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))
-          model       (assoc model :new-matches (context-match-fn model))
-          model       (update model :samples (fn [samples] (let [new-matches (:new-matches model)]
-                                                             (if (seq new-matches)
-                                                               (remove :predicted new-matches)
-                                                               samples))))
-          model       (update model :new-matches (fn [new-matches] (filter :predicted new-matches)))
-          model       (update model :matches (fn [matches] (->> model
-                                                                :new-matches
-                                                                (into matches))))]
-      (if-let [results (terminate? model)]
-        results
-        (do
-          (log-current-values model)
-          (let [model (update model :iteration inc)
-                model (update model :new-matches (fn [new-matches] (->> new-matches
-                                                                        (cap-nones)
-                                                                        (lazy-cat unclustered))))]
-            (recur model)))))))
-
 (defn concept-filter
   "Filter samples that don't share pattern concepts"
   [samples patterns]
@@ -115,7 +79,7 @@
           samples))
 
 (defn concept-context-match
-  [{:keys [context-thresh vector-fn samples patterns factory] :as params}]
+  [{:keys [context-thresh vector-fn samples patterns factory]}]
   #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
     (let [filtered-samples (-> samples
@@ -146,7 +110,7 @@
            samples))))
 
 (defn pattern-update
-  [{:keys [properties new-matches] :as model} patterns]
+  [{:keys [properties new-matches patterns] :as model}]
   (mapcat (fn [property]
             (let [samples  (filter #(= (:predicted %) property) new-matches)
                   patterns (filter #(= (:predicted %) property) patterns)]
@@ -163,9 +127,7 @@
           properties))
 
 (defn terminate?
-  [{:keys [max-iterations max-matches
-           iteration seeds
-           new-matches matches patterns samples] :as model}]
+  [{:keys [max-iterations iteration seeds new-matches matches patterns samples] :as model}]
 
   ;; Remaining matches added to negative group
   (let [success-model (assoc model :matches (->> samples
@@ -208,6 +170,40 @@
          (mapcat :support))))
 
 (defn context-path-filter
-  [{:keys [context-path-length-cap]} coll]
-  (filter #(<= (count (:context %)) context-path-length-cap) coll))
+  [{:keys [context-path-length-cap all-samples]}]
+  (filter #(<= (count (:context %)) context-path-length-cap) all-samples))
+
+(defn bootstrap
+  [{:keys [seeds] :as model}]
+  (let [model (assoc model :samples (context-path-filter model)
+                           :patterns #{}
+                           :matches #{}
+                           :new-matches seeds
+                           :iteration 0)]
+    (log/info (re-params model))
+    (log-starting-values model)
+    (loop [model model]
+      (let [model       (assoc model :patterns (pattern-update model))
+            unclustered (decluster model)
+            model       (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))
+            model       (assoc model :new-matches (concept-context-match model))
+            model       (update model :samples (fn [samples] (let [new-matches (:new-matches model)]
+                                                               (if (seq new-matches)
+                                                                 (remove :predicted new-matches)
+                                                                 samples))))
+            model       (update model :new-matches (fn [new-matches] (filter :predicted new-matches)))
+            model       (update model :matches (fn [matches] (->> model
+                                                                  :new-matches
+                                                                  (into matches))))]
+        (if-let [results (terminate? model)]
+          results
+          (do
+            (log-current-values model)
+            (let [model (update model :iteration inc)
+                  model (update model :new-matches (fn [new-matches] (->> new-matches
+                                                                          (cap-nones)
+                                                                          (lazy-cat unclustered))))]
+              (recur model))))))))
+
+
 
