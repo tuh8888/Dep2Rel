@@ -29,17 +29,6 @@
        (map :concepts)
        (some #(= concepts %))))
 
-(defn property-counts
-  [property-key properties m]
-  (let [m (->> m
-               (util/map-kv count)
-               (group-by property-key))]
-    (->> properties
-         (keys)
-         (map (fn [p]
-                (-> (util/map-kv #(get % p) m)
-                    (assoc :property p)))))))
-
 (defn log-starting-values
   [{:keys [properties seeds all-samples]}]
   (let [p1 (util/map-kv count (group-by :predicted seeds))]
@@ -53,13 +42,19 @@
 
 (defn log-current-values
   [{:keys [properties samples] :as model}]
-  (->> [:patterns :new-matches :matches :patterns]
-       (map #(find model %))
-       (into {})
-       (property-counts :predicted properties)
-       (map #(assoc % :samples (count samples)))
-       (incanter/to-dataset)
-       (log/info)))
+  (let [p1 (->> [:patterns :new-matches :matches :patterns]
+                (map #(find model %))
+                (into {})
+                (util/map-kv #(->> %
+                                   (group-by :predicted)
+                                   (util/map-kv count))))]
+    (->> properties
+         (map (fn [property]
+                (assoc (util/map-kv #(get % property) p1)
+                  :property property
+                  :samples (count samples))))
+         (incanter/to-dataset)
+         (log/info))))
 
 (defn cap-nones
   [matches]

@@ -69,14 +69,15 @@
                                             (re-model/model-params)
                                             (util/map-kv count))
                                   :model :training)
-                                (assoc (->> base-testing-model
+                                (assoc (->> testing-model
                                             (re-model/model-params)
                                             (util/map-kv count))
                                   :model :testing)]))
 (log/info "Num sentences with property\n"
           (->> [(:sentences training-model)
                 (:sentences testing-model)]
-               (re/property-counts properties :property)
+               (map #(group-by :property %))
+               (map #(util/map-kv count %))
                (map #(assoc %2 :model %1)
                     [:training :testing])
                (incanter/to-dataset)))
