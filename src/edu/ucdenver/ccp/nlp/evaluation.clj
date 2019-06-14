@@ -102,7 +102,7 @@
                          (-> (try
                                (math/calc-metrics {:actual-positive    actual-positive
                                                    :predicted-positive predicted-positive
-                                                   :all            all})
+                                                   :all                all})
                                (catch ArithmeticException _ {}))
                              (assoc :property property))))
                      properties)]
@@ -112,26 +112,28 @@
     metrics))
 
 (defn calc-overall-metrics
-  [{:keys [matches]}]
-  (let [predicted-positive (re-model/predicted-positive matches)
-        predicted-negative (re-model/predicted-negative matches)
-        tp (count (filter #(= (:predicted %) (:property %)) predicted-positive))
-        tn (count (filter #(= (:predicted %) (:property %)) predicted-negative))
-        fp (count (filter #(not= (:predicted %) (:property %)) predicted-positive))
-        fn (count (filter #(not= (:predicted %) (:property %)) predicted-negative))
-        precision (/ (float tp) (+ fp tp))
-        recall (/ (float tp) (+ tp fn))
-        f1 (/ (* 2 precision recall)
-              (+ precision recall))
-        metrics {:tp tp
-                 :tn tn
-                 :fp fp
-                 :fn fn
-                 :precision precision
-                 :recall recall
-                 :f1 f1}]
-    (log/info "Metrics" metrics)
-    metrics))
+  [model]
+  (let [metrics (remove #(= (:property %) re-model/NONE) (calc-metrics model))]
+    (when metrics
+      (try
+        (let [tp        (reduce + (map :tp metrics))
+              tn        (reduce + (map :tn metrics))
+              fp        (reduce + (map :fp metrics))
+              fn        (reduce + (map :fn metrics))
+              precision (/ (float tp) (+ fp tp))
+              recall    (/ (float tp) (+ tp fn))
+              f1        (/ (* 2 precision recall)
+                           (+ precision recall))
+              metrics   {:tp        tp
+                         :tn        tn
+                         :fp        fp
+                         :fn        fn
+                         :precision precision
+                         :recall    recall
+                         :f1        f1}]
+          (log/info "Overall Metrics" metrics)
+          metrics)
+        (catch Exception _ nil)))))
 
 (defn make-property-plot
   [{:keys [x-label y-label title]} property groups x y]

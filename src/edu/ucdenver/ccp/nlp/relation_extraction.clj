@@ -178,7 +178,6 @@
 (defn bootstrap
   [{:keys [seeds] :as model}]
   (let [model (assoc model :samples (context-path-filter model)
-                           :patterns #{}
                            :matches #{}
                            :new-matches seeds
                            :iteration 0)]
