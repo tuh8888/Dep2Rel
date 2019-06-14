@@ -58,15 +58,15 @@
 
 (defn cap-nones
   [matches]
-  (let [nones (filter #(= re-model/NONE (:property %)) matches)
-        others (remove #(= re-model/NONE (:property %)) matches)
+  (let [nones             (filter #(= re-model/NONE (:property %)) matches)
+        others            (remove #(= re-model/NONE (:property %)) matches)
         num-nones-to-keep (->> others
                                (group-by :predicted)
                                (util/map-kv count)
                                (vals)
                                (reduce max 0))
 
-        nones (take num-nones-to-keep nones)]
+        nones             (take num-nones-to-keep nones)]
     (lazy-cat nones others)))
 
 (defn bootstrap
@@ -83,18 +83,18 @@
                             :new-matches (set seeds)
                             :samples (context-path-filter-fn model all-samples)
                             :iteration 0)]
-    (let [model (update model :patterns (fn [patterns] (pattern-update-fn model patterns)))
+    (let [model       (update model :patterns (fn [patterns] (pattern-update-fn model patterns)))
           unclustered (decluster model)
-          model (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))
-          model (assoc model :new-matches (context-match-fn model))
-          model (update model :samples (fn [samples] (let [new-matches (:new-matches model)]
-                                                       (if (seq new-matches)
-                                                         (remove :predicted new-matches)
-                                                         samples))))
-          model (update model :new-matches (fn [new-matches] (filter :predicted new-matches)))
-          model (update model :matches (fn [matches] (->> model
-                                                          :new-matches
-                                                          (into matches))))]
+          model       (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))
+          model       (assoc model :new-matches (context-match-fn model))
+          model       (update model :samples (fn [samples] (let [new-matches (:new-matches model)]
+                                                             (if (seq new-matches)
+                                                               (remove :predicted new-matches)
+                                                               samples))))
+          model       (update model :new-matches (fn [new-matches] (filter :predicted new-matches)))
+          model       (update model :matches (fn [matches] (->> model
+                                                                :new-matches
+                                                                (into matches))))]
       (if-let [results (terminate? model)]
         results
         (do
@@ -115,31 +115,31 @@
           samples))
 
 (defn concept-context-match
-  [{:keys [context-thresh vector-fn samples patterns] :as params}]
+  [{:keys [context-thresh vector-fn samples patterns factory] :as params}]
   #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
     (let [filtered-samples (-> samples
                                (concept-filter patterns)
                                (vec))
-          patterns (vec patterns)
-          sample-vectors (->> filtered-samples
-                              (map vector-fn)
-                              (pmap #(linear-algebra/unit-vec params %))
-                              (vec))
-          pattern-vectors (->> patterns
-                               (map vector-fn)
-                               (pmap #(linear-algebra/unit-vec params %))
-                               (vec))
-          matches-map (->> pattern-vectors
-                           (linear-algebra/find-best-row-matches params sample-vectors)
-                           (filter (fn [{:keys [score]}] (< context-thresh score)))
-                           (map #(let [s (get filtered-samples (:i %))
-                                       p (get patterns (:j %))]
-                                   (when-not s (log/warn (:i %) "sample not found"))
-                                   (when-not p (log/warn (:j %) "pattern not found"))
-                                   [s p]))
-                           (filter (fn [[s p]] (sent-pattern-concepts-match? s p)))
-                           (into {}))]
+          patterns         (vec patterns)
+          sample-vectors   (->> filtered-samples
+                                (map vector-fn)
+                                (pmap #(linear-algebra/unit-vec factory %))
+                                (vec))
+          pattern-vectors  (->> patterns
+                                (map vector-fn)
+                                (pmap #(linear-algebra/unit-vec factory %))
+                                (vec))
+          matches-map      (->> sample-vectors
+                                (linear-algebra/find-best-col-matches factory pattern-vectors)
+                                (filter (fn [{:keys [score]}] (< context-thresh score)))
+                                (map #(let [s (get filtered-samples (:j %))
+                                            p (get patterns (:i %))]
+                                        (when-not s (log/warn (:j %) "sample not found"))
+                                        (when-not p (log/warn (:i %) "pattern not found"))
+                                        [s p]))
+                                (filter (fn [[s p]] (sent-pattern-concepts-match? s p)))
+                                (into {}))]
       (map (fn [s]
              (let [match (get matches-map s)]
                (assoc s :predicted (:predicted match))))
@@ -148,16 +148,18 @@
 (defn pattern-update
   [{:keys [properties new-matches] :as model} patterns]
   (mapcat (fn [property]
-            (let [samples (filter #(= (:predicted %) property) new-matches)
+            (let [samples  (filter #(= (:predicted %) property) new-matches)
                   patterns (filter #(= (:predicted %) property) patterns)]
-              (when (seq samples)
-                (log/info "Clustering" property)
-                (->> samples
-                     (partition-all 1000)
-                     (mapcat (fn [sample-part]
-                               (->> patterns
-                                    (cluster-tools/single-pass-cluster model sample-part)
-                                    (map #(assoc % :predicted property)))))))))
+              (if (seq samples)
+                (do
+                  (log/info "Clustering" property)
+                  (->> samples
+                       (partition-all 1000)
+                       (mapcat (fn [sample-part]
+                                 (->> patterns
+                                      (cluster-tools/single-pass-cluster model sample-part)
+                                      (map #(assoc % :predicted property)))))))
+                patterns)))
           properties))
 
 (defn terminate?

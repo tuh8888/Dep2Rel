@@ -87,7 +87,7 @@
 
 (def training-context-paths-plot (evaluation/plot-context-lengths training-model results-dir "Training %s"))
 #_(incanter/view training-context-paths-plot)
-(def testing-context-paths-plot(evaluation/plot-context-lengths testing-model results-dir "Test %s"))
+(def testing-context-paths-plot (evaluation/plot-context-lengths testing-model results-dir "Test %s"))
 #_(incanter/view testing-context-paths-plot)
 
 ;;; CLUSTERING ;;;
@@ -102,31 +102,35 @@
 
 ;;; RELATION EXTRACTION ;;;
 
-(def prepared-model (-> training-model
-                        (assoc :seed-frac 0.4
-                               :rng 0.022894)
-                        (re-model/split-train-test)
-                        (re-model/train-test testing-model)))
+(def prepared-model (let [negatives (filter #(= re-model/NONE (:property %)) (:sentences training-model))
+                          others (remove #(= re-model/NONE (:property %)) (:sentences training-model))
+                          seeds (lazy-cat others (take 200 negatives))]
+                      (-> training-model
+                          (assoc :s 1
+                                 :rng 0.022894)
+                          (assoc :seeds (map #(assoc % :predicted (:property %)) seeds #_(:sentences training-model)))
+                          #_(re-model/split-train-test)
+                          (re-model/train-test testing-model))))
 
-(def results (-> prepared-model
-                 (assoc :context-path-length-cap 100
-                        :context-thresh 0.95
-                        :cluster-thresh 0.95
-                        :min-match-support 0
-                        :max-iterations 100
-                        :max-matches 3000
-                        :re-clustering? true)
-                 (evaluation/run-model results-dir)))
-(incanter/view (:plot results))
+#_(def results (-> prepared-model
+                   (assoc :context-path-length-cap 100
+                          :context-thresh 0.95
+                          :cluster-thresh 0.95
+                          :min-match-support 0
+                          :max-iterations 100
+                          :max-matches 3000
+                          :re-clustering? true)
+                   (evaluation/run-model results-dir)))
+#_(incanter/view (:plot results))
 
-(count (:samples results))
+#_(util/map-kv count (group-by :property (:seeds results)))
 
 #_(apply evaluation/format-matches base-training-model results)
 
 (def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir
                                                    {:context-path-length-cap [100] #_[2 3 5 10 20 35 100]
-                                                    :context-thresh          [0.95] #_[0.975 0.95 0.925 0.9 0.85]
-                                                    :cluster-thresh          [0.95] #_[0.95 0.9 0.75 0.5]
+                                                    :context-thresh          #_[0.95] [0.975 0.95 0.925 0.9 0.85]
+                                                    :cluster-thresh          #_[0.95] [0.95 0.9 0.75 0.5]
                                                     :min-match-support       [0] #_[0 5 25]
                                                     :seed-frac #_[0.2]       [0.05 0.25 0.5 0.75]
                                                     :rng                     0.022894}))
