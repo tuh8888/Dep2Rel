@@ -7,8 +7,7 @@
             [edu.ucdenver.ccp.nlp.readers :as rdr]
             [uncomplicate.neanderthal.native :as thal-native]
             [incanter.core :as incanter]
-            [incanter.io :as inc-io]
-            [edu.ucdenver.ccp.nlp.relation-extraction :as re]))
+            [incanter.io :as inc-io]))
 
 (log/set-level! :info)
 
@@ -180,3 +179,7 @@
                                                       :min-match-support                [0] #_[0 5 25]
                                                       :seed-frac #_[0.2]                [0.05 0.25 0.5 0.75]
                                                       :rng                              0.022894}))
+
+(def baseline-results {:precision 0.4544
+                       :recall    0.5387
+                       :f1        0.3729})
