@@ -7,7 +7,8 @@
             [edu.ucdenver.ccp.nlp.readers :as rdr]
             [uncomplicate.neanderthal.native :as thal-native]
             [incanter.core :as incanter]
-            [incanter.io :as inc-io]))
+            [incanter.io :as inc-io]
+            [edu.ucdenver.ccp.nlp.relation-extraction :as re]))
 
 (log/set-level! :info)
 
@@ -140,20 +141,14 @@
                              :sentences (fn [sentences]
                                           (map #(re-model/map->Sentence %) sentences))))
 
-(def prepared-model (let [seeds (->> training-model
-                                     :sentences
-                                     (re-model/actual-negative)
-                                     (take 2000)
-                                     (lazy-cat (->> training-model
-                                                    :sentences
-                                                    (re-model/actual-positive)))
-                                     (map #(assoc % :predicted (:property %))))]
-                      (-> training-model
-                          (assoc :seed-frac 1
-                                 :rng 0.022894)
-                          (assoc :seeds seeds)
-                          #_(re-model/split-train-test)
-                          (re-model/train-test testing-model))))
+(def prepared-model (-> training-model
+                        (assoc :seed-frac 1
+                               :rng 0.022894
+                               :negative-cap 2000)
+                        (re-model/split-train-test)
+                        (re-model/train-test testing-model)))
+
+(re/log-starting-values prepared-model)
 
 (def results (-> prepared-model
                  (assoc :context-path-length-cap 100
@@ -177,7 +172,8 @@
                                                       :cluster-thresh          #_[0.95] [0.95 0.9 0.75 0.5]
                                                       :min-match-support                [0] #_[0 5 25]
                                                       :seed-frac #_[0.2]                [0.05 0.25 0.5 0.75]
-                                                      :rng                              0.022894}))
+                                                      :rng                              0.022894
+                                                      :negative-cap                     2000}))
 
 (def baseline-results {:precision 0.4544
                        :recall    0.5387

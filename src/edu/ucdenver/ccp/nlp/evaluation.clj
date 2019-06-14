@@ -48,9 +48,20 @@
 (defn ->csv
   [f model matches patterns]
   (let [formatted (format-matches model matches patterns)
-        cols      [:doc :e1-concept :e1-tok :e2-concept :e2-tok :seed :sentence]
-        csv-form  (str (apply str (interpose "," cols)) "\n" (apply str (map #(str (apply str (interpose "," ((apply juxt cols) %))) "\n") formatted)))]
-    (spit f csv-form)))
+        cols      [:doc :e1-concept :e1-tok :e2-concept :e2-tok :seed :sentence]]
+    (->> formatted
+         (map #(str (->> %
+                         ((apply juxt cols))
+                         (interpose ",")
+                         (apply str))
+                    "\n"))
+         (apply str)
+         (str (->> cols
+                   (interpose ",")
+                   (apply str))
+              "\n")
+         (spit f))))
+
 
 (defn cluster-sentences
   [sentences]
@@ -231,13 +242,14 @@
                                                     cluster-thresh
                                                     min-match-support
                                                     seed-frac
-                                                    rng]}]
+                                                    rng negative-cap]}]
   (doall
     ;; parallelize with
     #_(cp/upfor (dec (cp/ncpus)))
     (for [seed-frac               seed-frac
           :let [split-model    (re-model/split-train-test (assoc training-model :seed-frac seed-frac
-                                                                                :rng rng))
+                                                                                :rng rng
+                                                                                :negative-cap negative-cap))
                 prepared-model (if (seq testing-model)
                                  (re-model/train-test split-model testing-model)
                                  split-model)]

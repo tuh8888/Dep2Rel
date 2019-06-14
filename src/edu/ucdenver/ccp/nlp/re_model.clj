@@ -323,22 +323,18 @@
 
 (defn split-train-test
   "Splits model into train and test sets"
-  [{:keys [sentences properties word2vec-db] :as model}]
-  (let [seeds    (->> (disj properties NONE)
-                      (map (fn [property] (frac-seeds property model)))
-                      (apply clojure.set/union))
-        NONE-num (->> seeds
-                      (group-by :property)
-                      (vals)
-                      (map count)
-                      (reduce max))
-        seeds    (->> sentences
-                      (filter #(= NONE (:property %)))
-                      (count)
-                      (/ NONE-num)
-                      (assoc model :seed-frac)
-                      (frac-seeds NONE)
-                      (clojure.set/union seeds))]
+  [{:keys [sentences properties word2vec-db negative-cap seed-frac] :as model}]
+  (let [seeds (->> (disj properties NONE)
+                   (map (fn [property] (frac-seeds property model)))
+                   (apply clojure.set/union))
+        seeds (->> sentences
+                   (actual-negative)
+                   (count)
+                   (/ negative-cap)
+                   (min seed-frac)
+                   (assoc model :seed-frac)
+                   (frac-seeds NONE)
+                   (clojure.set/union seeds))]
     (word2vec/with-word2vec word2vec-db
       (-> model
           (assoc :all-samples (remove seeds sentences)
