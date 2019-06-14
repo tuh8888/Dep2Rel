@@ -76,6 +76,7 @@
            support-filter decluster]
 
     :as   model}]
+  (log/info (re-params model))
   (log-starting-values model)
   (loop [model (assoc model :patterns #{}
                             :matches #{}

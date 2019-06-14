@@ -103,10 +103,10 @@
 ;;; RELATION EXTRACTION ;;;
 
 (def prepared-model (-> training-model
-                        (assoc :seed-frac 0.2
+                        (assoc :seed-frac 0.4
                                :rng 0.022894)
                         (re-model/split-train-test)
-                        (re-model/test-train testing-model)))
+                        (re-model/train-test testing-model)))
 
 (def results (-> prepared-model
                  (assoc :context-path-length-cap 100
@@ -123,8 +123,7 @@
 
 #_(apply evaluation/format-matches base-training-model results)
 
-(def param-walk-results (evaluation/parameter-walk results-dir
-                                                   base-training-model
+(def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir
                                                    {:context-path-length-cap [100] #_[2 3 5 10 20 35 100]
                                                     :context-thresh          [0.95] #_[0.975 0.95 0.925 0.9 0.85]
                                                     :cluster-thresh          [0.95] #_[0.95 0.9 0.75 0.5]

@@ -15,10 +15,10 @@
   (map (fn [match]
          (let [[e1 _ :as entities] (map #(get-in model [:concept-annotations %]) (:entities match))
 
-               doc (:doc e1)
-               sent (->> (get-in model [:structure-graphs (:sent e1) :node-map])
-                         keys
-                         (re-model/pprint-sent model))
+               doc     (:doc e1)
+               sent    (->> (get-in model [:structure-graphs (:sent e1) :node-map])
+                            keys
+                            (re-model/pprint-sent model))
                context (->> match
                             :context
                             (re-model/pprint-sent model))
@@ -30,10 +30,10 @@
                                     (map :tok)
                                     (map #(get-in model [:structure-annotations %]))
                                     (map (comp :text first vals :spans)))
-               seed (->> (get match :seed)
-                         :concepts
-                         (mapcat identity)
-                         (interpose ", "))]
+               seed    (->> (get match :seed)
+                            :concepts
+                            (mapcat identity)
+                            (interpose ", "))]
            {:doc        doc
             :context    context
             :e1-concept e1-concept
@@ -48,8 +48,8 @@
 (defn ->csv
   [f model matches patterns]
   (let [formatted (format-matches model matches patterns)
-        cols [:doc :e1-concept :e1-tok :e2-concept :e2-tok :seed :sentence]
-        csv-form (str (apply str (interpose "," cols)) "\n" (apply str (map #(str (apply str (interpose "," ((apply juxt cols) %))) "\n") formatted)))]
+        cols      [:doc :e1-concept :e1-tok :e2-concept :e2-tok :seed :sentence]
+        csv-form  (str (apply str (interpose "," cols)) "\n" (apply str (map #(str (apply str (interpose "," ((apply juxt cols) %))) "\n") formatted)))]
     (spit f csv-form)))
 
 (defn cluster-sentences
@@ -72,13 +72,13 @@
 
 (defn pca-2
   [data]
-  (let [X (incanter/to-matrix data)
-        pca (inc-stats/principal-components X)
+  (let [X          (incanter/to-matrix data)
+        pca        (inc-stats/principal-components X)
         components (:rotation pca)
-        pc1 (incanter/sel components :cols 0)
-        pc2 (incanter/sel components :cols 1)
-        x1 (incanter/mmult X pc1)
-        x2 (incanter/mmult X pc2)]
+        pc1        (incanter/sel components :cols 0)
+        pc2        (incanter/sel components :cols 1)
+        x1         (incanter/mmult X pc1)
+        x2         (incanter/mmult X pc2)]
     [x1 x2]))
 
 
@@ -96,9 +96,9 @@
 
 (defn calc-metrics
   [{:keys [matches properties all-samples]}]
-  (let [all (sentences->entities all-samples)
+  (let [all     (sentences->entities all-samples)
         metrics (map (fn [property]
-                       (let [actual-true (actual-true property all-samples)
+                       (let [actual-true    (actual-true property all-samples)
                              predicted-true (predicted-true property matches)]
                          #_(log/info property "ALL" (count all) "AT" (count actual-true) "PT" (count predicted-true))
                          (-> (try
@@ -119,8 +119,8 @@
                 (filter #(= (second %) property))
                 (keep #(vector (get x (first %)) (get y (first %))))
                 (vec))
-        x (vec (map first xy))
-        y (vec (map second xy))]
+        x  (vec (map first xy))
+        y  (vec (map second xy))]
     (inc-charts/scatter-plot x y
                              :x-label x-label
                              :y-label y-label
@@ -146,13 +146,13 @@
   ([{:keys [properties]} dataset x y {{:as save :keys [file]} :save :as params}]
    (let [groups (map-indexed vector (incanter/sel dataset :cols :property))]
      (let [property (first properties)
-           plot (make-property-plot params property groups x y)]
+           plot     (make-property-plot params property groups x y)]
        (doseq [property (rest properties)] (add-property-series plot property groups x y (assoc params :save false)))
        (when save (inc-svg/save-svg plot (str file)))
        plot)))
   ([{:keys [properties]} dataset p1 x y params]
    (let [properties (disj properties p1)
-         groups (map-indexed vector (incanter/sel dataset :cols :property))]
+         groups     (map-indexed vector (incanter/sel dataset :cols :property))]
      (->> properties
           (keep (fn [p2]
                   (let [params (update params :title (fn [title] (format "%s for %s and %s" title p1 p2)))]
@@ -163,17 +163,17 @@
 
 (defn pca-plots
   [{:keys [sentences-dataset sentences] :as model} params]
-  (let [cols (->> model
-                  (re-model/context-vector (first sentences))
-                  (count)
-                  (range 0))
+  (let [cols           (->> model
+                            (re-model/context-vector (first sentences))
+                            (count)
+                            (range 0))
         numerical-data (incanter/sel sentences-dataset :cols cols)
         pca-components (pca-2 numerical-data)
-        x (vec (get pca-components 0))
-        y (vec (get pca-components 1))
-        plots (property-plot model sentences-dataset re-model/NONE x y (assoc params :x-label "PC1"
-                                                                                     :y-label "PC2"
-                                                                                     :title "PCA"))]
+        x              (vec (get pca-components 0))
+        y              (vec (get pca-components 1))
+        plots          (property-plot model sentences-dataset re-model/NONE x y (assoc params :x-label "PC1"
+                                                                                              :y-label "PC2"
+                                                                                              :title "PCA"))]
     (assoc plots "ALL" (property-plot model sentences-dataset x y (assoc params :x-label "PC1"
                                                                                 :y-label "PC2"
                                                                                 :title "PCA")))))
@@ -181,11 +181,11 @@
 (defn plot-metrics
   [{:keys [metrics] :as model} {:keys [view] :as params}]
   (let [metrics-dataset (incanter/to-dataset (or metrics (calc-metrics model)))
-        x (vec (incanter/sel metrics-dataset :cols :precision))
-        y (vec (incanter/sel metrics-dataset :cols :recall))
-        plot (property-plot model metrics-dataset x y (assoc params :x-label "Precision"
-                                                                    :y-label "Recall"
-                                                                    :title "Relation Extraction Results"))]
+        x               (vec (incanter/sel metrics-dataset :cols :precision))
+        y               (vec (incanter/sel metrics-dataset :cols :recall))
+        plot            (property-plot model metrics-dataset x y (assoc params :x-label "Precision"
+                                                                               :y-label "Recall"
+                                                                               :title "Relation Extraction Results"))]
     (when view (incanter/view plot))
     plot))
 
@@ -193,9 +193,9 @@
 (defn run-model
   "Run model with parameters"
   [model results-dir]
-  (let [model (if (contains? model :all-samples)
-                model
-                (re-model/split-train-test model))
+  (let [model   (if (contains? model :all-samples)
+                  model
+                  (re-model/split-train-test model))
         results (-> model
                     (assoc :vector-fn #(re-model/context-vector % model)
                            :context-match-fn re/concept-context-match
@@ -216,32 +216,34 @@
                                                           (io/file results-dir))}}))))
 
 (defn parameter-walk
-  [results-dir model {:keys [context-path-length-cap
-                             context-thresh
-                             cluster-thresh
-                             min-match-support
-                             seed-frac
-                             rng]}]
-  ;; parallelize with
-  #_(cp/upfor (dec (cp/ncpus)))
+  [training-model testing-model results-dir {:keys [context-path-length-cap
+                                                    context-thresh
+                                                    cluster-thresh
+                                                    min-match-support
+                                                    seed-frac
+                                                    rng]}]
   (doall
-    (for [seed-frac seed-frac
-          :let [split-model (re-model/split-train-test model)]
+    ;; parallelize with
+    #_(cp/upfor (dec (cp/ncpus)))
+    (for [seed-frac               seed-frac
+          :let [split-model    (re-model/split-train-test (assoc training-model :seed-frac seed-frac
+                                                                                :rng rng))
+                prepared-model (if (seq testing-model)
+                                 (re-model/train-test split-model testing-model)
+                                 split-model)]
           context-path-length-cap context-path-length-cap
-          context-thresh context-thresh
-          cluster-thresh cluster-thresh
-          min-match-support min-match-support]
-      (let [model (merge split-model {:context-thresh          context-thresh
-                                      :cluster-thresh          cluster-thresh
-                                      :min-match-support       min-match-support
-                                      :max-iterations          100
-                                      :max-matches             3000
-                                      :re-clustering?          true
-                                      :context-path-length-cap context-path-length-cap
-                                      :seed-frac               seed-frac
-                                      :rng                     rng})]
-        (log/warn (re/re-params model))
-        (run-model split-model results-dir)))))
+          context-thresh          context-thresh
+          cluster-thresh          cluster-thresh
+          min-match-support       min-match-support]
+      (-> prepared-model
+          (assoc :context-thresh context-thresh
+                 :cluster-thresh cluster-thresh
+                 :min-match-support min-match-support
+                 :max-iterations 100
+                 :max-matches 3000
+                 :re-clustering? true
+                 :context-path-length-cap context-path-length-cap)
+          (run-model results-dir)))))
 
 (defn flatten-context-vector
   [s model]
@@ -270,9 +272,9 @@
                                                                         {:count cnt
                                                                          :num   n})))))
                       (let [title (format fmt "Context Path Lengths")
-                            plot (inc-charts/bar-chart :count :num
-                                                       :title title
-                                                       :x-label "Context Path Length"
-                                                       :y-label "Frequency")]
+                            plot  (inc-charts/bar-chart :count :num
+                                                        :title title
+                                                        :x-label "Context Path Length"
+                                                        :y-label "Frequency")]
                         (inc-svg/save-svg plot (str (io/file results-dir title) ".svg") :width 1000)
                         plot)))

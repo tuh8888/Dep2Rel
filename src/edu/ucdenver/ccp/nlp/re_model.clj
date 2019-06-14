@@ -145,8 +145,8 @@
   [a1 a2]
   (let [min-a1-start (min-start a1)
         min-a2-start (min-start a2)
-        max-a1-end (max-end a1)
-        max-a2-end (max-end a2)]
+        max-a1-end   (max-end a1)
+        max-a2-end   (max-end a2)]
     (<= min-a1-start min-a2-start max-a2-end max-a1-end)))
 
 (defn make-context-path
@@ -186,9 +186,9 @@
         entities (->> anns
                       (map :id)
                       (set))
-        context (->> anns
-                     (map :tok)
-                     (make-context-path model undirected-sent sent-id))]
+        context  (->> anns
+                      (map :tok)
+                      (make-context-path model undirected-sent sent-id))]
     (->Sentence concepts entities context)))
 
 (defn combination-sentences
@@ -284,10 +284,12 @@
         (take pot)
         (set))))
 
-(defn test-train
-  [training-model {:keys [word2vec-db] :as testing-model}]
+(defn train-test
+  [{:keys [seeds seed-frac rng]} {:keys [word2vec-db] :as testing-model}]
   (word2vec/with-word2vec word2vec-db
-    (assoc testing-model :seeds (:seeds training-model)
+    (assoc testing-model :seed-frac seed-frac
+                         :rng rng
+                         :seeds seeds
                          :all-samples (->> testing-model
                                            :sentences
                                            (map #(assign-embedding testing-model %))
@@ -297,21 +299,21 @@
 (defn split-train-test
   "Splits model into train and test sets"
   [{:keys [sentences properties word2vec-db] :as model}]
-  (let [seeds (->> (disj properties NONE)
-                   (map (fn [property] (frac-seeds property model)))
-                   (apply clojure.set/union))
+  (let [seeds    (->> (disj properties NONE)
+                      (map (fn [property] (frac-seeds property model)))
+                      (apply clojure.set/union))
         NONE-num (->> seeds
                       (group-by :property)
                       (vals)
                       (map count)
                       (reduce max))
-        seeds (->> sentences
-                   (filter #(= NONE (:property %)))
-                   (count)
-                   (/ NONE-num)
-                   (assoc model :seed-frac)
-                   (frac-seeds NONE)
-                   (clojure.set/union seeds))]
+        seeds    (->> sentences
+                      (filter #(= NONE (:property %)))
+                      (count)
+                      (/ NONE-num)
+                      (assoc model :seed-frac)
+                      (frac-seeds NONE)
+                      (clojure.set/union seeds))]
     (word2vec/with-word2vec word2vec-db
       (-> model
           (assoc :all-samples (remove seeds sentences)
