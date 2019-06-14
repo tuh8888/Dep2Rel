@@ -51,7 +51,7 @@
          (doall)
          (apply linear-algebra/vec-sum))))
 
-(defrecord Sentence [concepts entities context]
+(defrecord Sentence [concepts entities context sent]
   ContextVector
   (context-vector [self {:keys [structure-annotations concept-annotations] :as model}]
     (or (:VEC self)
@@ -189,7 +189,7 @@
         context  (->> anns
                       (map :tok)
                       (make-context-path model undirected-sent sent-id))]
-    (->Sentence concepts entities context)))
+    (->Sentence concepts entities context sent-id)))
 
 (defn combination-sentences
   [model undirected-sent sent-id sent-annotations]
