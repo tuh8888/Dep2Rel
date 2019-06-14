@@ -81,25 +81,12 @@
         x2         (incanter/mmult X pc2)]
     [x1 x2]))
 
-
-(defn actual-positive
-  [property samples]
-  (->> samples
-       (filter #(= property (:property %)))
-       (sentences->entities)))
-
-(defn predicted-positive
-  [property matches]
-  (->> matches
-       (filter #(= property (:predicted %)))
-       (sentences->entities)))
-
 (defn calc-metrics
   [{:keys [matches properties all-samples]}]
   (let [all     (sentences->entities all-samples)
         metrics (map (fn [property]
-                       (let [actual-positive    (actual-positive property all-samples)
-                             predicted-positive (predicted-positive property matches)]
+                       (let [actual-positive    (sentences->entities (re-model/actual-positive property all-samples))
+                             predicted-positive (sentences->entities (re-model/predicted-positive property matches))]
                          #_(log/info property "ALL" (count all) "AT" (count actual-positive) "PT" (count predicted-positive))
                          (-> (try
                                (math/calc-metrics {:actual-positive    actual-positive
@@ -115,8 +102,8 @@
 
 (defn calc-overall-metrics
   [{:keys [matches]}]
-  (let [predicted-positive (remove #(= (:predicted %) re-model/NONE) matches)
-        predicted-negative (filter #(= (:predicted %) re-model/NONE) matches)
+  (let [predicted-positive (re-model/predicted-positive matches)
+        predicted-negative (re-model/predicted-negative matches)
         tp (count (filter #(= (:predicted %) (:property %)) predicted-positive))
         tn (count (filter #(= (:predicted %) (:property %)) predicted-negative))
         fp (count (filter #(not= (:predicted %) (:property %)) predicted-positive))

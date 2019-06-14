@@ -94,6 +94,31 @@
        (interpose " ")
        (apply str)))
 
+(defn predicted-positive
+  [samples]
+  (remove #(= (:predicted %) NONE) samples))
+
+(defn actual-positive
+  ([samples]
+   (remove #(= NONE (:property %)) samples))
+  ([property samples]
+   (filter #(= property (:property %)) samples)))
+
+(defn actual-negative
+  "The samples labelled negative"
+  [samples]
+  (filter #(= NONE (:property %)) samples))
+
+(defn predicted-positive
+  ([samples]
+   (remove #(= NONE (:predicted %)) samples))
+  ([property matches]
+   (filter #(= property (:predicted %)) matches)))
+
+(defn predicted-negative
+  [samples]
+  (filter #(= (:predicted %) NONE) samples))
+
 (defn ann-tok
   [model {:keys [doc spans] :as ann}]
   (let [{concept-start :start concept-end :end} (first (vals spans))
@@ -328,3 +353,4 @@
                                           (map #(assign-embedding model %))
                                           (filter :VEC)
                                           (doall))))))))
+

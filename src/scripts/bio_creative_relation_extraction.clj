@@ -30,31 +30,21 @@
 (def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
 
 (def factory thal-native/native-double)
-(def properties #{"UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
-                  "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
-                  "AGONIST" "AGONIST-ACTIVATOR" "AGONIST-INHIBITOR"
-                  "ANTAGONIST"
-                  "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
-                  re-model/NONE}
-  #_#{"PART-OF"
-      "REGULATOR" "DIRECT-REGULATOR" "INDIRECT-REGULATOR"
-      "UPREGULATOR" "ACTIVATOR" "INDIRECT-UPREGULATOR"
-      "DOWNREGULATOR" "INHIBITOR" "INDIRECT-DOWNREGULATOR"
-      "AGONIST" "AGONIST-ACTIVATOR" "AGONIST-INHIBITOR"
-      "ANTAGONIST"
-      "MODULATOR" "MODULATOR‐ACTIVATOR" "MODULATOR‐INHIBITOR"
-      "COFACTOR"
-      "SUBSTRATE" "PRODUCT-OF" "SUBSTRATE_PRODUCT-OF"
-      "NOT"
-      re-model/NONE}
-  #_#{"INHIBITOR" #_re-model/NONE})
 
-(def property-map {"UPREGULATOR"   "CPR:3" "ACTIVATOR" "CPR:3" "INDIRECT-UPREGULATOR" "CPR:3"
+(def property-map {
+                   ;"PART-OF" "CPR:1"
+                   ;"REGULATOR" "CPR:2" "DIRECT-REGULATOR" "CPR:2" "INDIRECT-REGULATOR" "CPR:2"
+                   "UPREGULATOR"   "CPR:3" "ACTIVATOR" "CPR:3" "INDIRECT-UPREGULATOR" "CPR:3"
                    "DOWNREGULATOR" "CPR:4" "INHIBITOR" "CPR:4" "INDIRECT-DOWNREGULATOR" "CPR:4"
                    "AGONIST"       "CPR:5" "AGONIST-ACTIVATOR" "CPR:5" "AGONIST-INHIBITOR" "CPR:5"
                    "ANTAGONIST"    "CPR:6"
+                   ;"MODULATOR" "CPR:7" "MODULATOR‐ACTIVATOR" "CPR:7" "MODULATOR‐INHIBITOR" "CPR:7"
+                   ;"COFACTOR" "CPR:8"
                    "SUBSTRATE"     "CPR:9" "PRODUCT-OF" "CPR:9" "SUBSTRATE_PRODUCT-OF" "CPR:9"
+                   ;"NOT" "CPR:10"
                    re-model/NONE   re-model/NONE})
+
+
 
 (def properties (set (vals property-map)))
 
@@ -66,44 +56,33 @@
 (def training-knowtator-view (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
 (def base-training-model (re-model/make-model training-knowtator-view factory word2vec-db))
-(def training-model-with-sentences (assoc base-training-model :sentences (re-model/make-sentences base-training-model)))
-(def training-model (assoc (update training-model-with-sentences
-                                   :sentences (fn [sentences]
-                                                (->> sentences
-                                                     (filter (fn [s]
-                                                               (->> s
-                                                                    :entities
-                                                                    (map #(get-in training-model-with-sentences [:concept-annotations % :concept]))
-                                                                    (set)
-                                                                    (allowed-concept-pairs))))
-                                                     (map #(update % :property (fn [property] (or (get property-map property)
-                                                                                                  re-model/NONE)))))))
-                      :properties properties))
+(def training-sentences (->> (re-model/make-sentences base-training-model)
+                             (filter (fn [s]
+                                       (->> s
+                                            :entities
+                                            (map #(get-in base-training-model [:concept-annotations % :concept]))
+                                            (set)
+                                            (allowed-concept-pairs))))
+                             (map #(update % :property (fn [property] (or (get property-map property)
+                                                                          re-model/NONE))))))
+(def training-model (assoc base-training-model :sentences training-sentences
+                                               :properties properties))
 
 (def testing-knowtator-view (k/model testing-dir nil))
 (rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
 (def base-testing-model (re-model/make-model testing-knowtator-view factory word2vec-db))
-(def testing-model-with-sentences (assoc base-testing-model :sentences (re-model/make-sentences base-testing-model)))
-(def testing-model (assoc (update testing-model-with-sentences
-                                  :sentences (fn [sentences]
-                                               (->> sentences
-                                                    (filter (fn [s]
-                                                              (->> s
-                                                                   :entities
-                                                                   (map #(get-in testing-model-with-sentences [:concept-annotations % :concept]))
-                                                                   (set)
-                                                                   (allowed-concept-pairs))))
-                                                    (map #(update % :property (fn [property] (or (get property-map property)
-                                                                                                 re-model/NONE)))))))
-                     :properties properties))
-
-;; This allows me to reset sentences if they get reloaded
-#_(def training-model (update training-model
-                              :sentences (fn [sentences]
-                                           (map #(re-model/map->Sentence %) sentences))))
-#_(def testing-model (update testing-model
-                             :sentences (fn [sentences]
-                                          (map #(re-model/map->Sentence %) sentences))))
+(def testing-sentences (->> (re-model/make-sentences base-testing-model)
+                            (filter (fn [s]
+                                      (->> s
+                                           :entities
+                                           (map #(get-in base-testing-model [:concept-annotations % :concept]))
+                                           (set)
+                                           (allowed-concept-pairs))))
+                            (map #(update % :property (fn [property] (or (get property-map property)
+                                                                         re-model/NONE))))))
+(def testing-model (-> base-testing-model
+                       (assoc :sentences testing-sentences)
+                       (assoc :properties properties)))
 
 ;;; SENTENCE STATS ;;;
 (log/info "Model\n"
@@ -126,14 +105,20 @@
 
 #_(def training-context-paths-plot (evaluation/plot-context-lengths training-model results-dir "Training %s"))
 #_(incanter/view training-context-paths-plot)
-(def testing-context-paths-plot (evaluation/plot-context-lengths testing-model results-dir "Test %s"))
-(def testing-context-paths-plot-pos (evaluation/plot-context-lengths (update testing-model :sentences (fn [sentences]
-                                                                                                        (remove #(not= re-model/NONE (:property %)) sentences)))
-                                                                     results-dir "Pos Test %s"))
-(def testing-context-paths-plot-neg (evaluation/plot-context-lengths (update testing-model :sentences (fn [sentences]
-                                                                                                        (filter #(not= re-model/NONE (:property %)) sentences)))
-                                                                     results-dir "Neg Test %s"))
-(incanter/view testing-context-paths-plot)
+#_(def testing-context-paths-plot (evaluation/plot-context-lengths testing-model results-dir "Test %s"))
+#_(def testing-context-paths-plot-pos (-> testing-model
+                                          (update :sentences (fn [sentences])
+                                                         (re-model/actual-positive sentences))
+                                          (evaluation/plot-context-lengths
+                                            results-dir "Pos Test %s")))
+#_(def testing-context-paths-plot-neg (-> testing-model
+                                          (update :sentences (fn [sentences]
+                                                               (re-model/actual-negative sentences)))
+                                          (evaluation/plot-context-lengths
+                                            results-dir "Neg Test %s")))
+#_(incanter/view testing-context-paths-plot)
+#_(incanter/view testing-context-paths-plot-pos)
+#_(incanter/view testing-context-paths-plot-neg)
 
 ;;; CLUSTERING ;;;
 
@@ -146,6 +131,14 @@
 
 
 ;;; RELATION EXTRACTION ;;;
+
+;; This allows me to reset sentences if they get reloaded
+#_(def training-model (update training-model
+                              :sentences (fn [sentences]
+                                           (map #(re-model/map->Sentence %) sentences))))
+#_(def testing-model (update testing-model
+                             :sentences (fn [sentences]
+                                          (map #(re-model/map->Sentence %) sentences))))
 
 (def prepared-model (let [negatives (filter #(= re-model/NONE (:property %)) (:sentences training-model))
                           others    (remove #(= re-model/NONE (:property %)) (:sentences training-model))
