@@ -77,12 +77,14 @@
 
 
 (defn add-to-pattern
-  [model p s]
+  [{:keys [factory] :as model} p s]
   (->Pattern (conj (set (:support p)) s)
-             (if p
-               (linear-algebra/vec-sum (context-vector p model)
-                                       (context-vector s model))
-               (context-vector s model))))
+             (linear-algebra/unit-vec factory (if p
+                                                (-> p
+                                                    (context-vector model)
+                                                    (linear-algebra/vec-sum
+                                                      (context-vector s model)))
+                                                (context-vector s model)))))
 
 (defn pprint-toks-text
   [{:keys [structure-annotations]} toks]

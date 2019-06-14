@@ -145,9 +145,6 @@
           (empty? samples)
           (do (log/info "No more samples")
               success-model)
-          #_(<= max-matches (count (remove #(= re-model/NONE (:property %)) matches)))
-          #_(do (log/info "Too many matches")
-                model)
           (empty? seeds)
           (do (log/info "No seeds")
               model)
@@ -176,8 +173,13 @@
   (filter #(<= (count (:context %)) context-path-length-cap) all-samples))
 
 (defn bootstrap
-  [{:keys [seeds] :as model}]
-  (let [model (assoc model :samples (context-path-filter model)
+  [{:keys [seeds factory vector-fn] :as model}]
+  (let [model (assoc model :samples (->> model
+                                         (context-path-filter)
+                                         (map #(->> %
+                                                    (vector-fn)
+                                                    (linear-algebra/unit-vec factory)
+                                                    (assoc % :VEC))))
                            :matches #{}
                            :new-matches seeds
                            :iteration 0)]
