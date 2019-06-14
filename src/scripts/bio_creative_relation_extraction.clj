@@ -68,35 +68,34 @@
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
 (def base-training-model (re-model/make-model training-knowtator-view factory word2vec-db))
 (def training-model-with-sentences (assoc base-training-model :sentences (re-model/make-sentences base-training-model)))
-(def training-model (assoc (update training-model-with-sentences :sentences
-                                   (fn [sentences]
-                                     (->> sentences
-                                          (filter (fn [s]
-                                                    (->> s
-                                                         :entities
-                                                         (map #(get-in training-model [:concept-annotations % :concept]))
-                                                         (set)
-                                                         (allowed-concept-pairs))))
-                                          (map #(update % :property (fn [property] (or (get property-map property)
-                                                                                       re-model/NONE)))))))
+(def training-model (assoc (update training-model-with-sentences
+                                   :sentences (fn [sentences]
+                                                (->> sentences
+                                                     (filter (fn [s]
+                                                               (->> s
+                                                                    :entities
+                                                                    (map #(get-in training-model-with-sentences [:concept-annotations % :concept]))
+                                                                    (set)
+                                                                    (allowed-concept-pairs))))
+                                                     (map #(update % :property (fn [property] (or (get property-map property)
+                                                                                                  re-model/NONE)))))))
                       :properties properties))
 
 (def testing-knowtator-view (k/model testing-dir nil))
 (rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
 (def base-testing-model (re-model/make-model testing-knowtator-view factory word2vec-db))
 (def testing-model-with-sentences (assoc base-testing-model :sentences (re-model/make-sentences base-testing-model)))
-
-(def testing-model (assoc (update testing-model-with-sentences :sentences
-                                  (fn [sentences]
-                                    (->> sentences
-                                         (filter (fn [s]
-                                                   (->> s
-                                                        :entities
-                                                        (map #(get-in training-model [:concept-annotations % :concept]))
-                                                        (set)
-                                                        (allowed-concept-pairs))))
-                                         (map #(update % :property (fn [property] (or (get property-map property)
-                                                                                      re-model/NONE)))))))
+(def testing-model (assoc (update testing-model-with-sentences
+                                  :sentences (fn [sentences]
+                                               (->> sentences
+                                                    (filter (fn [s]
+                                                              (->> s
+                                                                   :entities
+                                                                   (map #(get-in testing-model-with-sentences [:concept-annotations % :concept]))
+                                                                   (set)
+                                                                   (allowed-concept-pairs))))
+                                                    (map #(update % :property (fn [property] (or (get property-map property)
+                                                                                                 re-model/NONE)))))))
                      :properties properties))
 
 ;; This allows me to reset sentences if they get reloaded
@@ -145,7 +144,7 @@
 
 (def prepared-model (let [negatives (filter #(= re-model/NONE (:property %)) (:sentences training-model))
                           others    (remove #(= re-model/NONE (:property %)) (:sentences training-model))
-                          seeds    ` (lazy-cat others (take 2000 negatives))]
+                          seeds     (lazy-cat others (take 2000 negatives))]
                       (-> training-model
                           (assoc :s 1
                                  :rng 0.022894)
