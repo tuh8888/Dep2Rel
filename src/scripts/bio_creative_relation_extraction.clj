@@ -59,6 +59,9 @@
 
 (def properties (set (vals property-map)))
 
+(def allowed-concept-pairs #{#{"CHEMICAL" "GENE-N"}
+                             #{"CHEMICAL" "GENE-Y"}})
+
 ;;; MODELS ;;;
 
 (def training-knowtator-view (k/model training-dir nil))
@@ -67,9 +70,15 @@
 (def training-model-with-sentences (assoc base-training-model :sentences (re-model/make-sentences base-training-model)))
 (def training-model (assoc (update training-model-with-sentences :sentences
                                    (fn [sentences]
-                                     (map #(update % :property (fn [property] (or (get property-map property)
-                                                                                  re-model/NONE)))
-                                          sentences)))
+                                     (->> sentences
+                                          (filter (fn [s]
+                                                    (->> s
+                                                         :entities
+                                                         (map #(get-in training-model [:concept-annotations % :concept]))
+                                                         (set)
+                                                         (allowed-concept-pairs))))
+                                          (map #(update % :property (fn [property] (or (get property-map property)
+                                                                                       re-model/NONE)))))))
                       :properties properties))
 
 (def testing-knowtator-view (k/model testing-dir nil))
@@ -79,9 +88,15 @@
 
 (def testing-model (assoc (update testing-model-with-sentences :sentences
                                   (fn [sentences]
-                                    (map #(update % :property (fn [property] (or (get property-map property)
-                                                                                 re-model/NONE)))
-                                         sentences)))
+                                    (->> sentences
+                                         (filter (fn [s]
+                                                   (->> s
+                                                        :entities
+                                                        (map #(get-in training-model [:concept-annotations % :concept]))
+                                                        (set)
+                                                        (allowed-concept-pairs))))
+                                         (map #(update % :property (fn [property] (or (get property-map property)
+                                                                                      re-model/NONE)))))))
                      :properties properties))
 
 ;; This allows me to reset sentences if they get reloaded
