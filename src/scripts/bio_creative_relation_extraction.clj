@@ -81,8 +81,10 @@
                     [:training :testing])
                (incanter/to-dataset)))
 
-(evaluation/plot-context-lengths training-model-with-sentences results-dir)
-(evaluation/plot-context-lengths testing-model-with-sentences results-dir)
+(def training-context-paths-plot (evaluation/plot-context-lengths training-model results-dir "Training %s"))
+#_(incanter/view training-context-paths-plot)
+(def testing-context-paths-plot(evaluation/plot-context-lengths testing-model results-dir "Test %s"))
+#_(incanter/view testing-context-paths-plot)
 
 ;;; CLUSTERING ;;;
 
