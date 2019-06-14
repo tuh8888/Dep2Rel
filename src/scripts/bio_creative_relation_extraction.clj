@@ -127,8 +127,14 @@
 
 #_(def training-context-paths-plot (evaluation/plot-context-lengths training-model results-dir "Training %s"))
 #_(incanter/view training-context-paths-plot)
-#_(def testing-context-paths-plot (evaluation/plot-context-lengths testing-model results-dir "Test %s"))
-#_(incanter/view testing-context-paths-plot)
+(def testing-context-paths-plot (evaluation/plot-context-lengths testing-model results-dir "Test %s"))
+(def testing-context-paths-plot-pos (evaluation/plot-context-lengths (update testing-model :sentences (fn [sentences]
+                                                                                                        (remove #(not= re-model/NONE (:property %)) sentences)))
+                                                                     results-dir "Pos Test %s"))
+(def testing-context-paths-plot-neg (evaluation/plot-context-lengths (update testing-model :sentences (fn [sentences]
+                                                                                                        (filter #(not= re-model/NONE (:property %)) sentences)))
+                                                                     results-dir "Neg Test %s"))
+(incanter/view testing-context-paths-plot)
 
 ;;; CLUSTERING ;;;
 
@@ -153,8 +159,8 @@
                           (re-model/train-test testing-model))))
 
 (def results (-> prepared-model
-                 (assoc :context-path-length-cap 10
-                        :context-thresh 0.95
+                 (assoc :context-path-length-cap 100
+                        :context-thresh 0.9
                         :cluster-thresh 0.95
                         :min-match-support 0
                         :max-iterations 100
