@@ -59,9 +59,12 @@
 (def testing-model (assoc testing-model-with-sentences :properties properties))
 
 ;; This allows me to reset sentences if they get reloaded
-#_(def training-model (update training-model
-                              :sentences (fn [sentences]
-                                           (map #(re-model/map->Sentence %) sentences))))
+(def training-model (update training-model
+                            :sentences (fn [sentences]
+                                         (map #(re-model/map->Sentence %) sentences))))
+(def testing-model (update testing-model
+                           :sentences (fn [sentences]
+                                        (map #(re-model/map->Sentence %) sentences))))
 
 ;;; SENTENCE STATS ;;;
 (log/info "Model\n"
@@ -104,8 +107,7 @@
                                :rng 0.022894)
                         (re-model/split-train-test)))
 
-#_(def prepared-model (re-model/test-train testing-model prepared-model))
-
+(def prepared-model (re-model/test-train testing-model prepared-model))
 
 (def results (-> prepared-model
                  (assoc :context-path-length-cap 100
