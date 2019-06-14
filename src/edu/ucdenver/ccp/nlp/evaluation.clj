@@ -208,8 +208,7 @@
 
                     (re/bootstrap)
                     (doall))
-        results (assoc results :metrics (calc-metrics results)
-                               :plot)]
+        results (assoc results :metrics (calc-metrics results))]
     (assoc results :plot (plot-metrics results
                                        {:save {:file (->> results
                                                           (re/re-params)
