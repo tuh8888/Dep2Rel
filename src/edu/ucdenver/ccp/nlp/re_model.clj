@@ -285,7 +285,7 @@
         (set))))
 
 (defn test-train
-  [{:keys [word2vec-db] :as testing-model} training-model]
+  [training-model {:keys [word2vec-db] :as testing-model}]
   (word2vec/with-word2vec word2vec-db
     (assoc testing-model :seeds (:seeds training-model)
                          :all-samples (->> testing-model

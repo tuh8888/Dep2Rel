@@ -105,9 +105,8 @@
 (def prepared-model (-> training-model
                         (assoc :seed-frac 0.2
                                :rng 0.022894)
-                        (re-model/split-train-test)))
-
-(def prepared-model (re-model/test-train testing-model prepared-model))
+                        (re-model/split-train-test)
+                        (re-model/test-train testing-model)))
 
 (def results (-> prepared-model
                  (assoc :context-path-length-cap 100
