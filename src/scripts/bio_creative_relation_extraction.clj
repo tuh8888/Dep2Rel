@@ -8,13 +8,9 @@
             [uncomplicate.neanderthal.native :as thal-native]
             [incanter.core :as incanter]
             [incanter.io :as inc-io]
-            [incanter.charts :as inc-charts]
-            [edu.ucdenver.ccp.nlp.relation-extraction :as re]
-            [clojure.string :as str]
-            [ubergraph.alg :as uber-alg]
-            [incanter.svg :as inc-svg]))
+            [edu.ucdenver.ccp.nlp.relation-extraction :as re]))
 
-(log/set-level! :debug)
+(log/set-level! :info)
 
 ;; File naming patterns
 (def sep "_")
@@ -52,39 +48,60 @@
 
 (def training-knowtator-view (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
-(def training-model (re-model/make-model training-knowtator-view factory word2vec-db))
-(def training-model-with-sentences (assoc training-model :sentences (re-model/make-sentences training-model)))
+(def base-training-model (re-model/make-model training-knowtator-view factory word2vec-db))
+(def training-model-with-sentences (assoc base-training-model :sentences (re-model/make-sentences base-training-model)))
+(def training-model (assoc training-model-with-sentences :properties properties))
+
+(def testing-knowtator-view (k/model testing-dir nil))
+(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
+(def base-testing-model (re-model/make-model testing-knowtator-view factory word2vec-db))
+(def testing-model-with-sentences (assoc base-testing-model :sentences (re-model/make-sentences base-testing-model)))
+(def testing-model (assoc testing-model-with-sentences :properties properties))
+
+;; This allows me to reset sentences if they get reloaded
+#_(def training-model (update training-model
+                              :sentences (fn [sentences]
+                                           (map #(re-model/map->Sentence %) sentences))))
+
+;;; SENTENCE STATS ;;;
+(log/info "Model\n"
+          (incanter/to-dataset [(assoc (->> training-model
+                                            (re-model/model-params)
+                                            (util/map-kv count))
+                                  :model :training)
+                                (assoc (->> base-testing-model
+                                            (re-model/model-params)
+                                            (util/map-kv count))
+                                  :model :testing)]))
+(log/info "Num sentences with property\n"
+          (->> [(:sentences training-model)
+                (:sentences testing-model)]
+               (re/property-counts properties :property)
+               (map #(assoc %2 :model %1)
+                    [:training :testing])
+               (incanter/to-dataset)))
 
 (evaluation/plot-context-lengths training-model-with-sentences results-dir)
-
-(def training-model-with-props (assoc training-model-with-sentences :properties properties))
-(def testing-knowtator-view (k/view testing-dir))
-(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
-(def testing-model (re-model/make-model training-knowtator-view factory word2vec-db))
-(def testing-model-with-sentences (assoc testing-model :sentences (re-model/make-sentences testing-model)))
-(def testing-model-with-props (assoc testing-model-with-sentences :properties properties))
-;; This allows me to reset sentences if they get reloaded
-#_(def training-model-with-props (update training-model-with-props
-                                         :sentences (fn [sentences]
-                                                      (map #(re-model/map->Sentence %) sentences))))
+(evaluation/plot-context-lengths testing-model-with-sentences results-dir)
 
 ;;; CLUSTERING ;;;
 
 ;;; PCA ;;;
 
-(def model-with-sentences-dataset (evaluation/sentences->dataset training-model-with-props))
-#_(incanter/save (:sentences-dataset model-with-sentences-dataset) (str (io/file training-dir "sentences-dataset.csv")))
-(def pca-plots (evaluation/pca-plots model-with-sentences-dataset
-                                     {:save {:file (io/file results-dir "%s")}}))
+#_(def model-with-sentences-dataset (evaluation/sentences->dataset training-model))
+#_(incanter/save (:sentences-dataset model-with-sentences-dataset) (str (io/file training-dir " sentences-dataset.csv ")))
+#_(def pca-plots (evaluation/pca-plots model-with-sentences-dataset
+                                       {:save {:file (io/file results-dir " %s ")}}))
+
 
 ;;; RELATION EXTRACTION ;;;
 
-(def prepared-model (-> training-model-with-props
+(def prepared-model (-> training-model
                         (assoc :seed-frac 0.2
                                :rng 0.022894)
                         (re-model/split-train-test)))
 
-#_(def prepared-model (re-model/test-train testing-model-with-props prepared-model))
+#_(def prepared-model (re-model/test-train testing-model prepared-model))
 
 
 (def results (-> prepared-model
@@ -100,10 +117,10 @@
 
 (count (:samples results))
 
-#_(apply evaluation/format-matches training-model results)
+#_(apply evaluation/format-matches base-training-model results)
 
 (def param-walk-results (evaluation/parameter-walk results-dir
-                                                   training-model
+                                                   base-training-model
                                                    {:context-path-length-cap [100] #_[2 3 5 10 20 35 100]
                                                     :context-thresh          [0.95] #_[0.975 0.95 0.925 0.9 0.85]
                                                     :cluster-thresh          [0.95] #_[0.95 0.9 0.75 0.5]

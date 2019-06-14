@@ -16,7 +16,8 @@
 (def MODEL-KEYs [:concept-annotations
                  :concept-graphs
                  :structure-annotations
-                 :structure-graphs])
+                 :structure-graphs
+                 :sentences])
 
 (defn model-params
   [model]
@@ -245,21 +246,19 @@
   [v factory word2vec-db]
   (log/info "Making model")
   (word2vec/with-word2vec word2vec-db
-    (let [model (as-> (k/simple-model v) model
-                      (assoc model :factory factory
-                                   :word2vec-db word2vec-db)
-                      (update model :structure-annotations (fn [structure-annotations]
-                                                             (log/info "Making structure annotations")
-                                                             (util/pmap-kv (fn [s]
-                                                                             (assign-sent-id model s))
-                                                                           structure-annotations)))
-                      (update model :concept-annotations (fn [concept-annotations]
-                                                           (log/info "Making concept annotations")
-                                                           (util/pmap-kv (fn [s]
-                                                                           (assign-tok model s))
-                                                                         concept-annotations))))]
-      (log/info "Model" (util/map-kv count (model-params model)))
-      model)))
+    (as-> (k/simple-model v) model
+          (assoc model :factory factory
+                       :word2vec-db word2vec-db)
+          (update model :structure-annotations (fn [structure-annotations]
+                                                 (log/info "Making structure annotations")
+                                                 (util/pmap-kv (fn [s]
+                                                                 (assign-sent-id model s))
+                                                               structure-annotations)))
+          (update model :concept-annotations (fn [concept-annotations]
+                                               (log/info "Making concept annotations")
+                                               (util/pmap-kv (fn [s]
+                                                               (assign-tok model s))
+                                                             concept-annotations))))))
 
 (defn make-sentences
   [{:keys [word2vec-db] :as model}]
@@ -270,10 +269,6 @@
                          (pmap #(assign-embedding model %))
                          (pmap #(assign-property model %))
                          (doall))]
-      (log/info "Num sentences:" (count sentences))
-      (log/info "Num sentences with property:" (->> sentences
-                                                    (group-by :property)
-                                                    (util/map-kv count)))
       sentences)))
 
 (defn frac-seeds
