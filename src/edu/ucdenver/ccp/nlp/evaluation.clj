@@ -113,6 +113,28 @@
          (log/info))
     metrics))
 
+(defn calc-overall-metrics
+  [{:keys [matches]}]
+  (let [predicted-positive (remove #(= (:predicted %) re-model/NONE) matches)
+        predicted-negative (filter #(= (:predicted %) re-model/NONE) matches)
+        tp (count (filter #(= (:predicted %) (:property %)) predicted-positive))
+        tn (count (filter #(= (:predicted %) (:property %)) predicted-negative))
+        fp (count (filter #(not= (:predicted %) (:property %)) predicted-positive))
+        fn (count (filter #(not= (:predicted %) (:property %)) predicted-negative))
+        precision (/ (float tp) (+ fp tp))
+        recall (/ (float tp) (+ tp fn))
+        f1 (/ (* 2 precision recall)
+              (+ precision recall))
+        metrics {:tp tp
+                 :tn tn
+                 :fp fp
+                 :fn fn
+                 :precision precision
+                 :recall recall
+                 :f1 f1}]
+    (log/info "Metrics" metrics)
+    metrics))
+
 (defn make-property-plot
   [{:keys [x-label y-label title]} property groups x y]
   (let [xy (->> groups
@@ -208,7 +230,8 @@
 
                     (re/bootstrap)
                     (doall))
-        results (assoc results :metrics (calc-metrics results))]
+        results (assoc results :metrics (calc-metrics results)
+                               :overall-metrics (calc-overall-metrics results))]
     (assoc results :plot (plot-metrics results
                                        {:save {:file (->> results
                                                           (re/re-params)
