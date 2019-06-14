@@ -86,6 +86,7 @@
                        (assoc :properties properties)))
 
 ;;; SENTENCE STATS ;;;
+
 (log/info "Model\n"
           (incanter/to-dataset [(assoc (->> training-model
                                             (re-model/model-params)
@@ -123,23 +124,34 @@
 
 ;;; CLUSTERING ;;;
 
+(def clusters-dataset (-> training-model
+                          (assoc :sentences (-> training-model
+                                                (assoc :cluster-thresh 0.95
+                                                       :new-matches (:sentences training-model))
+                                                (re/pattern-update)))
+                          (evaluation/sentences->dataset)))
+(incanter/save (:sentences-dataset clusters-dataset) (str (io/file training-dir " clusters-dataset.csv ")))
+(def pca-plots (evaluation/pca-plots clusters-dataset
+                                     {:save {:file (io/file results-dir "%s")}}))
+
 ;;; PCA ;;;
 
-#_(def model-with-sentences-dataset (evaluation/sentences->dataset training-model))
-#_(incanter/save (:sentences-dataset model-with-sentences-dataset) (str (io/file training-dir " sentences-dataset.csv ")))
-#_(def pca-plots (evaluation/pca-plots model-with-sentences-dataset
-                                       {:save {:file (io/file results-dir " %s ")}}))
+#_(def sentences-dataset (evaluation/sentences->dataset training-model))
+#_(incanter/save (:sentences-dataset sentences-dataset) (str (io/file training-dir " sentences-dataset.csv ")))
+#_(def pca-plots (evaluation/pca-plots sentences-dataset
+                                       {:save {:file (io/file results-dir "%s")}}))
 
 
 ;;; RELATION EXTRACTION ;;;
 
-;; This allows me to reset sentences if they get reloaded
-#_(def training-model (update training-model
+(comment
+  ;; This allows me to reset sentences if they get reloaded
+  (def training-model (update training-model
                               :sentences (fn [sentences]
                                            (map #(re-model/map->Sentence %) sentences))))
-#_(def testing-model (update testing-model
+  (def testing-model (update testing-model
                              :sentences (fn [sentences]
-                                          (map #(re-model/map->Sentence %) sentences))))
+                                          (map #(re-model/map->Sentence %) sentences)))))
 
 (def prepared-model (-> training-model
                         (assoc :seed-frac 1
@@ -147,8 +159,6 @@
                                :negative-cap 2000)
                         (re-model/split-train-test)
                         (re-model/train-test testing-model)))
-
-(re/log-starting-values prepared-model)
 
 (def results (-> prepared-model
                  (assoc :context-path-length-cap 100
@@ -161,10 +171,6 @@
                  (evaluation/run-model results-dir)))
 
 #_(incanter/view (:plot results))
-
-#_(util/map-kv count (group-by :property (:seeds results)))
-
-#_(apply evaluation/format-matches base-training-model results)
 
 #_(def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir
                                                      {:context-path-length-cap          [100] #_[2 3 5 10 20 35 100]
