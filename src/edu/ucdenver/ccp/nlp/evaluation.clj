@@ -116,10 +116,10 @@
   (let [metrics (remove #(= (:property %) re-model/NONE) (calc-metrics model))]
     (when metrics
       (try
-        (let [tp        (reduce + (map :tp metrics))
-              tn        (reduce + (map :tn metrics))
-              fp        (reduce + (map :fp metrics))
-              fn        (reduce + (map :fn metrics))
+        (let [tp        (reduce + (keep :tp metrics))
+              tn        (reduce + (keep :tn metrics))
+              fp        (reduce + (keep :fp metrics))
+              fn        (reduce + (keep :fn metrics))
               precision (/ (float tp) (+ fp tp))
               recall    (/ (float tp) (+ tp fn))
               f1        (/ (* 2 precision recall)
