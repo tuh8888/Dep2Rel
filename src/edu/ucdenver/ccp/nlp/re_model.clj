@@ -351,7 +351,8 @@
       (-> model
           (assoc :all-samples (remove seeds sentences)
                  :seeds (->> seeds
-                             (map #(assoc % :predicted (:property %)))
+                             (map #(assoc % :predicted (:property %)
+                                            :confidence 1))
                              (set)))
           (update :all-samples (fn [samples] (->> samples
                                                   (map #(assign-embedding model %))
