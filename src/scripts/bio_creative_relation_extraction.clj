@@ -168,6 +168,7 @@
                    (assoc :context-path-length-cap 100
                           :context-thresh 0.9
                           :cluster-thresh 0.9
+                          :confidence-thresh 0.95
                           :min-match-support 0
                           :max-iterations 100
                           :max-matches 3000
@@ -180,6 +181,7 @@
                                                    {:context-path-length-cap          [10 20 100] #_[2 3 5 10 20 35 100]
                                                     :context-thresh          #_[0.95] [0.975 0.95 0.925 0.9 0.85]
                                                     :cluster-thresh          #_[0.95] [0.95 0.9 0.75 0.5]
+                                                    :confidence-thresh                [0.95]
                                                     :min-match-support                [0] #_[0 5 25]
                                                     :seed-frac                        [1] #_[0.05 0.25 0.5 0.75]
                                                     :rng                              0.022894

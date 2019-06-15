@@ -84,37 +84,46 @@
   #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
     (log/info "Finding matches")
-    (let [filtered-samples (-> samples
-                               (concept-filter patterns)
-                               (vec))
-          patterns         (vec patterns)
-          sample-vectors   (->> filtered-samples
-                                (map vector-fn)
-                                (pmap #(linear-algebra/unit-vec factory %))
-                                (vec))
-          pattern-vectors  (->> patterns
-                                (map vector-fn)
-                                (pmap #(linear-algebra/unit-vec factory %))
-                                (vec))
-          matches-map      (->> sample-vectors
-                                (linear-algebra/find-best-col-matches factory pattern-vectors)
-                                (filter (fn [{:keys [score]}] (< context-thresh score)))
-                                (map #(let [s (get filtered-samples (:j %))
-                                            p (get patterns (:i %))]
-                                        (when-not s (log/warn (:j %) "sample not found"))
-                                        (when-not p (log/warn (:i %) "pattern not found"))
-                                        [s p]))
-                                (filter (fn [[s p]] (sent-pattern-concepts-match? s p)))
-                                (into {}))]
+    (let [max-cluster-support-m (->> patterns
+                                     (group-by :property)
+                                     (util/map-kv :support)
+                                     (util/map-kv count))
+          filtered-samples      (-> samples
+                                    (concept-filter patterns)
+                                    (vec))
+          patterns              (vec patterns)
+          sample-vectors        (->> filtered-samples
+                                     (map vector-fn)
+                                     (pmap #(linear-algebra/unit-vec factory %))
+                                     (vec))
+          pattern-vectors       (->> patterns
+                                     (map vector-fn)
+                                     (pmap #(linear-algebra/unit-vec factory %))
+                                     (vec))
+          matches-map           (->> sample-vectors
+                                     (linear-algebra/find-best-col-matches factory pattern-vectors)
+                                     (filter (fn [{:keys [score]}] (< context-thresh score)))
+                                     (map #(let [s (get filtered-samples (:j %))
+                                                 p (get patterns (:i %))]
+                                             (when-not s (log/warn (:j %) "sample not found"))
+                                             (when-not p (log/warn (:i %) "pattern not found"))
+                                             [s [p (:score %)]]))
+                                     (filter (fn [[s p]] (sent-pattern-concepts-match? s p)))
+                                     (into {}))]
       (map (fn [s]
-             (let [match (get matches-map s)]
-               (assoc s :predicted (:predicted match))))
+             (let [[match score] (get matches-map s)]
+               (assoc s :predicted (:predicted match)
+                        :confidence (* score
+                                       (/ (count (:support match))
+                                          (get max-cluster-support-m (:predicted match)))))))
            samples))))
 
 (defn pattern-update
-  [{:keys [properties new-matches patterns] :as model}]
+  [{:keys [properties new-matches patterns confidence-thresh] :as model}]
   (mapcat (fn [property]
-            (let [samples  (filter #(= (:predicted %) property) new-matches)
+            (let [samples  (->> new-matches
+                                (filter #(< (:confidence %) confidence-thresh))
+                                (filter #(= (:predicted %) property)))
                   patterns (filter #(= (:predicted %) property) patterns)]
               (if (seq samples)
                 (do
