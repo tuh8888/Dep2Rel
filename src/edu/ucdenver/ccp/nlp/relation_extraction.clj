@@ -7,7 +7,7 @@
             [incanter.core :as incanter]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]))
 
-(def PARAM-KEYS [:context-thresh
+(def PARAM-KEYS [:match-thresh
                  :cluster-thresh
                  :context-path-length-cap
                  :rng
@@ -80,14 +80,15 @@
           samples))
 
 (defn concept-context-match
-  [{:keys [context-thresh vector-fn samples patterns factory]}]
+  [{:keys [match-thresh vector-fn samples patterns factory]}]
   #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
     (log/info "Finding matches")
     (let [max-cluster-support-m (->> patterns
-                                     (group-by :property)
-                                     (util/map-kv :support)
-                                     (util/map-kv count))
+                                     (group-by :predicted)
+                                     (util/map-kv #(map :support %))
+                                     (util/map-kv #(map count %))
+                                     (util/map-kv #(reduce max %)))
           filtered-samples      (-> samples
                                     (concept-filter patterns)
                                     (vec))
@@ -100,29 +101,30 @@
                                      (map vector-fn)
                                      (pmap #(linear-algebra/unit-vec factory %))
                                      (vec))
-          matches-map           (->> sample-vectors
+          new-matches           (->> sample-vectors
                                      (linear-algebra/find-best-col-matches factory pattern-vectors)
-                                     (filter (fn [{:keys [score]}] (< context-thresh score)))
+                                     (filter (fn [{:keys [score]}] (< match-thresh score)))
                                      (map #(let [s (get filtered-samples (:j %))
                                                  p (get patterns (:i %))]
                                              (when-not s (log/warn (:j %) "sample not found"))
                                              (when-not p (log/warn (:i %) "pattern not found"))
-                                             [s [p (:score %)]]))
-                                     (filter (fn [[s p]] (sent-pattern-concepts-match? s p)))
+                                             [s (assoc p :score (:score %))]))
                                      (into {}))]
-      (map (fn [s]
-             (let [[match score] (get matches-map s)]
-               (assoc s :predicted (:predicted match)
-                        :confidence (* score
-                                       (/ (count (:support match))
-                                          (get max-cluster-support-m (:predicted match)))))))
+      (map (fn [s] (let [p (get new-matches s)]
+                     (if (sent-pattern-concepts-match? s p)
+                       (assoc s :predicted (:predicted p)
+                                :confidence (* (:score p)
+                                               (/ (count (:support p))
+                                                  (get max-cluster-support-m (:predicted p)))))
+                       s)))
            samples))))
+
 
 (defn pattern-update
   [{:keys [properties new-matches patterns confidence-thresh] :as model}]
   (mapcat (fn [property]
             (let [samples  (->> new-matches
-                                (filter #(< (:confidence %) confidence-thresh))
+                                (filter #(< confidence-thresh (:confidence %)))
                                 (filter #(= (:predicted %) property)))
                   patterns (filter #(= (:predicted %) property) patterns)]
               (if (seq samples)

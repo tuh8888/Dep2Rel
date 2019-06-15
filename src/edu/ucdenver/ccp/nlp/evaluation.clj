@@ -227,7 +227,6 @@
                            :terminate? re/terminate?
                            :decluster re/decluster
                            :context-path-filter-fn re/context-path-filter)
-
                     (re/bootstrap)
                     (doall))
         results (assoc results :metrics (calc-metrics results)
@@ -240,8 +239,9 @@
 
 (defn parameter-walk
   [training-model testing-model results-dir {:keys [context-path-length-cap
-                                                    context-thresh
+                                                    match-thresh
                                                     cluster-thresh
+                                                    confidence-thresh
                                                     min-match-support
                                                     seed-frac
                                                     rng negative-cap]}]
@@ -256,12 +256,14 @@
                                  (re-model/train-test split-model testing-model)
                                  split-model)]
           context-path-length-cap context-path-length-cap
-          context-thresh          context-thresh
+          context-thresh          match-thresh
           cluster-thresh          cluster-thresh
+          confidence-thresh       confidence-thresh
           min-match-support       min-match-support]
       (-> prepared-model
-          (assoc :context-thresh context-thresh
+          (assoc :match-thresh context-thresh
                  :cluster-thresh cluster-thresh
+                 :confidence-thresh confidence-thresh
                  :min-match-support min-match-support
                  :max-iterations 100
                  :max-matches 3000

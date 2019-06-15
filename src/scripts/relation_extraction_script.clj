@@ -95,28 +95,28 @@
 
 (comment
 
-  (def matches (let [seeds (clojure.set/union
-                             (evaluation/make-seeds sentences
-                               "CRAFT_aggregate_ontology_Instance_21437"
-                               "CRAFT_aggregate_ontology_Instance_22305")
-                             (evaluation/make-seeds sentences
-                               "CRAFT_aggregate_ontology_Instance_21365"
-                               "CRAFT_aggregate_ontology_Instance_22495"))
-                     seed-thresh 0.95
+  (def matches (let [seeds          (clojure.set/union
+                                      (evaluation/make-seeds sentences
+                                                             "CRAFT_aggregate_ontology_Instance_21437"
+                                                             "CRAFT_aggregate_ontology_Instance_22305")
+                                      (evaluation/make-seeds sentences
+                                                             "CRAFT_aggregate_ontology_Instance_21365"
+                                                             "CRAFT_aggregate_ontology_Instance_22495"))
+                     seed-thresh    0.95
                      context-thresh 0.95
                      cluster-thresh 0.7
-                     min-support 10
-                     params {:seed             (first seeds)
-                             :seed-thresh      seed-thresh
-                             :context-thresh   context-thresh
-                             :context-match-fn #(< context-thresh (re/context-vector-cosine-sim %1 %2))
-                             :cluster-merge-fn re/add-to-pattern
-                             :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
-                                                  (and (< (or %3 cluster-thresh) score)
-                                                       score))
-                             :min-seed-support min-support}
-                     matches (->> (re/cluster-bootstrap-extract-relations seeds sentences params)
-                                  (map #(merge % params)))]
+                     min-support    10
+                     params         {:seed             (first seeds)
+                                     :seed-thresh      seed-thresh
+                                     :match-thresh     context-thresh
+                                     :context-match-fn #(< context-thresh (re/context-vector-cosine-sim %1 %2))
+                                     :cluster-merge-fn re/add-to-pattern
+                                     :cluster-match-fn #(let [score (re/context-vector-cosine-sim %1 %2)]
+                                                          (and (< (or %3 cluster-thresh) score)
+                                                               score))
+                                     :min-seed-support min-support}
+                     matches        (->> (re/cluster-bootstrap-extract-relations seeds sentences params)
+                                         (map #(merge % params)))]
                  (log/info "Metrics" (c-metrics matches))
                  matches))
 

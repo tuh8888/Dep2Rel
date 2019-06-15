@@ -77,11 +77,12 @@
 
 
 (defn add-to-pattern
-  [{:keys [factory]} p s]
+  [{:keys [factory] :as model} p s]
   (let [support (conj (set (:support p)) s)]
     (->Pattern support
                (->> support
-                    (apply linear-algebra/unit-vec)
+                    (map #(context-vector % model))
+                    (apply linear-algebra/vec-sum)
                     (linear-algebra/unit-vec factory)))))
 
 (defn pprint-toks-text
