@@ -286,7 +286,7 @@
                               (filter #(contains? properties (:property %)))
                               (filter #(re-model/context-vector % model))
                               (pmap #(flatten-context-vector % model))
-                              (map #(dissoc % :entities :concepts :context :support))
+                              (map #(dissoc % :VEC :entities :concepts :context :support :predicted))
                               (vec)
                               (incanter/to-dataset)))))
 

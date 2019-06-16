@@ -125,16 +125,25 @@
 #_(incanter/view testing-context-paths-plot-neg)
 
 ;;; CLUSTERING ;;;
+(def training-clusters (-> training-model
+                           (assoc :seed-frac 1
+                                  :rng 0.022894
+                                  :negative-cap 2000
+                                  :confidence-thresh 0
+                                  :cluster-thresh 0.95
+                                  :cluster-merge-fn re-model/add-to-pattern
+                                  :vector-fn #(re-model/context-vector % training-model))
+                           (re-model/split-train-test)
+                           (re/pattern-update)))
 
 (def clusters-dataset (-> training-model
-                          (assoc :sentences (-> training-model
-                                                (assoc :cluster-thresh 0.95
-                                                       :new-matches (:sentences training-model))
-                                                (re/pattern-update)))
+                          (assoc :sentences (map #(assoc % :property (:predicted %)) training-clusters))
                           (evaluation/sentences->dataset)))
+
 (incanter/save (:sentences-dataset clusters-dataset) (str (io/file training-dir " clusters-dataset.csv ")))
 (def pca-plots (evaluation/pca-plots clusters-dataset
                                      {:save {:file (io/file results-dir "%s")}}))
+#_(incanter/view (get pca-plots "ALL"))
 
 ;;; PCA ;;;
 
@@ -154,8 +163,6 @@
   (def testing-model (update testing-model
                              :sentences (fn [sentences]
                                           (map #(re-model/map->Sentence %) sentences)))))
-
-()
 
 (def prepared-model (-> training-model
                         (assoc :seed-frac 1
