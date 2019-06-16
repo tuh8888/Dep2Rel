@@ -127,17 +127,21 @@
                       (filter #(< confidence-thresh (:confidence %)))
                       (group-by :predicted))
         patterns (group-by :predicted patterns)]
-    (mapcat (fn [property]
-              (let [samples  (get seeds property)
-                    patterns (get patterns property)]
-                (log/info "Clustering" property)
-                (->> samples
-                     (partition-all 1000)
-                     (mapcat (fn [sample-part]
-                               (->> patterns
-                                    (cluster-tools/single-pass-cluster model sample-part)
-                                    (map #(assoc % :predicted property))))))))
-            properties)))
+    (->> properties
+         (pmap (fn [property]
+                 (let [samples  (get seeds property)
+                       patterns (get patterns property)]
+                   (log/info "Clustering" property)
+                   (if (seq samples)
+                     (->> samples
+                          (partition-all 1000)
+                          (mapcat (fn [sample-part]
+                                    (->> patterns
+                                         (cluster-tools/single-pass-cluster model sample-part)
+                                         (map #(assoc % :predicted property))))))
+                     patterns))))
+         (apply concat))))
+
 
 (defn terminate?
   [{:keys [max-iterations iteration seeds matches patterns samples] :as model}]
