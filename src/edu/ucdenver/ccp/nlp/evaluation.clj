@@ -10,6 +10,8 @@
             [edu.ucdenver.ccp.nlp.re-model :as re-model]
             [clojure.java.io :as io]))
 
+(def EVAL-KEYS #{:fn :tp :fp :tn :precision :recall :f1 :metrics :overall-metrics})
+
 (defn format-matches
   [model matches _]
   (map (fn [match]
@@ -232,7 +234,7 @@
         metrics {:metrics         (calc-metrics results)
                  :overall-metrics (calc-overall-metrics results)}
         results (merge results metrics)]
-    (spit (io/file results-dir "results.edn") metrics :append true)
+    (spit (io/file results-dir "results.edn") (select-keys results (lazy-cat EVAL-KEYS re/PARAM-KEYS)) :append true)
     (assoc results :plot (plot-metrics results
                                        {:save {:file (->> results
                                                           (re/re-params)
@@ -244,7 +246,7 @@
                                                     match-thresh
                                                     cluster-thresh
                                                     confidence-thresh
-                                                    min-match-support
+                                                    min-pattern-support
                                                     seed-frac
                                                     rng negative-cap]}]
   (doall
@@ -261,14 +263,14 @@
           context-thresh          match-thresh
           cluster-thresh          cluster-thresh
           confidence-thresh       confidence-thresh
-          min-match-support       min-match-support]
+          min-match-support       min-pattern-support]
       (-> prepared-model
           (assoc :match-thresh context-thresh
                  :cluster-thresh cluster-thresh
                  :confidence-thresh confidence-thresh
-                 :min-match-support min-match-support
+                 :min-pattern-support min-match-support
                  :max-iterations 100
-                 :max-matches 3000
+                 :max-matches 5000
                  :re-clustering? true
                  :context-path-length-cap context-path-length-cap)
           (run-model results-dir)))))

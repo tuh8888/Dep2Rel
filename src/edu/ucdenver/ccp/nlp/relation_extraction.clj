@@ -7,16 +7,16 @@
             [incanter.core :as incanter]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]))
 
-(def PARAM-KEYS [:match-thresh
-                 :cluster-thresh
-                 :context-path-length-cap
-                 :confidence-thresh
-                 :rng
-                 :seed-frac
-                 :min-match-support
-                 :re-clustering?
-                 :max-iterations 100
-                 :max-matches 3000])
+(def PARAM-KEYS #{:match-thresh
+                  :cluster-thresh
+                  :context-path-length-cap
+                  :confidence-thresh
+                  :rng
+                  :seed-frac
+                  :min-pattern-support
+                  :re-clustering?
+                  :max-iterations
+                  :max-matches})
 
 (defn re-params
   [model]
@@ -84,7 +84,7 @@
   [{:keys [match-thresh vector-fn samples patterns factory]}]
   #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
-    (log/info "Finding matches")
+    (log/info "Finding matches" (count patterns) (count samples))
     (let [max-cluster-support-m (->> patterns
                                      (group-by :predicted)
                                      (util/map-kv #(map :support %))
@@ -94,14 +94,8 @@
                                     (concept-filter patterns)
                                     (vec))
           patterns              (vec patterns)
-          sample-vectors        (->> filtered-samples
-                                     (map vector-fn)
-                                     (pmap #(linear-algebra/unit-vec factory %))
-                                     (vec))
-          pattern-vectors       (->> patterns
-                                     (map vector-fn)
-                                     (pmap #(linear-algebra/unit-vec factory %))
-                                     (vec))
+          sample-vectors        (map vector-fn filtered-samples)
+          pattern-vectors       (map vector-fn patterns)
           new-matches           (->> sample-vectors
                                      (linear-algebra/find-best-col-matches factory pattern-vectors)
                                      (filter (fn [{:keys [score]}] (< match-thresh score)))
@@ -126,25 +120,26 @@
   (let [seeds    (->> seeds
                       (filter #(< confidence-thresh (:confidence %)))
                       (group-by :predicted))
-        patterns (group-by :predicted patterns)]
-    (->> properties
-         (pmap (fn [property]
-                 (let [samples  (get seeds property)
-                       patterns (get patterns property)]
-                   (log/info "Clustering" property)
-                   (if (seq samples)
-                     (->> samples
-                          (partition-all 1000)
-                          (mapcat (fn [sample-part]
+        patterns (group-by :predicted patterns)
+        patterns (->> properties
+                      (pmap (fn [property]
+                              (let [samples  (get seeds property)
+                                    patterns (get patterns property)]
+                                (log/info (count samples) (count patterns))
+                                (if (seq samples)
+                                  (do
+                                    (log/info "Clustering" property)
                                     (->> patterns
-                                         (cluster-tools/single-pass-cluster model sample-part)
-                                         (map #(assoc % :predicted property))))))
-                     patterns))))
-         (apply concat))))
+                                         (cluster-tools/single-pass-cluster model samples)
+                                         (map #(assoc % :predicted property))))
+                                  patterns))))
+                      (apply concat))]
+    (log/info (count seeds) (count patterns))
+    patterns))
 
 
 (defn terminate?
-  [{:keys [max-iterations iteration seeds matches patterns samples] :as model}]
+  [{:keys [max-iterations iteration seeds matches patterns samples max-matches] :as model}]
 
   ;; Remaining matches added to negative group
   (let [success-model (assoc model :matches (->> samples
@@ -153,6 +148,9 @@
                                    :patterns patterns)]
     (cond (<= max-iterations iteration)
           (do (log/info "Max iteration reached")
+              success-model)
+          (<= max-matches (count (remove #(= (:property %) re-model/NONE) matches)))
+          (do (log/info "Max matches")
               success-model)
           (empty? seeds)
           (do (log/info "No new matches")
@@ -165,12 +163,8 @@
               success-model))))
 
 (defn support-filter
-  [{:keys [min-match-support seeds]} pattern]
-  (or (empty? seeds)
-      (->> pattern
-           :support
-           (count)
-           (<= min-match-support))))
+  [{:keys [min-pattern-support]} pattern]
+  (<= min-pattern-support (count (:support pattern))))
 
 
 (defn decluster
@@ -198,6 +192,7 @@
     (log/info (re-params model))
     (log-starting-values model)
     (loop [model model]
+      (log/info (count (:seeds model)) (count (:patterns model)))
       (let [model       (assoc model :patterns (pattern-update model))
             unclustered (decluster model)
             model       (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))

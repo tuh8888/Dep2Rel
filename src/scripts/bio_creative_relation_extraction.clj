@@ -172,28 +172,31 @@
                         (re-model/split-train-test)
                         (re-model/train-test testing-model)))
 
+(def prepared-model (update prepared-model :seeds (fn [seeds] (take 100 seeds))))
+
 (def results (-> prepared-model
                  (assoc :context-path-length-cap 100
                         :match-thresh 0.9
-                        :cluster-thresh 0.95
-                        :confidence-thresh 0
-                        :min-match-support 0
+                        :cluster-thresh 0.9
+                        :confidence-thresh 0.95
+                        :min-pattern-support 3
                         :max-iterations 100
+                        :max-matches 5000
                         :max-matches 3000
                         :re-clustering? true)
                  (evaluation/run-model results-dir)))
 
 #_(incanter/view (:plot results))
 
-#_(def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir
-                                                     {:context-path-length-cap          [10 100] #_[2 3 5 10 20 35 100]
-                                                      :match-thresh          #_[0.95]   [0.95 0.9 0.85]
-                                                      :cluster-thresh          #_[0.95] [0.95 0.9 0.85]
-                                                      :confidence-thresh                [0.95 0.9 0]
-                                                      :min-match-support                [0 2] #_[0 5 25]
-                                                      :seed-frac                        [1] #_[0.05 0.25 0.5 0.75]
-                                                      :rng                              0.022894
-                                                      :negative-cap                     3000}))
+(def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir
+                                                   {:context-path-length-cap          [100 10] #_[2 3 5 10 20 35 100]
+                                                    :match-thresh          #_[0.95]   [0.7 0.95 0.9]
+                                                    :cluster-thresh          #_[0.95] [0.7 0.95 0.9]
+                                                    :confidence-thresh                [0.8 0.9 0.5]
+                                                    :min-pattern-support              [1 3 5] #_[0 5 25]
+                                                    :seed-frac                        [1] #_[0.05 0.25 0.5 0.75]
+                                                    :rng                              0.022894
+                                                    :negative-cap                     3000}))
 
 (def baseline-results {:precision 0.4544
                        :recall    0.5387
