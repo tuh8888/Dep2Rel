@@ -62,41 +62,30 @@
                              #{"CHEMICAL" "GENE-Y"}})
 
 ;;; MODELS ;;;
+(defn biocreative-model
+  [model sentences property-map]
+  (assoc model
+    :sentences (->> sentences
+                    (filter (fn [{:keys [entities]}]
+                              (->> entities
+                                   (map #(get-in model [:concept-annotations % :concept]))
+                                   (set)
+                                   (allowed-concept-pairs))))
+                    (map #(update % :property (fn [property] (or (get property-map property)
+                                                                 re-model/NONE)))))
+    :properties (set (vals property-map))))
 
-(def training-knowtator-view (k/model training-dir nil))
-(rdr/read-biocreative-files training-dir training-pattern training-knowtator-view)
-(def base-training-model (re-model/make-model training-knowtator-view factory word2vec-db))
-(def training-sentences (re-model/make-sentences base-training-model))
-(spit (io/file training-dir "sentences.edn") (pr-str training-sentences))
-(def training-sentences-filtered (->> training-sentences-filtered
-                                      (filter (fn [s]
-                                                (->> s
-                                                     :entities
-                                                     (map #(get-in base-training-model [:concept-annotations % :concept]))
-                                                     (set)
-                                                     (allowed-concept-pairs))))
-                                      (map #(update % :property (fn [property] (or (get property-map property)
-                                                                                   re-model/NONE))))))
-(def training-model (assoc base-training-model :sentences training-sentences-filtered
-                                               :properties properties))
+(def training-knowtator (k/model training-dir nil))
+(rdr/read-biocreative-files training-dir training-pattern training-knowtator)
+(def base-training-model (re-model/make-model training-knowtator factory word2vec-db (io/file training-dir "model.edn")))
+(def training-sentences (re-model/make-sentences base-training-model (io/file training-dir "sentences.edn")))
+(def training-model (biocreative-model base-training-model training-sentences property-map))
 
-(def testing-knowtator-view (k/model testing-dir nil))
-(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator-view)
-(def base-testing-model (re-model/make-model testing-knowtator-view factory word2vec-db))
-(def testing-sentences (re-model/make-sentences base-testing-model))
-(spit (io/file testing-sentences "sentences.edn") (pr-str testing-sentences))
-(def testing-sentences-filtered (->> testing-sentences
-                                     (filter (fn [s]
-                                               (->> s
-                                                    :entities
-                                                    (map #(get-in base-testing-model [:concept-annotations % :concept]))
-                                                    (set)
-                                                    (allowed-concept-pairs))))
-                                     (map #(update % :property (fn [property] (or (get property-map property)
-                                                                                  re-model/NONE))))))
-(def testing-model (-> base-testing-model
-                       (assoc :sentences testing-sentences-filtered)
-                       (assoc :properties properties)))
+(def testing-knowtator (k/model testing-dir nil))
+(rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator)
+(def base-testing-model (re-model/make-model testing-knowtator factory word2vec-db (io/file testing-dir "model.edn")))
+(def testing-sentences (re-model/make-sentences base-testing-model (io/file testing-dir "sentences.edn")))
+(def testing-model (biocreative-model base-testing-model testing-sentences property-map))
 
 ;;; SENTENCE STATS ;;;
 
@@ -165,6 +154,8 @@
   (def testing-model (update testing-model
                              :sentences (fn [sentences]
                                           (map #(re-model/map->Sentence %) sentences)))))
+
+()
 
 (def prepared-model (-> training-model
                         (assoc :seed-frac 1

@@ -277,33 +277,43 @@
     sentences))
 
 (defn make-model
-  [v factory word2vec-db]
-  (log/info "Making model")
-  (word2vec/with-word2vec word2vec-db
-    (as-> (k/simple-model v) model
-          (assoc model :factory factory
-                       :word2vec-db word2vec-db)
-          (update model :structure-annotations (fn [structure-annotations]
-                                                 (log/info "Making structure annotations")
-                                                 (util/pmap-kv (fn [s]
-                                                                 (assign-sent-id model s))
-                                                               structure-annotations)))
-          (update model :concept-annotations (fn [concept-annotations]
-                                               (log/info "Making concept annotations")
-                                               (util/pmap-kv (fn [s]
-                                                               (assign-tok model s))
-                                                             concept-annotations))))))
+  [v factory word2vec-db model-file]
+  (let [model (read-string (slurp model-file))]
+    (if (seq model)
+      model
+      (word2vec/with-word2vec word2vec-db
+        (log/info "Making model")
+        (let [model (as-> (k/simple-model v) model
+                          (assoc model :factory factory
+                                       :word2vec-db word2vec-db)
+                          (update model :structure-annotations (fn [structure-annotations]
+                                                                 (log/info "Making structure annotations")
+                                                                 (util/pmap-kv (fn [s]
+                                                                                 (assign-sent-id model s))
+                                                                               structure-annotations)))
+                          (update model :concept-annotations (fn [concept-annotations]
+                                                               (log/info "Making concept annotations")
+                                                               (util/pmap-kv (fn [s]
+                                                                               (assign-tok model s))
+                                                                             concept-annotations))))]
+          (log/info "Writing model to" model-file)
+          (spit model-file (pr-str model))
+          model)))))
 
 (defn make-sentences
-  [{:keys [word2vec-db] :as model}]
-  (log/info "Making sentences")
-  (word2vec/with-word2vec word2vec-db
-    (let [sentences (->> model
-                         (concept-annotations->sentences)
-                         (pmap #(assign-embedding model %))
-                         (pmap #(assign-property model %))
-                         (doall))]
-      sentences)))
+  [{:keys [word2vec-db] :as model} sentences-file]
+  (let [sentences (read-string (slurp sentences-file))]
+    (if (seq sentences)
+      sentences
+      (word2vec/with-word2vec word2vec-db
+        (log/info "Making sentences")
+        (let [sentences (->> model
+                             (concept-annotations->sentences)
+                             (map #(assign-embedding model %))
+                             (pmap #(assign-property model %))
+                             (doall))]
+          (spit sentences-file (pr-str sentences))
+          sentences)))))
 
 (defn frac-seeds
   [property {:keys [sentences seed-frac rng]}]

@@ -109,7 +109,6 @@
   (let [sent-dir (->> "sentences"
                       (format pat)
                       (io/file dir))]
-    (log/info "Sentences location" sent-dir)
     (.setLoading (k/model v) true)
 
     (when (empty? (rest (file-seq (io/file dir "Articles"))))
