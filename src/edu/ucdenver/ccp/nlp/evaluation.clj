@@ -229,8 +229,10 @@
                            :context-path-filter-fn re/context-path-filter)
                     (re/bootstrap)
                     (doall))
-        results (assoc results :metrics (calc-metrics results)
-                               :overall-metrics (calc-overall-metrics results))]
+        metrics {:metrics         (calc-metrics results)
+                 :overall-metrics (calc-overall-metrics results)}
+        results (merge results metrics)]
+    (spit (io/file results-dir "results.edn") metrics :append true)
     (assoc results :plot (plot-metrics results
                                        {:save {:file (->> results
                                                           (re/re-params)
