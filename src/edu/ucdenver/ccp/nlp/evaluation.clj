@@ -234,7 +234,9 @@
         metrics {:metrics         (calc-metrics results)
                  :overall-metrics (calc-overall-metrics results)}
         results (merge results metrics)]
-    (spit (io/file results-dir "results.edn") (select-keys results (lazy-cat EVAL-KEYS re/PARAM-KEYS)) :append true)
+    (doto (io/file results-dir "results.edn")
+      (spit (select-keys results (lazy-cat EVAL-KEYS re/PARAM-KEYS)) :append true)
+      (spit "\n" :append true))
     (assoc results :plot (plot-metrics results
                                        {:save {:file (->> results
                                                           (re/re-params)
