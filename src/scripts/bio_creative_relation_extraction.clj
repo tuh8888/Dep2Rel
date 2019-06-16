@@ -77,13 +77,13 @@
 
 (def training-knowtator (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator)
-(def base-training-model (re-model/make-model training-knowtator factory word2vec-db (io/file training-dir "model.edn")))
+(def base-training-model (re-model/make-model training-knowtator word2vec-db factory))
 (def training-sentences (re-model/make-sentences base-training-model (io/file training-dir "sentences.edn")))
 (def training-model (biocreative-model base-training-model training-sentences property-map))
 
 (def testing-knowtator (k/model testing-dir nil))
 (rdr/read-biocreative-files testing-dir testing-pattern testing-knowtator)
-(def base-testing-model (re-model/make-model testing-knowtator factory word2vec-db (io/file testing-dir "model.edn")))
+(def base-testing-model (re-model/make-model testing-knowtator word2vec-db factory))
 (def testing-sentences (re-model/make-sentences base-testing-model (io/file testing-dir "sentences.edn")))
 (def testing-model (biocreative-model base-testing-model testing-sentences property-map))
 
@@ -125,24 +125,25 @@
 #_(incanter/view testing-context-paths-plot-neg)
 
 ;;; CLUSTERING ;;;
-(def training-clusters (-> training-model
-                           (assoc :seed-frac 1
-                                  :rng 0.022894
-                                  :negative-cap 2000
-                                  :confidence-thresh 0
-                                  :cluster-thresh 0.95
-                                  :cluster-merge-fn re-model/add-to-pattern
-                                  :vector-fn #(re-model/context-vector % training-model))
-                           (re-model/split-train-test)
-                           (re/pattern-update)))
+(comment
+  (def training-clusters (-> training-model
+                             (assoc :seed-frac 1
+                                    :rng 0.022894
+                                    :negative-cap 2000
+                                    :confidence-thresh 0
+                                    :cluster-thresh 0.95
+                                    :cluster-merge-fn re-model/add-to-pattern
+                                    :vector-fn #(re-model/context-vector % training-model))
+                             (re-model/split-train-test)
+                             (re/pattern-update)))
 
-(def clusters-dataset (-> training-model
-                          (assoc :sentences (map #(assoc % :property (:predicted %)) training-clusters))
-                          (evaluation/sentences->dataset)))
+  (def clusters-dataset (-> training-model
+                            (assoc :sentences (map #(assoc % :property (:predicted %)) training-clusters))
+                            (evaluation/sentences->dataset)))
 
-(incanter/save (:sentences-dataset clusters-dataset) (str (io/file training-dir " clusters-dataset.csv ")))
-(def pca-plots (evaluation/pca-plots clusters-dataset
-                                     {:save {:file (io/file results-dir "%s")}}))
+  (incanter/save (:sentences-dataset clusters-dataset) (str (io/file training-dir " clusters-dataset.csv ")))
+  (def pca-plots (evaluation/pca-plots clusters-dataset
+                                       {:save {:file (io/file results-dir "%s")}})))
 #_(incanter/view (get pca-plots "ALL"))
 
 ;;; PCA ;;;
@@ -167,14 +168,14 @@
 (def prepared-model (-> training-model
                         (assoc :seed-frac 1
                                :rng 0.022894
-                               :negative-cap 2000)
+                               :negative-cap 3000)
                         (re-model/split-train-test)
                         (re-model/train-test testing-model)))
 
 (def results (-> prepared-model
                  (assoc :context-path-length-cap 100
-                        :match-thresh 0.95
-                        :cluster-thresh 0.9
+                        :match-thresh 0.9
+                        :cluster-thresh 0.95
                         :confidence-thresh 0
                         :min-match-support 0
                         :max-iterations 100
