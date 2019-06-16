@@ -10,6 +10,7 @@
 (def PARAM-KEYS [:match-thresh
                  :cluster-thresh
                  :context-path-length-cap
+                 :confidence-thresh
                  :rng
                  :seed-frac
                  :min-match-support
@@ -34,16 +35,16 @@
   (let [p1 (util/map-kv count (group-by :predicted seeds))]
     (->> properties
          (map (fn [property]
-                {:seeds    (get p1 property)
-                 :property property
-                 :samples  (count all-samples)
-                 :actual-positive (count  (re-model/actual-positive property all-samples))}))
+                {:seeds           (get p1 property)
+                 :property        property
+                 :samples         (count all-samples)
+                 :actual-positive (count (re-model/actual-positive property all-samples))}))
          (incanter/to-dataset)
          (log/info))))
 
 (defn log-current-values
   [{:keys [properties samples] :as model}]
-  (let [p1 (->> [:patterns :new-matches :matches :patterns]
+  (let [p1 (->> [:patterns :seeds :matches :patterns]
                 (map #(find model %))
                 (into {})
                 (util/map-kv #(->> %
@@ -121,26 +122,25 @@
 
 
 (defn pattern-update
-  [{:keys [properties new-matches patterns confidence-thresh] :as model}]
-  (mapcat (fn [property]
-            (let [samples  (->> new-matches
-                                (filter #(< confidence-thresh (:confidence %)))
-                                (filter #(= (:predicted %) property)))
-                  patterns (filter #(= (:predicted %) property) patterns)]
-              (if (seq samples)
-                (do
-                  (log/info "Clustering" property)
-                  (->> samples
-                       (partition-all 1000)
-                       (mapcat (fn [sample-part]
-                                 (->> patterns
-                                      (cluster-tools/single-pass-cluster model sample-part)
-                                      (map #(assoc % :predicted property)))))))
-                patterns)))
-          properties))
+  [{:keys [properties seeds patterns confidence-thresh] :as model}]
+  (let [seeds    (->> seeds
+                      (filter #(< confidence-thresh (:confidence %)))
+                      (group-by :predicted))
+        patterns (group-by :predicted patterns)]
+    (mapcat (fn [property]
+              (let [samples  (get seeds property)
+                    patterns (get patterns property)]
+                (log/info "Clustering" property)
+                (->> samples
+                     (partition-all 1000)
+                     (mapcat (fn [sample-part]
+                               (->> patterns
+                                    (cluster-tools/single-pass-cluster model sample-part)
+                                    (map #(assoc % :predicted property))))))))
+            properties)))
 
 (defn terminate?
-  [{:keys [max-iterations iteration seeds new-matches matches patterns samples] :as model}]
+  [{:keys [max-iterations iteration seeds matches patterns samples] :as model}]
 
   ;; Remaining matches added to negative group
   (let [success-model (assoc model :matches (->> samples
@@ -150,22 +150,19 @@
     (cond (<= max-iterations iteration)
           (do (log/info "Max iteration reached")
               success-model)
-          (empty? new-matches)
+          (empty? seeds)
           (do (log/info "No new matches")
               success-model)
           (empty? samples)
           (do (log/info "No more samples")
               success-model)
-          (empty? seeds)
-          (do (log/info "No seeds")
-              model)
           (empty? (remove #(= re-model/NONE %) (map :property samples)))
           (do (log/info "Only negative examples left")
               success-model))))
 
 (defn support-filter
-  [{:keys [min-match-support new-matches]} pattern]
-  (or (empty? new-matches)
+  [{:keys [min-match-support seeds]} pattern]
+  (or (empty? seeds)
       (->> pattern
            :support
            (count)
@@ -192,7 +189,7 @@
                                                     (linear-algebra/unit-vec factory)
                                                     (assoc % :VEC))))
                            :matches #{}
-                           :new-matches seeds
+                           :seeds seeds
                            :iteration 0)]
     (log/info (re-params model))
     (log-starting-values model)
@@ -200,23 +197,23 @@
       (let [model       (assoc model :patterns (pattern-update model))
             unclustered (decluster model)
             model       (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))
-            model       (assoc model :new-matches (concept-context-match model))
-            model       (update model :samples (fn [samples] (let [new-matches (:new-matches model)]
+            model       (assoc model :seeds (concept-context-match model))
+            model       (update model :samples (fn [samples] (let [new-matches (:seeds model)]
                                                                (if (seq new-matches)
                                                                  (remove :predicted new-matches)
                                                                  samples))))
-            model       (update model :new-matches (fn [new-matches] (filter :predicted new-matches)))
+            model       (update model :seeds (fn [new-matches] (filter :predicted new-matches)))
             model       (update model :matches (fn [matches] (->> model
-                                                                  :new-matches
+                                                                  :seeds
                                                                   (into matches))))]
         (if-let [results (terminate? model)]
           results
           (do
             (log-current-values model)
             (let [model (update model :iteration inc)
-                  model (update model :new-matches (fn [new-matches] (->> new-matches
-                                                                          (cap-nones)
-                                                                          (lazy-cat unclustered))))]
+                  model (update model :seeds (fn [new-matches] (->> new-matches
+                                                                    (cap-nones)
+                                                                    (lazy-cat unclustered))))]
               (recur model))))))))
 
 

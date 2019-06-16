@@ -53,37 +53,35 @@
 
 (defrecord Sentence [concepts entities context sent-id full-sentence-text context-text]
   ContextVector
-  (context-vector [self {:keys [structure-annotations concept-annotations] :as model}]
+  (context-vector [self {:keys [structure-annotations concept-annotations factory] :as model}]
     (or (:VEC self)
         (let [context-toks (->> self
                                 :context
-                                (map #(get structure-annotations %)))]
-          (->> self
-               :entities
-               (map (fn [e] (get concept-annotations e)))
-               (lazy-cat context-toks)
-               (map #(context-vector % model))
-               (doall)
-               (apply linear-algebra/vec-sum))))))
+                                (map #(get structure-annotations %)))
+              v            (->> self
+                                :entities
+                                (map (fn [e] (get concept-annotations e)))
+                                (lazy-cat context-toks)
+                                (map #(context-vector % model))
+                                (doall)
+                                (apply linear-algebra/vec-sum))]
+          (when v (linear-algebra/unit-vec factory v))))))
 
-(defrecord Pattern [support VEC]
+
+(defrecord Pattern [support]
   ContextVector
-  (context-vector [self model]
+  (context-vector [self {:keys [factory] :as model}]
     (or (:VEC self)
         (->> self
              :support
              (map #(context-vector % model))
-             (apply linear-algebra/vec-sum)))))
+             (apply linear-algebra/vec-sum)
+             (linear-algebra/unit-vec factory)))))
 
 
 (defn add-to-pattern
-  [{:keys [factory] :as model} p s]
-  (let [support (conj (set (:support p)) s)]
-    (->Pattern support
-               (->> support
-                    (map #(context-vector % model))
-                    (apply linear-algebra/vec-sum)
-                    (linear-algebra/unit-vec factory)))))
+  [_ p s]
+  (->Pattern (conj (set (:support p)) s)))
 
 (defn pprint-toks-text
   [{:keys [structure-annotations]} toks]
@@ -335,30 +333,22 @@
 (defn split-train-test
   "Splits model into train and test sets"
   [{:keys [sentences properties word2vec-db negative-cap seed-frac] :as model}]
-  (let [seeds (->> (disj properties NONE)
-                   (map (fn [property] (frac-seeds property model)))
-                   (apply clojure.set/union))
-        seeds (->> sentences
-                   (actual-negative)
-                   (count)
-                   (/ negative-cap)
-                   (min seed-frac)
-                   (assoc model :seed-frac)
-                   (frac-seeds NONE)
-                   (clojure.set/union seeds))]
-    (word2vec/with-word2vec word2vec-db
+  (word2vec/with-word2vec word2vec-db
+    (let [seeds (->> (disj properties NONE)
+                     (map (fn [property] (frac-seeds property model)))
+                     (apply clojure.set/union))
+          seeds (->> sentences
+                     (actual-negative)
+                     (count)
+                     (/ negative-cap)
+                     (min seed-frac)
+                     (assoc model :seed-frac)
+                     (frac-seeds NONE)
+                     (clojure.set/union seeds))]
       (-> model
           (assoc :all-samples (remove seeds sentences)
                  :seeds (->> seeds
                              (map #(assoc % :predicted (:property %)
                                             :confidence 1))
-                             (set)))
-          (update :all-samples (fn [samples] (->> samples
-                                                  (map #(assign-embedding model %))
-                                                  (filter :VEC)
-                                                  (doall))))
-          (update :seeds (fn [seeds] (->> seeds
-                                          (map #(assign-embedding model %))
-                                          (filter :VEC)
-                                          (doall))))))))
+                             (set)))))))
 
