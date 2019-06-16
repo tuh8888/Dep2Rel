@@ -8,8 +8,10 @@
             [word2vec :as word2vec]
             [taoensso.timbre :as log]
             [clojure.math.combinatorics :as combo]
-            [edu.ucdenver.ccp.knowtator-clj :as k])
-  (:import (clojure.lang PersistentArrayMap ExceptionInfo)))
+            [edu.ucdenver.ccp.knowtator-clj :as k]
+            [clojure.java.io :as io])
+  (:import (clojure.lang PersistentArrayMap ExceptionInfo)
+           (java.io File)))
 
 (def NONE "NONE")
 
@@ -277,32 +279,30 @@
     sentences))
 
 (defn make-model
-  [v factory word2vec-db model-file]
-  (let [model (read-string (slurp model-file))]
-    (if (seq model)
-      model
-      (word2vec/with-word2vec word2vec-db
-        (log/info "Making model")
-        (let [model (as-> (k/simple-model v) model
-                          (assoc model :factory factory
-                                       :word2vec-db word2vec-db)
-                          (update model :structure-annotations (fn [structure-annotations]
-                                                                 (log/info "Making structure annotations")
-                                                                 (util/pmap-kv (fn [s]
-                                                                                 (assign-sent-id model s))
-                                                                               structure-annotations)))
-                          (update model :concept-annotations (fn [concept-annotations]
-                                                               (log/info "Making concept annotations")
-                                                               (util/pmap-kv (fn [s]
-                                                                               (assign-tok model s))
-                                                                             concept-annotations))))]
-          (log/info "Writing model to" model-file)
-          (spit model-file (pr-str model))
-          model)))))
+  [v word2vec-db factory]
+  (word2vec/with-word2vec word2vec-db
+    (log/info "Making model")
+    (let [model                 (k/simple-model v)
+          structure-annotations (do
+                                  (log/info "Making structure annotations")
+                                  (util/pmap-kv (fn [s]
+                                                  (assign-sent-id model s))
+                                                (:structure-annotations model)))
+          concept-annotations   (do
+                                  (log/info "Making concept annotations")
+                                  (util/pmap-kv (fn [s]
+                                                  (assign-tok model s))
+                                                (:concept-annotations model)))]
+
+      (assoc model :factory factory
+                   :word2vec-db word2vec-db
+                   :structure-annotations structure-annotations
+                   :concept-annotations concept-annotations))))
 
 (defn make-sentences
   [{:keys [word2vec-db] :as model} sentences-file]
-  (let [sentences (read-string (slurp sentences-file))]
+  (let [sentences (when (.exists ^File sentences-file)
+                    (read-string (slurp sentences-file)))]
     (if (seq sentences)
       sentences
       (word2vec/with-word2vec word2vec-db
