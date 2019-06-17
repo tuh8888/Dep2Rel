@@ -177,7 +177,7 @@
                         (re-model/train-test testing-model)))
 
 (def results (-> prepared-model
-                 (update :seeds (fn [seeds] (take 5 seeds)))
+                 #_(update :seeds (fn [seeds] (take 100 seeds)))
                  (assoc :context-path-length-cap 100
                         :match-thresh 0.95
                         :cluster-thresh 0.99

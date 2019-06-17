@@ -115,7 +115,7 @@
            samples))))
 
 (defn support-weighted-sim-distribution-context-match
-  [{:keys [vector-fn samples patterns match-thresh properties] :as model}]
+  [{:keys [vector-fn samples patterns match-thresh properties factory] :as model}]
   (when (and (seq samples) (seq patterns))
     (log/info "Finding matches" (count patterns) (count samples))
     (let [samples                      (vec samples)
@@ -139,20 +139,25 @@
                                                                                            (reduce +))]
                                                      [property (map #(/ % other-property-total-support) other-patterns-support)])))
                                             (into {}))
-          scores                       (cluster-tools/update-score-cache model sample-vectors pattern-vectors nil 0)]
+          other-property-patterns      (->> properties
+                                            (map (fn [property]
+                                                   [property (->> patterns
+                                                                  (map-indexed vector)
+                                                                  (remove (fn [[_ p]] (= (:predicted p) property)))
+                                                                  (map first))]))
+                                            (into {}))
+          score-mat                    (linear-algebra/mdot factory pattern-vectors sample-vectors)]
       (->> samples
-           (map-indexed vector)
-           (pmap (fn [[i sample]]
-                   (let [sample-scores                  (filter #(= (:i %) i) scores)
-                         {best-score :score best-j :j :as best} (apply max-key :score sample-scores)
+           (map vector score-mat)
+           (pmap (fn [[sample-scores sample]]
+                   (let [[best-j best-score] (apply max-key second (map-indexed vector sample-scores))
                          {best-predicted :predicted best-support :support :as best-pattern} (get patterns best-j)
-                         other-properties-sample-scores (remove (fn [{:keys [j]}] (= best-predicted
-                                                                                     (get-in patterns [j :predicted])))
-                                                                sample-scores)
-                         weights                        (get other-property-weights best-predicted)
-                         weighted-scores                (->> other-properties-sample-scores
-                                                             (map :score)
-                                                             (map * weights))]
+                         weights         (get other-property-weights best-predicted)
+                         weighted-scores (->> best-predicted
+                                              (get other-property-patterns)
+                                              (select-keys sample-scores)
+                                              (map second)
+                                              (map * weights))]
                      (let [{:keys [p-value]} (incanter.stats/t-test weighted-scores :mu best-score)
                            confidence (- 1 p-value)]
                        (if (< match-thresh confidence)
