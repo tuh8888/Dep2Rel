@@ -5,6 +5,7 @@
             [clojure.set :refer [subset? intersection]]
             [taoensso.timbre :as log]
             [incanter.core :as incanter]
+            [incanter.stats :as inc-stats]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]))
 
 (def PARAM-KEYS #{:match-thresh
@@ -115,50 +116,52 @@
            samples))))
 
 (defn support-weighted-sim-distribution-context-match
-  [{:keys [vector-fn samples patterns match-thresh properties factory] :as model}]
+  [{:keys [vector-fn samples patterns match-thresh properties factory]}]
   (when (and (seq samples) (seq patterns))
     (log/info "Finding matches" (count patterns) (count samples))
-    (let [samples                      (vec samples)
-          patterns                     (vec patterns)
-          sample-vectors               (map vector-fn samples)
-          pattern-vectors              (map vector-fn patterns)
-          predicted-pattern-property-m (group-by :predicted patterns)
-          property-support-m           (->> predicted-pattern-property-m
-                                            (util/map-kv #(map :support %))
-                                            (util/map-kv #(map count %))
-                                            (util/map-kv #(reduce + %)))
-          other-property-weights       (->> properties
-                                            (map (fn [property]
-                                                   (let [other-patterns-support       (->> patterns
-                                                                                           (remove #(= (:predicted %) property))
-                                                                                           (map :support)
-                                                                                           (map count))
-                                                         other-property-total-support (->> property
-                                                                                           (dissoc property-support-m)
-                                                                                           (vals)
-                                                                                           (reduce +))]
-                                                     [property (map #(/ % other-property-total-support) other-patterns-support)])))
-                                            (into {}))
-          other-property-patterns      (->> properties
-                                            (map (fn [property]
-                                                   [property (->> patterns
-                                                                  (map-indexed vector)
-                                                                  (remove (fn [[_ p]] (= (:predicted p) property)))
-                                                                  (map first))]))
-                                            (into {}))
-          score-mat                    (linear-algebra/mdot factory pattern-vectors sample-vectors)]
+    (let [samples                 (vec samples)
+          patterns                (vec patterns)
+          pattern-vectors         (map vector-fn patterns)
+          pattern-support-counts  (->> patterns
+                                       (map :support)
+                                       (map count))
+          total-support           (reduce + pattern-support-counts)
+          pattern-weights         (map #(/ % total-support) pattern-support-counts)
+          other-property-patterns (->> properties
+                                       (map (fn [property]
+                                              (let [other-patterns               (->> patterns
+                                                                                      (map-indexed (fn [j p] {:j j :pattern p}))
+                                                                                      #_(remove (fn [{{:keys [predicted]} :pattern}] (= predicted property))))
+                                                    other-property-total-support (->> other-patterns
+                                                                                      (map :pattern)
+                                                                                      (map :support)
+                                                                                      (map count)
+                                                                                      (reduce +))
+                                                    other-patterns               (map (fn [{{:keys [support]} :pattern :as m}]
+                                                                                        (assoc m :weight (/ (count support)
+                                                                                                            other-property-total-support)))
+                                                                                      other-patterns)]
+                                                [property other-patterns])))
+                                       (into {}))]
       (->> samples
-           (map vector score-mat)
-           (pmap (fn [[sample-scores sample]]
+           (map vector-fn)
+           (linear-algebra/mdot factory pattern-vectors)
+           (map vector samples)
+           (pmap (fn [[sample sample-scores]]
                    (let [[best-j best-score] (apply max-key second (map-indexed vector sample-scores))
-                         {best-predicted :predicted best-support :support :as best-pattern} (get patterns best-j)
-                         weights         (get other-property-weights best-predicted)
-                         weighted-scores (->> best-predicted
-                                              (get other-property-patterns)
-                                              (select-keys sample-scores)
-                                              (map second)
-                                              (map * weights))]
-                     (let [{:keys [p-value]} (incanter.stats/t-test weighted-scores :mu best-score)
+                         {best-predicted :predicted best-support :support} (get patterns best-j)
+                         weighted-best-score     (* best-score (/ (count best-support)
+                                                                  total-support))
+                         other-property-patterns (get other-property-patterns best-predicted)
+                         other-scores            (->> other-property-patterns
+                                                      (map :j)
+                                                      (select-keys sample-scores)
+                                                      (map second))
+                         other-scores            sample-scores
+                         weights                 (map :weight other-property-patterns)
+                         weights                 pattern-weights
+                         weighted-scores         (map * other-scores weights)]
+                     (let [{:keys [p-value]} (inc-stats/t-test weighted-scores :mu weighted-best-score)
                            confidence (- 1 p-value)]
                        (if (< match-thresh confidence)
                          (assoc sample :predicted best-predicted
