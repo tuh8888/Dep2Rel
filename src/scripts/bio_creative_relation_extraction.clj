@@ -78,8 +78,8 @@
 (def training-knowtator (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator)
 (def base-training-model (re-model/make-model training-knowtator word2vec-db factory
-                                              (io/file testing-dir "concept-annotations.edn")
-                                              (io/file testing-dir "structure-annotations.edn")))
+                                              (io/file training-dir "concept-annotations.edn")
+                                              (io/file training-dir "structure-annotations.edn")))
 (def training-sentences (re-model/make-sentences base-training-model (io/file training-dir "sentences.edn")))
 (def training-model (biocreative-model base-training-model training-sentences property-map))
 
@@ -90,17 +90,13 @@
                                              (io/file testing-dir "structure-annotations.edn")))
 (def testing-sentences (re-model/make-sentences base-testing-model (io/file testing-dir "sentences.edn")))
 (def testing-model (biocreative-model base-testing-model testing-sentences property-map))
-(first (:concept-annotations base-testing-model))
-(graph/undirected-graph (get-in base-testing-model [:structure-graphs "21955206-Sentence 6"]))
 
 ;;; SENTENCE STATS ;;;
 (log/info "Model\n"
-          (incanter/to-dataset [(assoc (->> training-model
-                                            (re-model/model-params)
+          (incanter/to-dataset [(assoc (->> (select-keys training-model re-model/MODEL-KEYs)
                                             (util/map-kv count))
                                   :model :training)
-                                (assoc (->> testing-model
-                                            (re-model/model-params)
+                                (assoc (->> (select-keys testing-model re-model/MODEL-KEYs)
                                             (util/map-kv count))
                                   :model :testing)]))
 (log/info "Num sentences with property\n"
@@ -177,31 +173,31 @@
                         (re-model/split-train-test)
                         (re-model/train-test testing-model)))
 
-(def results (-> prepared-model
-                 #_(update :seeds (fn [seeds] (take 100 seeds)))
-                 (assoc :context-path-length-cap 100
-                        :match-thresh 0.5
-                        :cluster-thresh 0.5
-                        :confidence-thresh 0
-                        :min-pattern-support 3
-                        :max-iterations 100
-                        :max-matches 5000
-                        :re-clustering? true
-                        :match-fn re/support-weighted-sim-distribution-context-match)
-                 (evaluation/run-model results-dir)))
+#_(def results (-> prepared-model
+                   (update :seeds (fn [seeds] (take 100 seeds)))
+                   (assoc :context-path-length-cap 100
+                          :match-thresh 0.95
+                          :cluster-thresh 0.75
+                          :confidence-thresh 0
+                          :min-pattern-support 1
+                          :max-iterations 100
+                          :max-matches 5000
+                          :re-clustering? true
+                          :match-fn re/sim-to-support-in-pattern-match)
+                   (evaluation/run-model results-dir)))
 
 #_(incanter/view (:plot results))
 
-(def param-walk-results (evaluation/parameter-walk (update training-model :sentences (fn [seeds] (take 100 seeds))) testing-model results-dir
-                                                   {:context-path-length-cap          [100 10] #_[2 3 5 10 20 35 100]
-                                                    :match-thresh          #_[0.95]   [0.7 0.8 0.9]
-                                                    :cluster-thresh          #_[0.95] [0.975 0.95 0.9]
-                                                    :confidence-thresh                [0.8 0.9 0.5]
-                                                    :min-pattern-support              [1 3 5] #_[0 5 25]
-                                                    :seed-frac                        [1] #_[0.05 0.25 0.5 0.75]
-                                                    :rng                              0.022894
-                                                    :negative-cap                     3000
-                                                    :match-fn                         re/support-weighted-sim-distribution-context-match}))
+#_(def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir
+                                                     {:context-path-length-cap          [100 10] #_[2 3 5 10 20 35 100]
+                                                      :match-thresh          #_[0.95]   [0.7 0.8 0.9]
+                                                      :cluster-thresh          #_[0.95] [0.975 0.95 0.9]
+                                                      :confidence-thresh                [0.9 0.7 0.5]
+                                                      :min-pattern-support              [1] #_[0 5 25]
+                                                      :seed-frac                        [1] #_[0.05 0.25 0.5 0.75]
+                                                      :rng                              0.022894
+                                                      :negative-cap                     5000
+                                                      :match-fn                         re/support-weighted-sim-distribution-context-match}))
 
 
 (def baseline-results {:precision 0.4544
