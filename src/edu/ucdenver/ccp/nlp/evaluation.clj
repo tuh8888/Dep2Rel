@@ -249,7 +249,8 @@
                                                     confidence-thresh
                                                     min-pattern-support
                                                     seed-frac
-                                                    rng negative-cap]}]
+                                                    rng negative-cap
+                                                    match-fn]}]
   (doall
     ;; parallelize with
     #_(cp/upfor (dec (cp/ncpus)))
@@ -273,7 +274,8 @@
                  :max-iterations 100
                  :max-matches 5000
                  :re-clustering? true
-                 :context-path-length-cap context-path-length-cap)
+                 :context-path-length-cap context-path-length-cap
+                 :match-fn match-fn)
           (run-model results-dir)))))
 
 (defn flatten-context-vector

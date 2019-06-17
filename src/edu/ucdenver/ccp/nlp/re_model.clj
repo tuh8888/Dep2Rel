@@ -282,33 +282,32 @@
   [v word2vec-db factory concept-annotations-file structure-annotations-file]
   (word2vec/with-word2vec word2vec-db
     (log/info "Making model")
-    (let [model                 (k/simple-model v)
-          structure-annotations (let [structure-annotations (when (.exists ^File structure-annotations-file)
-                                                              (read-string (slurp structure-annotations-file)))]
-                                  (if (seq structure-annotations)
-                                    structure-annotations
-                                    (let [structure-annotations (do
-                                                                  (log/info "Making structure annotations")
-                                                                  (util/pmap-kv (fn [s]
-                                                                                  (assign-sent-id model s))
-                                                                                (:structure-annotations model)))]
-                                      (spit structure-annotations-file (pr-str structure-annotations))
-                                      structure-annotations)))
-          concept-annotations   (let [concept-annotations (when (.exists ^File concept-annotations-file)
-                                                            (read-string (slurp concept-annotations-file)))]
-                                  (if (seq concept-annotations)
-                                    concept-annotations
-                                    (let [concept-annotations (do
-                                                                (log/info "Making concept annotations")
-                                                                (util/pmap-kv (fn [s]
-                                                                                (assign-tok model s))
-                                                                              (:concept-annotations model)))]
-                                      (spit concept-annotations-file (pr-str concept-annotations))
-                                      concept-annotations)))]
+    (let [model               (k/simple-model v)
+          model               (assoc model :structure-annotations (let [structure-annotations (when (.exists ^File structure-annotations-file)
+                                                                                                (read-string (slurp structure-annotations-file)))]
+                                                                    (if (seq structure-annotations)
+                                                                      structure-annotations
+                                                                      (let [structure-annotations (do
+                                                                                                    (log/info "Making structure annotations")
+                                                                                                    (util/pmap-kv (fn [s]
+                                                                                                                    (assign-sent-id model s))
+                                                                                                                  (:structure-annotations model)))]
+                                                                        (spit structure-annotations-file (pr-str structure-annotations))
+                                                                        structure-annotations))))
+          concept-annotations (let [concept-annotations (when (.exists ^File concept-annotations-file)
+                                                          (read-string (slurp concept-annotations-file)))]
+                                (if (seq concept-annotations)
+                                  concept-annotations
+                                  (let [concept-annotations (do
+                                                              (log/info "Making concept annotations")
+                                                              (util/pmap-kv (fn [s]
+                                                                              (assign-tok model s))
+                                                                            (:concept-annotations model)))]
+                                    (spit concept-annotations-file (pr-str concept-annotations))
+                                    concept-annotations)))]
 
       (assoc model :factory factory
                    :word2vec-db word2vec-db
-                   :structure-annotations structure-annotations
                    :concept-annotations concept-annotations))))
 
 (defn make-sentences

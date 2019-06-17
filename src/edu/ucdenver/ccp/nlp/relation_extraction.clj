@@ -233,6 +233,7 @@
 
 (defn bootstrap
   [{:keys [seeds factory vector-fn match-fn] :as model}]
+  (log/info (:context-path-length-cap model) (count (:all-samples model)) match-fn)
   (let [model (assoc model :samples (->> model
                                          (context-path-filter)
                                          (map #(->> %
