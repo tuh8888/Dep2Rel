@@ -114,6 +114,51 @@
                        s)))
            samples))))
 
+(defn support-weighted-sim-distribution-context-match
+  [{:keys [vector-fn samples patterns match-thresh properties] :as model}]
+  (when (and (seq samples) (seq patterns))
+    (log/info "Finding matches" (count patterns) (count samples))
+    (let [samples                      (vec samples)
+          patterns                     (vec patterns)
+          sample-vectors               (map vector-fn samples)
+          pattern-vectors              (map vector-fn patterns)
+          predicted-pattern-property-m (group-by :predicted patterns)
+          property-support-m           (->> predicted-pattern-property-m
+                                            (util/map-kv #(map :support %))
+                                            (util/map-kv #(map count %))
+                                            (util/map-kv #(reduce + %)))
+          other-property-weights       (->> properties
+                                            (map (fn [property]
+                                                   (let [other-patterns-support       (->> patterns
+                                                                                           (remove #(= (:predicted %) property))
+                                                                                           (map :support)
+                                                                                           (map count))
+                                                         other-property-total-support (->> property
+                                                                                           (dissoc property-support-m)
+                                                                                           (vals)
+                                                                                           (reduce +))]
+                                                     [property (map #(/ % other-property-total-support) other-patterns-support)])))
+                                            (into {}))
+          scores                       (cluster-tools/update-score-cache model sample-vectors pattern-vectors nil 0)]
+      (->> samples
+           (map-indexed vector)
+           (pmap (fn [[i sample]]
+                   (let [sample-scores                  (filter #(= (:i %) i) scores)
+                         {best-score :score best-j :j :as best} (apply max-key :score sample-scores)
+                         {best-predicted :predicted best-support :support :as best-pattern} (get patterns best-j)
+                         other-properties-sample-scores (remove (fn [{:keys [j]}] (= best-predicted
+                                                                                     (get-in patterns [j :predicted])))
+                                                                sample-scores)
+                         weights                        (get other-property-weights best-predicted)
+                         weighted-scores                (->> other-properties-sample-scores
+                                                             (map :score)
+                                                             (map * weights))]
+                     (let [{:keys [p-value]} (incanter.stats/t-test weighted-scores :mu best-score)
+                           confidence (- 1 p-value)]
+                       (if (< match-thresh confidence)
+                         (assoc sample :predicted best-predicted
+                                       :confidence confidence)
+                         sample)))))))))
 
 (defn pattern-update
   [{:keys [properties seeds patterns confidence-thresh] :as model}]
@@ -179,7 +224,7 @@
   (filter #(<= (count (:context %)) context-path-length-cap) all-samples))
 
 (defn bootstrap
-  [{:keys [seeds factory vector-fn] :as model}]
+  [{:keys [seeds factory vector-fn match-fn] :as model}]
   (let [model (assoc model :samples (->> model
                                          (context-path-filter)
                                          (map #(->> %
@@ -196,7 +241,7 @@
       (let [model       (assoc model :patterns (pattern-update model))
             unclustered (decluster model)
             model       (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))
-            model       (assoc model :seeds (concept-context-match model))
+            model       (assoc model :seeds (match-fn model))
             model       (update model :samples (fn [samples] (let [new-matches (:seeds model)]
                                                                (if (seq new-matches)
                                                                  (remove :predicted new-matches)

@@ -222,7 +222,6 @@
                   (re-model/split-train-test model))
         results (-> model
                     (assoc :vector-fn #(re-model/context-vector % model)
-                           :context-match-fn re/concept-context-match
                            :cluster-merge-fn re-model/add-to-pattern
                            :pattern-update-fn re/pattern-update
                            :support-filter re/support-filter

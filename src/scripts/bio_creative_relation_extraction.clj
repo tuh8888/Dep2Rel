@@ -176,19 +176,21 @@
                         (re-model/split-train-test)
                         (re-model/train-test testing-model)))
 
-#_(def prepared-model (update prepared-model :seeds (fn [seeds] (take 100 seeds))))
+(def results (-> prepared-model
+                 (update :seeds (fn [seeds] (take 5 seeds)))
+                 (assoc :context-path-length-cap 100
+                        :match-thresh 0.95
+                        :cluster-thresh 0.99
+                        :confidence-thresh 0.975
+                        :min-pattern-support 0
+                        :max-iterations 100
+                        :max-matches 5000
+                        :max-matches 3000
+                        :re-clustering? true
+                        :match-fn re/support-weighted-sim-distribution-context-match)
+                 (evaluation/run-model results-dir)))
 
-#_(def results (-> prepared-model
-                   (assoc :context-path-length-cap 100
-                          :match-thresh 0.9
-                          :cluster-thresh 0.975
-                          :confidence-thresh 0
-                          :min-pattern-support 4
-                          :max-iterations 100
-                          :max-matches 5000
-                          :max-matches 3000
-                          :re-clustering? true)
-                   (evaluation/run-model results-dir)))
+(Math/sqrt (reduce + (map #(math/exp % 2) (re-model/context-vector (first (:seeds prepared-model)) prepared-model))))
 
 #_(incanter/view (:plot results))
 
