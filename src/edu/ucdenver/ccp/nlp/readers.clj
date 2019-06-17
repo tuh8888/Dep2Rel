@@ -17,7 +17,6 @@
                    (map #(s/split % #"\t")))]
     (map
       (fn [[id title abstract]]
-        (log/debug "Article" id title)
         (let [article-f (io/file (.getArticlesLocation annotations) (str id ".txt"))]
           (spit article-f (str title "\n" abstract))
           (let [text-sources (.getTextSources annotations)
@@ -64,7 +63,6 @@
                                        0
                                        graph-space)
                  id (str doc "-" id)]
-             (log/debug "Relation" id property src-ent dest-ent)
              (.removeModelListener annotations text-source)
              (.add text-source graph-space)
              (.addCellToGraph graph-space source)
@@ -95,7 +93,6 @@
                  text-source ^TextSource (.get (.get (.getTextSources annotations) doc))
                  concept-annotation (ConceptAnnotation. text-source id concept (.getDefaultProfile annotations) nil nil)
                  span (Span. concept-annotation nil start end)]
-             (log/debug "Entity" id concept)
              (.removeModelListener annotations text-source)
              (.add ^ConceptAnnotation concept-annotation span)
              (.add (.getConceptAnnotations text-source) concept-annotation)
@@ -109,7 +106,6 @@
   (let [sent-dir (->> "sentences"
                       (format pat)
                       (io/file dir))]
-    (log/info "Sentences location" sent-dir)
     (.setLoading (k/model v) true)
 
     (when (empty? (rest (file-seq (io/file dir "Articles"))))

@@ -10,18 +10,20 @@
             [edu.ucdenver.ccp.nlp.re-model :as re-model]
             [clojure.java.io :as io]))
 
+(def EVAL-KEYS #{:fn :tp :fp :tn :precision :recall :f1 :metrics :overall-metrics})
+
 (defn format-matches
   [model matches _]
   (map (fn [match]
          (let [[e1 _ :as entities] (map #(get-in model [:concept-annotations %]) (:entities match))
 
-               doc     (:doc e1)
-               sent    (->> (get-in model [:structure-graphs (:sent e1) :node-map])
-                            keys
-                            (re-model/pprint-sent model))
-               context (->> match
-                            :context
-                            (re-model/pprint-sent model))
+               doc          (:doc e1)
+               sent-text    (->> (:sent-id e1)
+                                 (keys)
+                                 (re-model/pprint-sent-text model))
+               context-text (->> match
+                                 :context
+                                 (re-model/pprint-toks-text model))
                [e1-concept e2-concept] (->> entities
                                             (sort-by :concept)
                                             (map :concept)
@@ -30,27 +32,38 @@
                                     (map :tok)
                                     (map #(get-in model [:structure-annotations %]))
                                     (map (comp :text first vals :spans)))
-               seed    (->> (get match :seed)
-                            :concepts
-                            (mapcat identity)
-                            (interpose ", "))]
+               seed         (->> (get match :seed)
+                                 :concepts
+                                 (mapcat identity)
+                                 (interpose ", "))]
            {:doc        doc
-            :context    context
+            :context    context-text
             :e1-concept e1-concept
             :e1-tok     e1-tok
             :e2-concept e2-concept
             :e2-tok     e2-tok
             :seed       (apply str seed)
-            :sentence   (str "\"" sent "\"")}))
+            :sentence   (str "\"" sent-text "\"")}))
 
        matches))
 
 (defn ->csv
   [f model matches patterns]
   (let [formatted (format-matches model matches patterns)
-        cols      [:doc :e1-concept :e1-tok :e2-concept :e2-tok :seed :sentence]
-        csv-form  (str (apply str (interpose "," cols)) "\n" (apply str (map #(str (apply str (interpose "," ((apply juxt cols) %))) "\n") formatted)))]
-    (spit f csv-form)))
+        cols      [:doc :e1-concept :e1-tok :e2-concept :e2-tok :seed :sentence]]
+    (->> formatted
+         (map #(str (->> %
+                         ((apply juxt cols))
+                         (interpose ",")
+                         (apply str))
+                    "\n"))
+         (apply str)
+         (str (->> cols
+                   (interpose ",")
+                   (apply str))
+              "\n")
+         (spit f))))
+
 
 (defn cluster-sentences
   [sentences]
@@ -81,59 +94,44 @@
         x2         (incanter/mmult X pc2)]
     [x1 x2]))
 
-
-(defn actual-positive
-  [property samples]
-  (->> samples
-       (filter #(= property (:property %)))
-       (sentences->entities)))
-
-(defn predicted-positive
-  [property matches]
-  (->> matches
-       (filter #(= property (:predicted %)))
-       (sentences->entities)))
-
 (defn calc-metrics
   [{:keys [matches properties all-samples]}]
   (let [all     (sentences->entities all-samples)
         metrics (map (fn [property]
-                       (let [actual-positive    (actual-positive property all-samples)
-                             predicted-positive (predicted-positive property matches)]
+                       (let [actual-positive    (sentences->entities (re-model/actual-positive property all-samples))
+                             predicted-positive (sentences->entities (re-model/predicted-positive property matches))]
                          #_(log/info property "ALL" (count all) "AT" (count actual-positive) "PT" (count predicted-positive))
                          (-> (try
                                (math/calc-metrics {:actual-positive    actual-positive
                                                    :predicted-positive predicted-positive
-                                                   :all            all})
+                                                   :all                all})
                                (catch ArithmeticException _ {}))
                              (assoc :property property))))
                      properties)]
-    (->> metrics
-         (incanter/to-dataset)
-         (log/info))
     metrics))
 
 (defn calc-overall-metrics
-  [{:keys [matches]}]
-  (let [predicted-positive (remove #(= (:predicted %) re-model/NONE) matches)
-        predicted-negative (filter #(= (:predicted %) re-model/NONE) matches)
-        tp (count (filter #(= (:predicted %) (:property %)) predicted-positive))
-        tn (count (filter #(= (:predicted %) (:property %)) predicted-negative))
-        fp (count (filter #(not= (:predicted %) (:property %)) predicted-positive))
-        fn (count (filter #(not= (:predicted %) (:property %)) predicted-negative))
-        precision (/ (float tp) (+ fp tp))
-        recall (/ (float tp) (+ tp fn))
-        f1 (/ (* 2 precision recall)
-              (+ precision recall))
-        metrics {:tp tp
-                 :tn tn
-                 :fp fp
-                 :fn fn
-                 :precision precision
-                 :recall recall
-                 :f1 f1}]
-    (log/info "Metrics" metrics)
-    metrics))
+  [model]
+  (let [metrics (remove #(= (:property %) re-model/NONE) (calc-metrics model))]
+    (when metrics
+      (try
+        (let [tp        (reduce + (keep :tp metrics))
+              tn        (reduce + (keep :tn metrics))
+              fp        (reduce + (keep :fp metrics))
+              fn        (reduce + (keep :fn metrics))
+              precision (/ (float tp) (+ fp tp))
+              recall    (/ (float tp) (+ tp fn))
+              f1        (/ (* 2 precision recall)
+                           (+ precision recall))
+              metrics   {:tp        tp
+                         :tn        tn
+                         :fp        fp
+                         :fn        fn
+                         :precision precision
+                         :recall    recall
+                         :f1        f1}]
+          metrics)
+        (catch Exception _ nil)))))
 
 (defn make-property-plot
   [{:keys [x-label y-label title]} property groups x y]
@@ -215,57 +213,69 @@
 (defn run-model
   "Run model with parameters"
   [model results-dir]
-  (let [model   (if (contains? model :all-samples)
-                  model
-                  (re-model/split-train-test model))
-        results (-> model
-                    (assoc :vector-fn #(re-model/context-vector % model)
-                           :context-match-fn re/concept-context-match
-                           :cluster-merge-fn re-model/add-to-pattern
-                           :pattern-update-fn re/pattern-update
-                           :support-filter re/support-filter
-                           :terminate? re/terminate?
-                           :decluster re/decluster
-                           :context-path-filter-fn re/context-path-filter)
-
-                    (re/bootstrap)
-                    (doall))
-        results (assoc results :metrics (calc-metrics results)
-                               :overall-metrics (calc-overall-metrics results))]
+  (let [model           (if (contains? model :all-samples)
+                          model
+                          (re-model/split-train-test model))
+        results         (-> model
+                            (assoc :vector-fn #(re-model/context-vector % model)
+                                   :cluster-merge-fn re-model/add-to-pattern
+                                   :pattern-update-fn re/pattern-update
+                                   :support-filter re/support-filter
+                                   :terminate? re/terminate?
+                                   :decluster re/decluster
+                                   :context-path-filter-fn re/context-path-filter)
+                            (re/bootstrap)
+                            (doall))
+        metrics         (calc-metrics results)
+        overall-metrics (calc-overall-metrics results)
+        results         (merge results {:metrics         metrics
+                                        :overall-metrics overall-metrics})]
+    (->> metrics
+         (incanter/to-dataset)
+         (log/info))
+    (log/info "Overall Metrics" overall-metrics)
+    (doto (io/file results-dir "results.edn")
+      (spit (select-keys results (lazy-cat EVAL-KEYS re/PARAM-KEYS)) :append true)
+      (spit "\n" :append true))
     (assoc results :plot (plot-metrics results
-                                       {:save {:file (->> results
-                                                          (re/re-params)
+                                       {:save {:file (->> (select-keys results re/PARAM-KEYS)
                                                           (format "metrics-%s.svg")
                                                           (io/file results-dir))}}))))
 
 (defn parameter-walk
   [training-model testing-model results-dir {:keys [context-path-length-cap
-                                                    context-thresh
+                                                    match-thresh
                                                     cluster-thresh
-                                                    min-match-support
+                                                    confidence-thresh
+                                                    min-pattern-support
                                                     seed-frac
-                                                    rng]}]
+                                                    rng negative-cap
+                                                    match-fn]}]
   (doall
     ;; parallelize with
     #_(cp/upfor (dec (cp/ncpus)))
     (for [seed-frac               seed-frac
           :let [split-model    (re-model/split-train-test (assoc training-model :seed-frac seed-frac
-                                                                                :rng rng))
+                                                                                :rng rng
+                                                                                :negative-cap negative-cap))
                 prepared-model (if (seq testing-model)
                                  (re-model/train-test split-model testing-model)
                                  split-model)]
           context-path-length-cap context-path-length-cap
-          context-thresh          context-thresh
+          context-thresh          match-thresh
           cluster-thresh          cluster-thresh
-          min-match-support       min-match-support]
+          confidence-thresh       confidence-thresh
+          min-match-support       min-pattern-support]
       (-> prepared-model
-          (assoc :context-thresh context-thresh
+          (assoc :match-thresh context-thresh
                  :cluster-thresh cluster-thresh
-                 :min-match-support min-match-support
+                 :confidence-thresh confidence-thresh
+                 :min-pattern-support min-match-support
                  :max-iterations 100
-                 :max-matches 3000
+                 :max-matches 5000
                  :re-clustering? true
-                 :context-path-length-cap context-path-length-cap)
+                 :context-path-length-cap context-path-length-cap
+                 :match-fn match-fn)
           (run-model results-dir)))))
 
 (defn flatten-context-vector
@@ -281,7 +291,7 @@
                               (filter #(contains? properties (:property %)))
                               (filter #(re-model/context-vector % model))
                               (pmap #(flatten-context-vector % model))
-                              (map #(dissoc % :entities :concepts :context))
+                              (map #(dissoc % :VEC :entities :concepts :context :support :predicted))
                               (vec)
                               (incanter/to-dataset)))))
 

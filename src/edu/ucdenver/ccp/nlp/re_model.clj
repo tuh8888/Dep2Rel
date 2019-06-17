@@ -9,21 +9,16 @@
             [taoensso.timbre :as log]
             [clojure.math.combinatorics :as combo]
             [edu.ucdenver.ccp.knowtator-clj :as k])
-  (:import (clojure.lang PersistentArrayMap ExceptionInfo)))
+  (:import (clojure.lang PersistentArrayMap ExceptionInfo)
+           (java.io File)))
 
 (def NONE "NONE")
 
-(def MODEL-KEYs [:concept-annotations
-                 :concept-graphs
-                 :structure-annotations
-                 :structure-graphs
-                 :sentences])
-
-(defn model-params
-  [model]
-  (->> MODEL-KEYs
-       (map #(find model %))
-       (into {})))
+(def MODEL-KEYs #{:concept-annotations
+                  :concept-graphs
+                  :structure-annotations
+                  :structure-graphs
+                  :sentences})
 
 (defn word-embedding-catch
   [word]
@@ -51,48 +46,80 @@
          (doall)
          (apply linear-algebra/vec-sum))))
 
-(defrecord Sentence [concepts entities context sent]
+(defrecord Sentence [concepts entities context sent-id full-sentence-text context-text]
   ContextVector
-  (context-vector [self {:keys [structure-annotations concept-annotations] :as model}]
+  (context-vector [self {:keys [structure-annotations concept-annotations factory] :as model}]
     (or (:VEC self)
         (let [context-toks (->> self
                                 :context
-                                (map #(get structure-annotations %)))]
-          (->> self
-               :entities
-               (map (fn [e] (get concept-annotations e)))
-               (lazy-cat context-toks)
-               (map #(context-vector % model))
-               (doall)
-               (apply linear-algebra/vec-sum))))))
+                                (map #(get structure-annotations %)))
+              v            (->> self
+                                :entities
+                                (map (fn [e] (get concept-annotations e)))
+                                (lazy-cat context-toks)
+                                (map #(context-vector % model))
+                                (doall)
+                                (apply linear-algebra/vec-sum))]
+          (when v (linear-algebra/unit-vec factory v))))))
 
-(defrecord Pattern [support VEC]
+
+(defrecord Pattern [support]
   ContextVector
-  (context-vector [self model]
+  (context-vector [self {:keys [factory] :as model}]
     (or (:VEC self)
         (->> self
              :support
              (map #(context-vector % model))
-             (apply linear-algebra/vec-sum)))))
+             (apply linear-algebra/vec-sum)
+             (linear-algebra/unit-vec factory)))))
 
 
 (defn add-to-pattern
-  [model p s]
-  (->Pattern (conj (set (:support p)) s)
-             (if p
-               (linear-algebra/vec-sum (context-vector p model)
-                                       (context-vector s model))
-               (context-vector s model))))
+  [_ p s]
+  (->Pattern (conj (set (:support p)) s)))
 
-(defn pprint-sent
-  [model sent]
-  (->> sent
-       (map #(get-in model [:structure-annotations %]))
+(defn pprint-toks-text
+  [{:keys [structure-annotations]} toks]
+  (->> toks
+       (map #(get structure-annotations %))
        (map (comp first vals :spans))
        (sort-by :start)
        (map :text)
        (interpose " ")
        (apply str)))
+
+(defn pprint-sent-text
+  [{:keys [structure-graphs] :as model} sent-id]
+  (->> sent-id
+       (get structure-graphs)
+       :node-map
+       (keys)
+       (pprint-toks-text model)))
+
+(defn predicted-positive
+  [samples]
+  (remove #(= (:predicted %) NONE) samples))
+
+(defn actual-positive
+  ([samples]
+   (remove #(= NONE (:property %)) samples))
+  ([property samples]
+   (filter #(= property (:property %)) samples)))
+
+(defn actual-negative
+  "The samples labelled negative"
+  [samples]
+  (filter #(= NONE (:property %)) samples))
+
+(defn predicted-positive
+  ([samples]
+   (remove #(= NONE (:predicted %)) samples))
+  ([property matches]
+   (filter #(= property (:predicted %)) matches)))
+
+(defn predicted-negative
+  [samples]
+  (filter #(= (:predicted %) NONE) samples))
 
 (defn ann-tok
   [model {:keys [doc spans] :as ann}]
@@ -151,7 +178,7 @@
 
 (defn make-context-path
   [{:keys [structure-annotations concept-annotations]} undirected-sent sent-id toks]
-  (let [sent-anns (filter #(= (:sent %) sent-id) (vals concept-annotations))]
+  (let [sent-anns (filter #(= (:sent-id %) sent-id) (vals concept-annotations))]
     (->> toks
          (apply uber-alg/shortest-path undirected-sent)
          (uber-alg/nodes-in-path)
@@ -179,17 +206,19 @@
   "Make a sentence using the sentence graph and entities"
   [model undirected-sent sent-id anns]
   ;; TODO: Remove context toks that are part of the entities
-  (let [concepts (->> anns
-                      (map :concept)
-                      (map #(conj #{} %))
-                      (set))
-        entities (->> anns
-                      (map :id)
-                      (set))
-        context  (->> anns
-                      (map :tok)
-                      (make-context-path model undirected-sent sent-id))]
-    (->Sentence concepts entities context sent-id)))
+  (let [concepts           (->> anns
+                                (map :concept)
+                                (map #(conj #{} %))
+                                (set))
+        entities           (->> anns
+                                (map :id)
+                                (set))
+        context            (->> anns
+                                (map :tok)
+                                (make-context-path model undirected-sent sent-id))
+        full-sentence-text (pprint-sent-text model sent-id)
+        context-text       (pprint-toks-text model context)]
+    (->Sentence concepts entities context sent-id full-sentence-text context-text)))
 
 (defn combination-sentences
   [model undirected-sent sent-id sent-annotations]
@@ -201,7 +230,7 @@
   (let [undirected-sents (util/map-kv graph/undirected-graph structure-graphs)]
     (->> concept-annotations
          (vals)
-         (group-by :sent)
+         (group-by :sent-id)
          (pmap (fn [[sent-id sent-annotations]]
                  (log/debug "Sentence:" sent-id)
                  (combination-sentences model (get undirected-sents sent-id) sent-id sent-annotations)))
@@ -213,13 +242,13 @@
 
 (defn assign-sent-id
   [model tok]
-  (assoc tok :sent (tok-sent-id model tok)))
+  (assoc tok :sent-id (tok-sent-id model tok)))
 
 (defn assign-tok
   [model ann]
-  (let [{:keys [sent id]} (ann-tok model ann)]
+  (let [{:keys [sent-id id]} (ann-tok model ann)]
     (assoc ann :tok id
-               :sent sent)))
+               :sent-id sent-id)))
 
 (defn sent-property
   [{:keys [concept-graphs]} [id1 id2]]
@@ -243,33 +272,52 @@
     sentences))
 
 (defn make-model
-  [v factory word2vec-db]
-  (log/info "Making model")
+  [v word2vec-db factory concept-annotations-file structure-annotations-file]
   (word2vec/with-word2vec word2vec-db
-    (as-> (k/simple-model v) model
-          (assoc model :factory factory
-                       :word2vec-db word2vec-db)
-          (update model :structure-annotations (fn [structure-annotations]
-                                                 (log/info "Making structure annotations")
-                                                 (util/pmap-kv (fn [s]
-                                                                 (assign-sent-id model s))
-                                                               structure-annotations)))
-          (update model :concept-annotations (fn [concept-annotations]
-                                               (log/info "Making concept annotations")
-                                               (util/pmap-kv (fn [s]
-                                                               (assign-tok model s))
-                                                             concept-annotations))))))
+    (log/info "Making model")
+    (let [model               (k/simple-model v)
+          model               (assoc model :structure-annotations (let [structure-annotations (when (.exists ^File structure-annotations-file)
+                                                                                                (read-string (slurp structure-annotations-file)))]
+                                                                    (if (seq structure-annotations)
+                                                                      structure-annotations
+                                                                      (let [structure-annotations (do
+                                                                                                    (log/info "Making structure annotations")
+                                                                                                    (util/pmap-kv (fn [s]
+                                                                                                                    (assign-sent-id model s))
+                                                                                                                  (:structure-annotations model)))]
+                                                                        (spit structure-annotations-file (pr-str structure-annotations))
+                                                                        structure-annotations))))
+          concept-annotations (let [concept-annotations (when (.exists ^File concept-annotations-file)
+                                                          (read-string (slurp concept-annotations-file)))]
+                                (if (seq concept-annotations)
+                                  concept-annotations
+                                  (let [concept-annotations (do
+                                                              (log/info "Making concept annotations")
+                                                              (util/pmap-kv (fn [s]
+                                                                              (assign-tok model s))
+                                                                            (:concept-annotations model)))]
+                                    (spit concept-annotations-file (pr-str concept-annotations))
+                                    concept-annotations)))]
+
+      (assoc model :factory factory
+                   :word2vec-db word2vec-db
+                   :concept-annotations concept-annotations))))
 
 (defn make-sentences
-  [{:keys [word2vec-db] :as model}]
-  (log/info "Making sentences")
-  (word2vec/with-word2vec word2vec-db
-    (let [sentences (->> model
-                         (concept-annotations->sentences)
-                         (pmap #(assign-embedding model %))
-                         (pmap #(assign-property model %))
-                         (doall))]
-      sentences)))
+  [{:keys [word2vec-db] :as model} sentences-file]
+  (let [sentences (when (.exists ^File sentences-file)
+                    (read-string (slurp sentences-file)))]
+    (if (seq sentences)
+      sentences
+      (word2vec/with-word2vec word2vec-db
+        (log/info "Making sentences")
+        (let [sentences (->> model
+                             (concept-annotations->sentences)
+                             (map #(assign-embedding model %))
+                             (pmap #(assign-property model %))
+                             (doall))]
+          (spit sentences-file (pr-str sentences))
+          sentences)))))
 
 (defn frac-seeds
   [property {:keys [sentences seed-frac rng]}]
@@ -298,33 +346,23 @@
 
 (defn split-train-test
   "Splits model into train and test sets"
-  [{:keys [sentences properties word2vec-db] :as model}]
-  (let [seeds    (->> (disj properties NONE)
-                      (map (fn [property] (frac-seeds property model)))
-                      (apply clojure.set/union))
-        NONE-num (->> seeds
-                      (group-by :property)
-                      (vals)
-                      (map count)
-                      (reduce max))
-        seeds    (->> sentences
-                      (filter #(= NONE (:property %)))
-                      (count)
-                      (/ NONE-num)
-                      (assoc model :seed-frac)
-                      (frac-seeds NONE)
-                      (clojure.set/union seeds))]
-    (word2vec/with-word2vec word2vec-db
+  [{:keys [sentences properties word2vec-db negative-cap seed-frac] :as model}]
+  (word2vec/with-word2vec word2vec-db
+    (let [seeds (->> (disj properties NONE)
+                     (map (fn [property] (frac-seeds property model)))
+                     (apply clojure.set/union))
+          seeds (->> sentences
+                     (actual-negative)
+                     (count)
+                     (/ negative-cap)
+                     (min seed-frac)
+                     (assoc model :seed-frac)
+                     (frac-seeds NONE)
+                     (clojure.set/union seeds))]
       (-> model
           (assoc :all-samples (remove seeds sentences)
                  :seeds (->> seeds
-                             (map #(assoc % :predicted (:property %)))
-                             (set)))
-          (update :all-samples (fn [samples] (->> samples
-                                                  (map #(assign-embedding model %))
-                                                  (filter :VEC)
-                                                  (doall))))
-          (update :seeds (fn [seeds] (->> seeds
-                                          (map #(assign-embedding model %))
-                                          (filter :VEC)
-                                          (doall))))))))
+                             (map #(assoc % :predicted (:property %)
+                                            :confidence 1))
+                             (set)))))))
+
