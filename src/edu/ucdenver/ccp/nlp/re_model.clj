@@ -8,24 +8,17 @@
             [word2vec :as word2vec]
             [taoensso.timbre :as log]
             [clojure.math.combinatorics :as combo]
-            [edu.ucdenver.ccp.knowtator-clj :as k]
-            [clojure.java.io :as io])
+            [edu.ucdenver.ccp.knowtator-clj :as k])
   (:import (clojure.lang PersistentArrayMap ExceptionInfo)
            (java.io File)))
 
 (def NONE "NONE")
 
-(def MODEL-KEYs [:concept-annotations
-                 :concept-graphs
-                 :structure-annotations
-                 :structure-graphs
-                 :sentences])
-
-(defn model-params
-  [model]
-  (->> MODEL-KEYs
-       (map #(find model %))
-       (into {})))
+(def MODEL-KEYs #{:concept-annotations
+                  :concept-graphs
+                  :structure-annotations
+                  :structure-graphs
+                  :sentences})
 
 (defn word-embedding-catch
   [word]

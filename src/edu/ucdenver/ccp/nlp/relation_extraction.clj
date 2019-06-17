@@ -19,12 +19,6 @@
                   :max-iterations
                   :max-matches})
 
-(defn re-params
-  [model]
-  (->> PARAM-KEYS
-       (map #(find model %))
-       (into {})))
-
 (defn sent-pattern-concepts-match?
   [{:keys [concepts]} {:keys [support]}]
   (->> support
@@ -83,9 +77,8 @@
 
 (defn concept-context-match
   [{:keys [match-thresh vector-fn samples patterns factory]}]
-  #_(log/info (count (remove vector-fn samples)) (count (remove vector-fn patterns)))
   (when (and (seq samples) (seq patterns))
-    (log/info "Finding matches" (count patterns) (count samples))
+    (log/info "Finding matches")
     (let [max-cluster-support-m (->> patterns
                                      (group-by :predicted)
                                      (util/map-kv #(map :support %))
@@ -116,33 +109,17 @@
            samples))))
 
 (defn support-weighted-sim-distribution-context-match
-  [{:keys [vector-fn samples patterns match-thresh properties factory]}]
+  [{:keys [vector-fn samples patterns match-thresh factory]}]
   (when (and (seq samples) (seq patterns))
-    (log/info "Finding matches" (count patterns) (count samples))
-    (let [samples                 (vec samples)
-          patterns                (vec patterns)
-          pattern-vectors         (map vector-fn patterns)
-          pattern-support-counts  (->> patterns
-                                       (map :support)
-                                       (map count))
-          total-support           (reduce + pattern-support-counts)
-          pattern-weights         (map #(/ % total-support) pattern-support-counts)
-          other-property-patterns (->> properties
-                                       (map (fn [property]
-                                              (let [other-patterns               (->> patterns
-                                                                                      (map-indexed (fn [j p] {:j j :pattern p}))
-                                                                                      #_(remove (fn [{{:keys [predicted]} :pattern}] (= predicted property))))
-                                                    other-property-total-support (->> other-patterns
-                                                                                      (map :pattern)
-                                                                                      (map :support)
-                                                                                      (map count)
-                                                                                      (reduce +))
-                                                    other-patterns               (map (fn [{{:keys [support]} :pattern :as m}]
-                                                                                        (assoc m :weight (/ (count support)
-                                                                                                            other-property-total-support)))
-                                                                                      other-patterns)]
-                                                [property other-patterns])))
-                                       (into {}))]
+    (log/info "Finding matches")
+    (let [samples                (vec samples)
+          patterns               (vec patterns)
+          pattern-vectors        (map vector-fn patterns)
+          pattern-support-counts (->> patterns
+                                      (map :support)
+                                      (map count))
+          total-support          (reduce + pattern-support-counts)
+          pattern-weights        (map #(/ % total-support) pattern-support-counts)]
       (->> samples
            (map vector-fn)
            (linear-algebra/mdot factory pattern-vectors)
@@ -152,13 +129,7 @@
                          {best-predicted :predicted best-support :support} (get patterns best-j)
                          weighted-best-score     (* best-score (/ (count best-support)
                                                                   total-support))
-                         other-property-patterns (get other-property-patterns best-predicted)
-                         other-scores            (->> other-property-patterns
-                                                      (map :j)
-                                                      (select-keys sample-scores)
-                                                      (map second))
                          other-scores            sample-scores
-                         weights                 (map :weight other-property-patterns)
                          weights                 pattern-weights
                          weighted-scores         (map * other-scores weights)]
                      (let [{:keys [p-value]} (inc-stats/t-test weighted-scores :mu weighted-best-score)
@@ -178,7 +149,6 @@
                       (pmap (fn [property]
                               (let [samples  (get seeds property)
                                     patterns (get patterns property)]
-                                (log/info (count samples) (count patterns))
                                 (if (seq samples)
                                   (do
                                     (log/info "Clustering" property)
@@ -187,7 +157,6 @@
                                          (map #(assoc % :predicted property))))
                                   patterns))))
                       (apply concat))]
-    (log/info (count seeds) (count patterns))
     patterns))
 
 
@@ -233,7 +202,6 @@
 
 (defn bootstrap
   [{:keys [seeds factory vector-fn match-fn] :as model}]
-  (log/info (:context-path-length-cap model) (count (:all-samples model)) match-fn)
   (let [model (assoc model :samples (->> model
                                          (context-path-filter)
                                          (map #(->> %
@@ -243,10 +211,9 @@
                            :matches #{}
                            :seeds seeds
                            :iteration 0)]
-    (log/info (re-params model))
+    (log/info (select-keys model PARAM-KEYS))
     (log-starting-values model)
     (loop [model model]
-      (log/info (count (:seeds model)) (count (:patterns model)))
       (let [model       (assoc model :patterns (pattern-update model))
             unclustered (decluster model)
             model       (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))

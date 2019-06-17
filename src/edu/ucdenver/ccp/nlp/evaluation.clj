@@ -108,9 +108,6 @@
                                (catch ArithmeticException _ {}))
                              (assoc :property property))))
                      properties)]
-    (->> metrics
-         (incanter/to-dataset)
-         (log/info))
     metrics))
 
 (defn calc-overall-metrics
@@ -133,7 +130,6 @@
                          :precision precision
                          :recall    recall
                          :f1        f1}]
-          (log/info "Overall Metrics" metrics)
           metrics)
         (catch Exception _ nil)))))
 
@@ -217,28 +213,32 @@
 (defn run-model
   "Run model with parameters"
   [model results-dir]
-  (let [model   (if (contains? model :all-samples)
-                  model
-                  (re-model/split-train-test model))
-        results (-> model
-                    (assoc :vector-fn #(re-model/context-vector % model)
-                           :cluster-merge-fn re-model/add-to-pattern
-                           :pattern-update-fn re/pattern-update
-                           :support-filter re/support-filter
-                           :terminate? re/terminate?
-                           :decluster re/decluster
-                           :context-path-filter-fn re/context-path-filter)
-                    (re/bootstrap)
-                    (doall))
-        metrics {:metrics         (calc-metrics results)
-                 :overall-metrics (calc-overall-metrics results)}
-        results (merge results metrics)]
+  (let [model           (if (contains? model :all-samples)
+                          model
+                          (re-model/split-train-test model))
+        results         (-> model
+                            (assoc :vector-fn #(re-model/context-vector % model)
+                                   :cluster-merge-fn re-model/add-to-pattern
+                                   :pattern-update-fn re/pattern-update
+                                   :support-filter re/support-filter
+                                   :terminate? re/terminate?
+                                   :decluster re/decluster
+                                   :context-path-filter-fn re/context-path-filter)
+                            (re/bootstrap)
+                            (doall))
+        metrics         (calc-metrics results)
+        overall-metrics (calc-overall-metrics results)
+        results         (merge results {:metrics         metrics
+                                        :overall-metrics overall-metrics})]
+    (->> metrics
+         (incanter/to-dataset)
+         (log/info))
+    (log/info "Overall Metrics" overall-metrics)
     (doto (io/file results-dir "results.edn")
       (spit (select-keys results (lazy-cat EVAL-KEYS re/PARAM-KEYS)) :append true)
       (spit "\n" :append true))
     (assoc results :plot (plot-metrics results
-                                       {:save {:file (->> results
-                                                          (re/re-params)
+                                       {:save {:file (->> (select-keys results re/PARAM-KEYS)
                                                           (format "metrics-%s.svg")
                                                           (io/file results-dir))}}))))
 

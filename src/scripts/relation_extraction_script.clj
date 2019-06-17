@@ -51,7 +51,6 @@
 (def mem-descs
   (memoize
     (fn [c]
-      (log/info c)
       (k/get-owl-descendants reasoner c))))
 
 (def model (assoc model
