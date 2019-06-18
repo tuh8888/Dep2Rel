@@ -83,7 +83,7 @@ Combination of the word vectors along the context path
 @snapend
 
 @snap[west span-50]
-@img[clean-img](assets/pca-all.png)
+@img[clean-img](assets/PCA%20for%20NONE%20and%20ACTIVATOR.svg)
 @snapend
 
 @snap[east span-50]
