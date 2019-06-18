@@ -108,22 +108,23 @@
                     [:training :testing])
                (incanter/to-dataset)))
 
-#_(def training-context-paths-plot (evaluation/plot-context-lengths training-model results-dir "Training %s"))
-#_(incanter/view training-context-paths-plot)
-#_(def testing-context-paths-plot (evaluation/plot-context-lengths testing-model results-dir "Test %s"))
-#_(def testing-context-paths-plot-pos (-> testing-model
-                                          (update :sentences (fn [sentences])
-                                                  (re-model/actual-positive sentences))
+(comment
+  (def training-context-paths-plot (evaluation/plot-context-lengths training-model results-dir "Training %s"))
+  (incanter/view training-context-paths-plot)
+  (def testing-context-paths-plot (evaluation/plot-context-lengths testing-model results-dir "Test %s"))
+  (def testing-context-paths-plot-pos (-> testing-model
+                                          (update :sentences (fn [sentences]
+                                                               (re-model/actual-positive sentences)))
                                           (evaluation/plot-context-lengths
                                             results-dir "Pos Test %s")))
-#_(def testing-context-paths-plot-neg (-> testing-model
+  (def testing-context-paths-plot-neg (-> testing-model
                                           (update :sentences (fn [sentences]
                                                                (re-model/actual-negative sentences)))
                                           (evaluation/plot-context-lengths
                                             results-dir "Neg Test %s")))
-#_(incanter/view testing-context-paths-plot)
-#_(incanter/view testing-context-paths-plot-pos)
-#_(incanter/view testing-context-paths-plot-neg)
+  (incanter/view testing-context-paths-plot)
+  (incanter/view testing-context-paths-plot-pos)
+  (incanter/view testing-context-paths-plot-neg))
 
 ;;; CLUSTERING ;;;
 (comment
@@ -174,16 +175,16 @@
                         (re-model/train-test testing-model)))
 
 (def results (-> prepared-model
-                 (update :seeds (fn [seeds] (take 100 seeds)))
+                 #_(update :seeds (fn [seeds] (take 100 seeds)))
                  (assoc :context-path-length-cap 100
-                        :match-thresh 0.7
-                        :cluster-thresh 0.7
-                        :confidence-thresh 0
+                        :match-thresh 0.99
+                        :cluster-thresh 0.975
+                        :confidence-thresh 0.7
                         :min-pattern-support 1
                         :max-iterations 100
                         :max-matches 5000
-                        :re-clustering? false
-                        :match-fn re/sim-to-support-in-pattern-match)
+                        :re-clustering? true
+                        :match-fn re/support-weighted-sim-pattern-distribution-context-match)
                  (evaluation/run-model results-dir)))
 
 #_(incanter/view (:plot results))

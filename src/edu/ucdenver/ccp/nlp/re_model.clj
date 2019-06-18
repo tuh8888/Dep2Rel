@@ -121,36 +121,6 @@
   [samples]
   (filter #(= (:predicted %) NONE) samples))
 
-(defn ann-tok
-  [model {:keys [doc spans] :as ann}]
-  (let [{concept-start :start concept-end :end} (first (vals spans))
-        tok-id (->> model
-                    :structure-annotations
-                    (vals)
-                    (filter #(= (:doc %) doc))
-                    (reduce
-                      (fn [{old-spans :spans :as old-tok} {new-spans :spans :as new-tok}]
-                        (let [{old-tok-start :start old-tok-end :end} (first (vals old-spans))
-                              {new-tok-start :start new-tok-end :end} (first (vals new-spans))]
-                          (cond (<= new-tok-start concept-start concept-end new-tok-end) new-tok
-                                (<= concept-start new-tok-start new-tok-end concept-end) new-tok
-                                (and old-tok (<= old-tok-start concept-start concept-end old-tok-end)) old-tok
-                                (and old-tok (<= concept-start old-tok-start old-tok-end concept-end)) old-tok
-                                (<= new-tok-start concept-start new-tok-end) new-tok
-                                (and old-tok (<= old-tok-start concept-start old-tok-end)) old-tok
-                                :else old-tok)))
-                      nil))]
-    (when-not tok-id (log/warn "No token found for" ann))
-    tok-id))
-
-(defn tok-sent-id
-  [{:keys [structure-graphs]} {:keys [id]}]
-  (some
-    (fn [[sent-id sent]]
-      (when (get-in sent [:node-map id])
-        sent-id))
-    structure-graphs))
-
 (defn min-start
   [a]
   (->> a
@@ -167,6 +137,30 @@
        (map :end)
        (reduce max)))
 
+(defn ann-toks
+  [model {:keys [doc] :as ann}]
+  (let [concept-start (min-start ann)
+        concept-end   (max-end ann)
+        tok-ids       (into [] (comp (filter #(= (:doc %) doc))
+                                     (filter #(let [tok-start (min-start %)
+                                                    tok-end   (max-end %)]
+                                                (or (<= tok-start concept-start tok-end)
+                                                    (<= tok-start concept-end tok-end))
+                                                #_(<= concept-start tok-start tok-end concept-end))))
+                            (vals (:structure-annotations model)))]
+    (when-not (seq tok-ids) (log/warn "No token found for" ann)
+                            (throw (ex-info (str "No token found for " ann)
+                                            {:type :tok-assignment, :cause :tok-not-found})))
+    tok-ids))
+
+(defn tok-sent-id
+  [{:keys [structure-graphs]} {:keys [id]}]
+  (some
+    (fn [[sent-id sent]]
+      (when (get-in sent [:node-map id])
+        sent-id))
+    structure-graphs))
+
 (defn overlap
   "Finds overlap between two annotations"
   [a1 a2]
@@ -177,10 +171,9 @@
     (<= min-a1-start min-a2-start max-a2-end max-a1-end)))
 
 (defn make-context-path
-  [{:keys [structure-annotations concept-annotations]} undirected-sent sent-id toks]
+  [{:keys [structure-annotations concept-annotations]} undirected-sent sent-id tok1 tok2]
   (let [sent-anns (filter #(= (:sent-id %) sent-id) (vals concept-annotations))]
-    (->> toks
-         (apply uber-alg/shortest-path undirected-sent)
+    (->> (uber-alg/shortest-path undirected-sent tok1 tok2)
          (uber-alg/nodes-in-path)
          (map #(get structure-annotations %))
          (reduce
@@ -204,7 +197,7 @@
 
 (defn make-sentence
   "Make a sentence using the sentence graph and entities"
-  [model undirected-sent sent-id anns]
+  [model undirected-sent sent-id [ann1 ann2 :as anns]]
   ;; TODO: Remove context toks that are part of the entities
   (let [concepts           (->> anns
                                 (map :concept)
@@ -213,9 +206,9 @@
         entities           (->> anns
                                 (map :id)
                                 (set))
-        context            (->> anns
-                                (map :tok)
-                                (make-context-path model undirected-sent sent-id))
+        context            (apply min-key count (for [tok1 (:toks ann1)
+                                                      tok2 (:toks ann2)]
+                                                  (make-context-path model undirected-sent sent-id tok1 tok2)))
         full-sentence-text (pprint-sent-text model sent-id)
         context-text       (pprint-toks-text model context)]
     (->Sentence concepts entities context sent-id full-sentence-text context-text)))
@@ -232,7 +225,6 @@
          (vals)
          (group-by :sent-id)
          (pmap (fn [[sent-id sent-annotations]]
-                 (log/debug "Sentence:" sent-id)
                  (combination-sentences model (get undirected-sents sent-id) sent-id sent-annotations)))
          (apply concat))))
 
@@ -244,10 +236,11 @@
   [model tok]
   (assoc tok :sent-id (tok-sent-id model tok)))
 
-(defn assign-tok
+(defn assign-toks
   [model ann]
-  (let [{:keys [sent-id id]} (ann-tok model ann)]
-    (assoc ann :tok id
+  (let [toks (ann-toks model ann)
+        {:keys [sent-id]} (first toks)]
+    (assoc ann :toks (map :id toks)
                :sent-id sent-id)))
 
 (defn sent-property
@@ -276,27 +269,28 @@
   (word2vec/with-word2vec word2vec-db
     (log/info "Making model")
     (let [model               (k/simple-model v)
-          model               (assoc model :structure-annotations (let [structure-annotations (when (.exists ^File structure-annotations-file)
-                                                                                                (read-string (slurp structure-annotations-file)))]
-                                                                    (if (seq structure-annotations)
-                                                                      structure-annotations
-                                                                      (let [structure-annotations (do
-                                                                                                    (log/info "Making structure annotations")
-                                                                                                    (util/pmap-kv (fn [s]
-                                                                                                                    (assign-sent-id model s))
-                                                                                                                  (:structure-annotations model)))]
-                                                                        (spit structure-annotations-file (pr-str structure-annotations))
-                                                                        structure-annotations))))
-          concept-annotations (let [concept-annotations (when (.exists ^File concept-annotations-file)
+          model               (->> (let [structure-annotations (when (and structure-annotations-file (.exists ^File structure-annotations-file))
+                                                                 (read-string (slurp structure-annotations-file)))]
+                                     (if (seq structure-annotations)
+                                       structure-annotations
+                                       (let [structure-annotations (do
+                                                                     (log/info "Making structure annotations")
+                                                                     (util/pmap-kv (fn [s]
+                                                                                     (assign-sent-id model s))
+                                                                                   (:structure-annotations model)))]
+                                         (when structure-annotations-file (spit structure-annotations-file (pr-str structure-annotations)))
+                                         structure-annotations)))
+                                   (assoc model :structure-annotations))
+          concept-annotations (let [concept-annotations (when (and concept-annotations-file (.exists ^File concept-annotations-file))
                                                           (read-string (slurp concept-annotations-file)))]
                                 (if (seq concept-annotations)
                                   concept-annotations
                                   (let [concept-annotations (do
                                                               (log/info "Making concept annotations")
                                                               (util/pmap-kv (fn [s]
-                                                                              (assign-tok model s))
+                                                                              (assign-toks model s))
                                                                             (:concept-annotations model)))]
-                                    (spit concept-annotations-file (pr-str concept-annotations))
+                                    (when concept-annotations-file (spit concept-annotations-file (pr-str concept-annotations)))
                                     concept-annotations)))]
 
       (assoc model :factory factory

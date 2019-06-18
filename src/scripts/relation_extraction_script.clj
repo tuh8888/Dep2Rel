@@ -40,7 +40,7 @@
 (def concepts-with-toks
   (zipmap (keys (:concept-annotations model))
           (pmap
-            #(let [tok-id (re-model/ann-tok model %)
+            #(let [tok-id  (re-model/ann-toks model %)
                    sent-id (re-model/tok-sent-id model tok-id)]
                (assoc % :tok tok-id
                         :sent-id sent-id))
