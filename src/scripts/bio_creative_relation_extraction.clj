@@ -175,7 +175,9 @@
                         (re-model/train-test testing-model)))
 
 (def results (-> prepared-model
-                 (update :seeds (fn [seeds] (take 20 seeds)))
+                 (update :seeds (fn [seeds] (->> seeds
+                                                 (remove #(= (:predicted %) re-model/NONE))
+                                                 (take 1000))))
                  (assoc :context-path-length-cap 100
                         :match-thresh 0.5
                         :cluster-thresh 0.75
@@ -184,7 +186,7 @@
                         :max-iterations 100
                         :max-matches 5000
                         :re-clustering? true
-                        :match-fn re/support-weighted-sim-pattern-distribution-context-match)
+                        :match-fn re/support-weighted-sim-distribution-context-match)
                  (evaluation/run-model results-dir)))
 
 #_(incanter/view (:plot results))
@@ -199,7 +201,6 @@
                                                       :rng                              0.022894
                                                       :negative-cap                     5000
                                                       :match-fn                         re/support-weighted-sim-distribution-context-match}))
-
 
 (def baseline-results {:precision 0.4544
                        :recall    0.5387

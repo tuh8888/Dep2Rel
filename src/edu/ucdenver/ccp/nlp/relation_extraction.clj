@@ -187,24 +187,25 @@
            (map (fn [[sample sample-scores]]
                   (let [scores (support-pattern-scores params patterns sample-scores)]
                     (if (seq scores)
-                      (let [{:keys [predicted weight] best-scores :scores} (apply max-key :score scores)
+                      (let [{:keys [predicted weight] best-scores :scores :as pattern} (apply max-key :score scores)
                             other-scores (->> scores
                                               (remove #(= (:predicted %) predicted))
                                               (mapcat #(map (fn [score]
                                                               (* score (:weight %)))
-                                                            (:scores %))))]
-                        (if (seq other-scores)
+                                                            (:scores %))))
+                            best-scores  (map #(* % weight) best-scores)]
+                        (try
                           (let [mu          (inc-stats/mean other-scores)
-                                best-scores (map #(* % weight) best-scores)
-                                {:keys [p-value]} (do (log/info mu (seq best-scores))
-                                                      (inc-stats/t-test best-scores :mu mu))
+                                {:keys [p-value]} (inc-stats/t-test best-scores :mu mu)
                                 confidence  (- 1 p-value)]
                             (if (< match-thresh confidence)
                               (assoc sample :predicted predicted
                                             :confidence confidence)
                               sample)
                             (assoc sample :predicted predicted
-                                          :confidence confidence))))
+                                          :confidence confidence))
+                          (catch Exception _
+                            sample)))
                       sample))))))))
 
 (defn sim-to-support-in-pattern-match
