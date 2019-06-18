@@ -2,7 +2,7 @@
 
 **Presenter:** Harrison Pielke-Lombardo
 
-**Advisor:** Lawrence Hunter
+**Adviser:** Lawrence Hunter
 
 @snap[south span-75]
 @img[](assets/CUAnschutz_sl_clr.png)
@@ -12,9 +12,10 @@
 ---
 @title[Background]
 
-## Some questions
+## Some observations
 
-- What if there aren't enough gold standard annotations?
+- There's not many gold standard relation annotations
+- We can 
 - Can we construct syntactic/semantic patterns for finding relations in 
 scientific literature?
 - How many relations are there in the scientific literature?
