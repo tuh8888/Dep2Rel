@@ -250,7 +250,7 @@
 (defn terminate?
   [{:keys [max-iterations iteration seeds matches patterns samples max-matches] :as model}]
 
-  ;; Remaining matches added to negative group
+  ;; Remaining samples added to negative group
   (let [success-model (assoc model :matches (->> samples
                                                  (map #(assoc % :predicted re-model/NONE))
                                                  (into matches))

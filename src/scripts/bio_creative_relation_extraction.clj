@@ -186,9 +186,13 @@
                         :max-iterations 100
                         :max-matches 5000
                         :re-clustering? true
-                        :match-fn re/sim-to-support-in-pattern-match)
+                        :match-fn re/support-weighted-sim-distribution-context-match)
                  (evaluation/run-model results-dir)))
+(count (:all-samples results))
+(count (:matches results))
 
+
+(evaluation/calc-overall-metrics results)
 #_(incanter/view (:plot results))
 
 #_(def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir
