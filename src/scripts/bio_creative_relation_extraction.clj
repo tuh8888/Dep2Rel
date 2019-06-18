@@ -24,7 +24,7 @@
 (def biocreative-dir (io/file home-dir "BioCreative" "BCVI-2017" "ChemProt_Corpus"))
 (def training-dir (io/file biocreative-dir training-prefix))
 (def testing-dir (io/file biocreative-dir testing-prefix))
-(def results-dir (io/file training-dir "results"))
+(def results-dir (io/file biocreative-dir "results"))
 
 (def word-vector-dir (io/file home-dir "WordVectors"))
 (def word2vec-db (io/file word-vector-dir "bio-word-vectors-clj.vec"))
@@ -175,11 +175,11 @@
                         (re-model/train-test testing-model)))
 
 (def results (-> prepared-model
-                 #_(update :seeds (fn [seeds] (take 100 seeds)))
+                 (update :seeds (fn [seeds] (take 20 seeds)))
                  (assoc :context-path-length-cap 100
-                        :match-thresh 0.99
-                        :cluster-thresh 0.975
-                        :confidence-thresh 0.7
+                        :match-thresh 0.5
+                        :cluster-thresh 0.75
+                        :confidence-thresh 0
                         :min-pattern-support 1
                         :max-iterations 100
                         :max-matches 5000
@@ -204,3 +204,13 @@
 (def baseline-results {:precision 0.4544
                        :recall    0.5387
                        :f1        0.3729})
+
+(def results (with-open [rdr (clojure.java.io/reader (io/file results-dir "results.edn"))]
+               (->> (line-seq rdr)
+                    (map read-string)
+                    (map #(merge % (:overall-metrics %)))
+                    (vec))))
+
+(def dataset (incanter/to-dataset results))
+(incanter/view dataset)
+(count results)

@@ -196,7 +196,8 @@
                         (if (seq other-scores)
                           (let [mu          (inc-stats/mean other-scores)
                                 best-scores (map #(* % weight) best-scores)
-                                {:keys [p-value]} (inc-stats/t-test best-scores :mu mu)
+                                {:keys [p-value]} (do (log/info mu (seq best-scores))
+                                                      (inc-stats/t-test best-scores :mu mu))
                                 confidence  (- 1 p-value)]
                             (if (< match-thresh confidence)
                               (assoc sample :predicted predicted
