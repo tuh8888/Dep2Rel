@@ -316,15 +316,14 @@
             model       (update model :matches (fn [matches] (->> model
                                                                   :seeds
                                                                   (into matches))))]
+        (log-current-values model)
         (if-let [results (terminate? model)]
           results
-          (do
-            (log-current-values model)
-            (let [model (update model :iteration inc)
-                  model (update model :seeds (fn [new-matches] (->> new-matches
-                                                                    (cap-nones)
-                                                                    (lazy-cat unclustered))))]
-              (recur model))))))))
+          (let [model (update model :iteration inc)
+                model (update model :seeds (fn [new-matches] (->> new-matches
+                                                                  (cap-nones)
+                                                                  (lazy-cat unclustered))))]
+            (recur model)))))))
 
 
 
