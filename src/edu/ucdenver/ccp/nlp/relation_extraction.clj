@@ -27,13 +27,15 @@
        (some #(= concepts %))))
 
 (defn log-starting-values
-  [{:keys [properties seeds all-samples]}]
-  (let [p1 (util/map-kv count (group-by :predicted seeds))]
+  [{:keys [properties seeds all-samples patterns]}]
+  (let [p1 (util/map-kv count (group-by :predicted seeds))
+        p2 (util/map-kv count (group-by :predicted patterns))]
     (->> properties
          (map (fn [property]
                 {:seeds           (get p1 property)
                  :predicted       property
                  :samples         (count all-samples)
+                 :patterns        (get p2 property)
                  :actual-positive (count (re-model/actual-positive property all-samples))}))
          (incanter/to-dataset)
          (log/info))))
@@ -76,38 +78,34 @@
                   patterns))
           samples))
 
-#_(defn concept-context-match
-    [{:keys [match-thresh vector-fn samples patterns factory]}]
-    (when (and (seq samples) (seq patterns))
-      (log/info "Finding matches")
-      (let [max-cluster-support-m (->> patterns
-                                       (group-by :predicted)
-                                       (util/map-kv #(map :support %))
-                                       (util/map-kv #(map count %))
-                                       (util/map-kv #(reduce max %)))
-            filtered-samples      (-> samples
-                                      (concept-filter patterns)
-                                      (vec))
-            patterns              (vec patterns)
-            sample-vectors        (map vector-fn filtered-samples)
-            pattern-vectors       (map vector-fn patterns)
-            new-matches           (->> sample-vectors
-                                       (linear-algebra/find-best-col-matches factory pattern-vectors)
-                                       (filter (fn [{:keys [score]}] (< match-thresh score)))
-                                       (map #(let [s (get filtered-samples (:j %))
-                                                   p (get patterns (:i %))]
-                                               (when-not s (log/warn (:j %) "sample not found"))
-                                               (when-not p (log/warn (:i %) "pattern not found"))
-                                               [s (assoc p :score (:score %))]))
-                                       (into {}))]
-        (map (fn [s] (let [p (get new-matches s)]
-                       (if (sent-pattern-concepts-match? s p)
-                         (assoc s :predicted (:predicted p)
-                                  :confidence (* (:score p)
-                                                 (/ (count (:support p))
-                                                    (get max-cluster-support-m (:predicted p)))))
-                         s)))
-             samples))))
+(defn concept-context-match
+  [{:keys [match-thresh vector-fn samples patterns factory]}]
+  (when (and (seq samples) (seq patterns))
+    (log/info "Finding matches")
+    (let [max-cluster-support-m (->> patterns
+                                     (group-by :predicted)
+                                     (util/map-kv #(map :support %))
+                                     (util/map-kv #(map count %))
+                                     (util/map-kv #(reduce max %)))
+          filtered-samples      (-> samples
+                                    (concept-filter patterns)
+                                    (vec))
+          patterns              (->> patterns
+                                     (map #(assoc % :VEC (vector-fn %)))
+                                     (vec))]
+      (->> filtered-samples
+           (map vector-fn)
+           (linear-algebra/mdot factory (map :VEC patterns))
+           (map vector filtered-samples)
+           (pmap (fn [[sample sample-scores]]
+                   (let [[j score] (apply max-key second (map-indexed vector sample-scores))
+                         {:keys [predicted support]} (get patterns j)]
+                     (if (< match-thresh score)
+                       (assoc sample :predicted predicted
+                                     :confidence (* score
+                                                    (/ (count support)
+                                                       (get max-cluster-support-m predicted))))
+                       sample))))))))
 
 (defn patterns-with-support-weight
   [patterns]
@@ -185,29 +183,29 @@
            (map vector-fn)
            (linear-algebra/mdot factory support-vectors)
            (map vector samples)
-           (map (fn [[sample sample-scores]]
-                  (let [scores (support-pattern-scores params patterns sample-scores)]
-                    (if (seq scores)
-                      (let [{:keys [predicted weight] best-scores :scores} (apply max-key :score scores)
-                            other-scores (->> scores
-                                              (remove #(= (:predicted %) predicted))
-                                              (mapcat #(map (fn [score]
-                                                              (* score (:weight %)))
-                                                            (:scores %))))
-                            best-scores  (map #(* % weight) best-scores)]
-                        (try
-                          (let [mu          (inc-stats/mean other-scores)
-                                {:keys [p-value]} (inc-stats/t-test best-scores :mu mu)
-                                confidence  (- 1 p-value)]
-                            (if (< match-thresh confidence)
-                              (assoc sample :predicted predicted
-                                            :confidence confidence)
-                              sample)
-                            (assoc sample :predicted predicted
-                                          :confidence confidence))
-                          (catch Exception _
-                            sample)))
-                      sample))))))))
+           (pmap (fn [[sample sample-scores]]
+                   (let [scores (support-pattern-scores params patterns sample-scores)]
+                     (if (seq scores)
+                       (let [{:keys [predicted weight] best-scores :scores} (apply max-key :score scores)
+                             other-scores (->> scores
+                                               (remove #(= (:predicted %) predicted))
+                                               (mapcat #(map (fn [score]
+                                                               (* score (:weight %)))
+                                                             (:scores %))))
+                             best-scores  (map #(* % weight) best-scores)]
+                         (try
+                           (let [mu         (inc-stats/mean other-scores)
+                                 {:keys [p-value]} (inc-stats/t-test best-scores :mu mu)
+                                 confidence (- 1 p-value)]
+                             (if (< match-thresh confidence)
+                               (assoc sample :predicted predicted
+                                             :confidence confidence)
+                               sample)
+                             (assoc sample :predicted predicted
+                                           :confidence confidence))
+                           (catch Exception _
+                             sample)))
+                       sample))))))))
 
 (defn sim-to-support-in-pattern-match
   [{:keys [samples vector-fn patterns factory] :as params}]
@@ -219,14 +217,68 @@
          (map vector-fn)
          (linear-algebra/mdot factory support-vectors)
          (map vector samples)
-         (map (fn [[sample sample-scores]]
-                (let [{:keys [score good predicted support]} (->> sample-scores
-                                                                  (support-pattern-scores params patterns)
-                                                                  (apply max-key :score))]
-                  (if good
-                    (assoc sample :predicted predicted
-                                  :confidence (* score (/ good support)))
-                    sample)))))))
+         (pmap (fn [[sample sample-scores]]
+                 (let [scores (support-pattern-scores params patterns sample-scores)]
+                   (if (seq scores)
+                     (let [{:keys [score good predicted support]} (apply max-key :score scores)]
+                       (if good
+                         (assoc sample :predicted predicted
+                                       :confidence (* score (/ good (count support))))
+                         sample))
+                     sample)))))))
+
+(defn pattern-seed-match-scores
+  [{:keys [seeds patterns vector-fn factory pattern-seed-matches]}]
+  (if (and pattern-seed-matches (< 0 pattern-seed-matches))
+    (let [seeds           (vec seeds)
+          pattern-vectors (map vector-fn patterns)
+          sample-vectors  (map vector-fn seeds)]
+      (log/info "Calculating seed matches")
+      (->> pattern-vectors
+           (linear-algebra/mdot factory sample-vectors)
+           (map vector patterns)
+           (pmap (fn [[pattern scores]]
+                   (assoc pattern :seed-match-scores scores)))))
+    patterns))
+
+(defn pattern-seed-match-ratio
+  [{:keys [seeds match-thresh] :as model}]
+  (let [patterns (pattern-seed-match-scores model)
+        seeds-m  (->> seeds
+                      (map-indexed vector)
+                      (group-by #(:predicted (second %)))
+                      (util/map-kv #(map first %)))]
+    (map (fn [p]
+           (let [predicted-positive (->> p
+                                         :seed-match-scores
+                                         (filter #(< match-thresh %))
+                                         (count))]
+             (if (= 0 predicted-positive)
+               (assoc p :recall 0
+                        :precision 0)
+               (let [tp              (->> p
+                                          :predicted
+                                          (get seeds-m)
+                                          (select-keys (:seed-match-scores p))
+                                          (vals)
+                                          (filter #(< match-thresh %))
+                                          (count))
+                     actual-positive (count (get seeds-m (:predicted p)))
+                     fp              (- predicted-positive tp)
+                     fn              (- actual-positive tp)
+                     precision       (/ tp predicted-positive)
+                     recall          (/ tp actual-positive)]
+                 (assoc p :precision precision
+                          :recall recall
+                          :f1 (/ (* 2 precision recall)
+                                 (+ precision recall))
+                          :tp tp
+                          :fp fp
+                          :fn fn
+                          :fn (- (count seeds) tp fp fn))))))
+
+         patterns)))
+
 
 
 (defn pattern-update
@@ -234,26 +286,27 @@
   (let [seeds    (->> seeds
                       (filter #(< confidence-thresh (:confidence %)))
                       (group-by :predicted))
-        patterns (group-by :predicted patterns)
-        patterns (->> properties
-                      (pmap (fn [property]
-                              (let [samples  (get seeds property)
-                                    patterns (get patterns property)]
-                                (if (seq samples)
+        patterns (group-by :predicted patterns)]
+    (->> properties
+         (pmap (fn [property]
+                 (let [samples  (vec (get seeds property))
+                       patterns (get patterns property)
+                       patterns (if (seq samples)
                                   (do
                                     (log/info "Clustering" property)
                                     (->> patterns
                                          (cluster-tools/single-pass-cluster model samples)
                                          (map #(assoc % :predicted property))))
-                                  patterns))))
-                      (apply concat))]
-    patterns))
+                                  patterns)]
+                   (pattern-seed-match-scores (assoc model :patterns patterns)))))
+
+         (apply concat))))
 
 
 (defn terminate?
   [{:keys [max-iterations iteration seeds matches patterns samples max-matches] :as model}]
 
-  ;; Remaining matches added to negative group
+  ;; Remaining samples added to negative group
   (let [success-model (assoc model :matches (->> samples
                                                  (map #(assoc % :predicted re-model/NONE))
                                                  (into matches))
@@ -316,15 +369,14 @@
             model       (update model :matches (fn [matches] (->> model
                                                                   :seeds
                                                                   (into matches))))]
+        (log-current-values model)
         (if-let [results (terminate? model)]
           results
-          (do
-            (log-current-values model)
-            (let [model (update model :iteration inc)
-                  model (update model :seeds (fn [new-matches] (->> new-matches
-                                                                    (cap-nones)
-                                                                    (lazy-cat unclustered))))]
-              (recur model))))))))
+          (let [model (update model :iteration inc)
+                model (update model :seeds (fn [new-matches] (->> new-matches
+                                                                  (cap-nones)
+                                                                  (lazy-cat unclustered))))]
+            (recur model)))))))
 
 
 

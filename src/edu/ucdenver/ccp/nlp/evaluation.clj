@@ -101,37 +101,55 @@
                        (let [actual-positive    (sentences->entities (re-model/actual-positive property all-samples))
                              predicted-positive (sentences->entities (re-model/predicted-positive property matches))]
                          #_(log/info property "ALL" (count all) "AT" (count actual-positive) "PT" (count predicted-positive))
-                         (-> (try
-                               (math/calc-metrics {:actual-positive    actual-positive
-                                                   :predicted-positive predicted-positive
-                                                   :all                all})
-                               (catch ArithmeticException _ {}))
+                         (-> {:actual-positive    actual-positive
+                              :predicted-positive predicted-positive
+                              :all                all}
+                             (math/calc-metrics)
                              (assoc :property property))))
                      properties)]
     metrics))
 
 (defn calc-overall-metrics
-  [model]
-  (let [metrics (remove #(= (:property %) re-model/NONE) (calc-metrics model))]
-    (when metrics
-      (try
-        (let [tp        (reduce + (keep :tp metrics))
-              tn        (reduce + (keep :tn metrics))
-              fp        (reduce + (keep :fp metrics))
-              fn        (reduce + (keep :fn metrics))
-              precision (/ (float tp) (+ fp tp))
-              recall    (/ (float tp) (+ tp fn))
-              f1        (/ (* 2 precision recall)
-                           (+ precision recall))
-              metrics   {:tp        tp
-                         :tn        tn
-                         :fp        fp
-                         :fn        fn
-                         :precision precision
-                         :recall    recall
-                         :f1        f1}]
-          metrics)
-        (catch Exception _ nil)))))
+  [{:keys [matches properties]}]
+  (try
+    (let [properties (disj properties re-model/NONE)
+          tp         (->> properties
+                          (mapcat (fn [p]
+                                    (->> matches
+                                         (filter #(= (:property %) p))
+                                         (filter #(= (:predicted %) p)))))
+                          (count))
+          fp         (->> properties
+                          (mapcat (fn [p]
+                                    (->> matches
+                                         (filter #(not= p (:property %)))
+                                         (filter #(= p (:predicted %))))))
+                          (count))
+          tn         (->> properties
+                          (mapcat (fn [p]
+                                    (->> matches
+                                         (filter #(not= (:property %) p))
+                                         (filter #(not= (:predicted %) p)))))
+                          (count))
+          fn         (->> properties
+                          (mapcat (fn [p]
+                                    (->> matches
+                                         (filter #(= (:property %) p))
+                                         (filter #(not= (:predicted %) p)))))
+                          (count))
+          precision  (/ (float tp) (+ fp tp))
+          recall     (/ (float tp) (+ tp fn))
+          f1         (/ (* 2 precision recall)
+                        (+ precision recall))
+          metrics    {:tp        tp
+                      :tn        tn
+                      :fp        fp
+                      :fn        fn
+                      :precision precision
+                      :recall    recall
+                      :f1        f1}]
+      metrics)
+    (catch Exception _ nil)))
 
 (defn make-property-plot
   [{:keys [x-label y-label title]} property groups x y]
