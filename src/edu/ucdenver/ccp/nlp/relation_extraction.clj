@@ -181,29 +181,29 @@
            (map vector-fn)
            (linear-algebra/mdot factory support-vectors)
            (map vector samples)
-           (map (fn [[sample sample-scores]]
-                  (let [scores (support-pattern-scores params patterns sample-scores)]
-                    (if (seq scores)
-                      (let [{:keys [predicted weight] best-scores :scores} (apply max-key :score scores)
-                            other-scores (->> scores
-                                              (remove #(= (:predicted %) predicted))
-                                              (mapcat #(map (fn [score]
-                                                              (* score (:weight %)))
-                                                            (:scores %))))
-                            best-scores  (map #(* % weight) best-scores)]
-                        (try
-                          (let [mu          (inc-stats/mean other-scores)
-                                {:keys [p-value]} (inc-stats/t-test best-scores :mu mu)
-                                confidence  (- 1 p-value)]
-                            (if (< match-thresh confidence)
-                              (assoc sample :predicted predicted
-                                            :confidence confidence)
-                              sample)
-                            (assoc sample :predicted predicted
-                                          :confidence confidence))
-                          (catch Exception _
-                            sample)))
-                      sample))))))))
+           (pmap (fn [[sample sample-scores]]
+                   (let [scores (support-pattern-scores params patterns sample-scores)]
+                     (if (seq scores)
+                       (let [{:keys [predicted weight] best-scores :scores} (apply max-key :score scores)
+                             other-scores (->> scores
+                                               (remove #(= (:predicted %) predicted))
+                                               (mapcat #(map (fn [score]
+                                                               (* score (:weight %)))
+                                                             (:scores %))))
+                             best-scores  (map #(* % weight) best-scores)]
+                         (try
+                           (let [mu         (inc-stats/mean other-scores)
+                                 {:keys [p-value]} (inc-stats/t-test best-scores :mu mu)
+                                 confidence (- 1 p-value)]
+                             (if (< match-thresh confidence)
+                               (assoc sample :predicted predicted
+                                             :confidence confidence)
+                               sample)
+                             (assoc sample :predicted predicted
+                                           :confidence confidence))
+                           (catch Exception _
+                             sample)))
+                       sample))))))))
 
 (defn sim-to-support-in-pattern-match
   [{:keys [samples vector-fn patterns factory] :as params}]
@@ -215,14 +215,15 @@
          (map vector-fn)
          (linear-algebra/mdot factory support-vectors)
          (map vector samples)
-         (map (fn [[sample sample-scores]]
-                (let [{:keys [score good predicted support]} (->> sample-scores
-                                                                  (support-pattern-scores params patterns)
-                                                                  (apply max-key :score))]
-                  (if good
-                    (assoc sample :predicted predicted
-                                  :confidence (* score (/ good support)))
-                    sample)))))))
+         (pmap (fn [[sample sample-scores]]
+                 (let [scores (support-pattern-scores params patterns sample-scores)]
+                   (if (seq scores)
+                     (let [{:keys [score good predicted support]} (apply max-key :score scores)]
+                       (if good
+                         (assoc sample :predicted predicted
+                                       :confidence (* score (/ good (count support))))
+                         sample))
+                     sample)))))))
 
 
 (defn pattern-update
