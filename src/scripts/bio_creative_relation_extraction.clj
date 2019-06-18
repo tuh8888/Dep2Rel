@@ -78,7 +78,7 @@
 (def training-knowtator (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator)
 (def base-training-model (re-model/make-model training-knowtator word2vec-db factory
-                                              (io/file training-dir "concept-annotations.edn")
+                                              nil #_(io/file training-dir "concept-annotations.edn")
                                               (io/file training-dir "structure-annotations.edn")))
 (def training-sentences (re-model/make-sentences base-training-model (io/file training-dir "sentences.edn")))
 (def training-model (biocreative-model base-training-model training-sentences property-map))
@@ -174,15 +174,15 @@
                         (re-model/train-test testing-model)))
 
 (def results (-> prepared-model
-                 (update :seeds (fn [seeds] (take 100 seeds)))
+                 #_(update :seeds (fn [seeds] (take 100 seeds)))
                  (assoc :context-path-length-cap 100
-                        :match-thresh 0.7
-                        :cluster-thresh 0.7
+                        :match-thresh 0.8
+                        :cluster-thresh 0.8
                         :confidence-thresh 0
                         :min-pattern-support 1
                         :max-iterations 100
                         :max-matches 5000
-                        :re-clustering? false
+                        :re-clustering? true
                         :match-fn re/sim-to-support-in-pattern-match)
                  (evaluation/run-model results-dir)))
 
