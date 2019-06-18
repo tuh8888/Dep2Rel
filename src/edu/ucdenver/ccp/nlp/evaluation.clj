@@ -101,11 +101,10 @@
                        (let [actual-positive    (sentences->entities (re-model/actual-positive property all-samples))
                              predicted-positive (sentences->entities (re-model/predicted-positive property matches))]
                          #_(log/info property "ALL" (count all) "AT" (count actual-positive) "PT" (count predicted-positive))
-                         (-> (try
-                               (math/calc-metrics {:actual-positive    actual-positive
-                                                   :predicted-positive predicted-positive
-                                                   :all                all})
-                               (catch ArithmeticException _ {}))
+                         (-> {:actual-positive    actual-positive
+                              :predicted-positive predicted-positive
+                              :all                all}
+                             (math/calc-metrics)
                              (assoc :property property))))
                      properties)]
     metrics))
