@@ -17,7 +17,8 @@
                   :min-pattern-support
                   :re-clustering?
                   :max-iterations
-                  :max-matches})
+                  :max-matches
+                  :match-fn})
 
 (defn sent-pattern-concepts-match?
   [{:keys [concepts]} {:keys [support]}]
@@ -192,10 +193,10 @@
                                               (remove #(= (:predicted %) predicted))
                                               (mapcat #(map (fn [score]
                                                               (* score (:weight %)))
-                                                            (:scores %))))]
-                        (if (seq other-scores)
+                                                            (:scores %))))
+                            best-scores  (map #(* % weight) best-scores)]
+                        (try
                           (let [mu          (inc-stats/mean other-scores)
-                                best-scores (map #(* % weight) best-scores)
                                 {:keys [p-value]} (inc-stats/t-test best-scores :mu mu)
                                 confidence  (- 1 p-value)]
                             (if (< match-thresh confidence)
@@ -203,7 +204,9 @@
                                             :confidence confidence)
                               sample)
                             (assoc sample :predicted predicted
-                                          :confidence confidence))))
+                                          :confidence confidence))
+                          (catch Exception _
+                            sample)))
                       sample))))))))
 
 (defn sim-to-support-in-pattern-match

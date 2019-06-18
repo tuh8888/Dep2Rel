@@ -228,8 +228,7 @@
                             (doall))
         metrics         (calc-metrics results)
         overall-metrics (calc-overall-metrics results)
-        results         (merge results {:metrics         metrics
-                                        :overall-metrics overall-metrics})]
+        results         (merge results overall-metrics {:property-metrics metrics})]
     (->> metrics
          (incanter/to-dataset)
          (log/info))
@@ -238,7 +237,7 @@
       (spit (select-keys results (lazy-cat EVAL-KEYS re/PARAM-KEYS)) :append true)
       (spit "\n" :append true))
     (assoc results :plot (plot-metrics results
-                                       {:save {:file (->> (select-keys results re/PARAM-KEYS)
+                                       {:save {:file (->> (select-keys results (disj re/PARAM-KEYS :match-fn))
                                                           (format "metrics-%s.svg")
                                                           (io/file results-dir))}}))))
 
