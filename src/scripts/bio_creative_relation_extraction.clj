@@ -179,14 +179,14 @@
                                                  (remove #(= (:predicted %) re-model/NONE))
                                                  (take 1000))))
                  (assoc :context-path-length-cap 100
-                        :match-thresh 0.7
-                        :cluster-thresh 0.85
+                        :match-thresh 0.8
+                        :cluster-thresh 0.95
                         :confidence-thresh 0
                         :min-pattern-support 1
                         :max-iterations 100
                         :max-matches 5000
                         :re-clustering? true
-                        :match-fn re/support-weighted-sim-distribution-context-match)
+                        :match-fn re/concept-context-match)
                  (evaluation/run-model results-dir)))
 
 #_(incanter/view (:plot results))

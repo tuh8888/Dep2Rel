@@ -76,38 +76,34 @@
                   patterns))
           samples))
 
-#_(defn concept-context-match
-    [{:keys [match-thresh vector-fn samples patterns factory]}]
-    (when (and (seq samples) (seq patterns))
-      (log/info "Finding matches")
-      (let [max-cluster-support-m (->> patterns
-                                       (group-by :predicted)
-                                       (util/map-kv #(map :support %))
-                                       (util/map-kv #(map count %))
-                                       (util/map-kv #(reduce max %)))
-            filtered-samples      (-> samples
-                                      (concept-filter patterns)
-                                      (vec))
-            patterns              (vec patterns)
-            sample-vectors        (map vector-fn filtered-samples)
-            pattern-vectors       (map vector-fn patterns)
-            new-matches           (->> sample-vectors
-                                       (linear-algebra/find-best-col-matches factory pattern-vectors)
-                                       (filter (fn [{:keys [score]}] (< match-thresh score)))
-                                       (map #(let [s (get filtered-samples (:j %))
-                                                   p (get patterns (:i %))]
-                                               (when-not s (log/warn (:j %) "sample not found"))
-                                               (when-not p (log/warn (:i %) "pattern not found"))
-                                               [s (assoc p :score (:score %))]))
-                                       (into {}))]
-        (map (fn [s] (let [p (get new-matches s)]
-                       (if (sent-pattern-concepts-match? s p)
-                         (assoc s :predicted (:predicted p)
-                                  :confidence (* (:score p)
-                                                 (/ (count (:support p))
-                                                    (get max-cluster-support-m (:predicted p)))))
-                         s)))
-             samples))))
+(defn concept-context-match
+  [{:keys [match-thresh vector-fn samples patterns factory]}]
+  (when (and (seq samples) (seq patterns))
+    (log/info "Finding matches")
+    (let [max-cluster-support-m (->> patterns
+                                     (group-by :predicted)
+                                     (util/map-kv #(map :support %))
+                                     (util/map-kv #(map count %))
+                                     (util/map-kv #(reduce max %)))
+          filtered-samples      (-> samples
+                                    (concept-filter patterns)
+                                    (vec))
+          patterns              (->> patterns
+                                     (map #(assoc % :VEC (vector-fn %)))
+                                     (vec))]
+      (->> filtered-samples
+           (map vector-fn)
+           (linear-algebra/mdot factory (map :VEC patterns))
+           (map vector filtered-samples)
+           (pmap (fn [[sample sample-scores]]
+                   (let [[j score] (apply max-key second (map-indexed vector sample-scores))
+                         {:keys [predicted support]} (get patterns j)]
+                     (if (< match-thresh score)
+                       (assoc sample :predicted predicted
+                                     :confidence (* score
+                                                    (/ (count support)
+                                                       (get max-cluster-support-m predicted))))
+                       sample))))))))
 
 (defn patterns-with-support-weight
   [patterns]
