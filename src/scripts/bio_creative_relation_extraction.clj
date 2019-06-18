@@ -174,25 +174,53 @@
                         (re-model/split-train-test)
                         (re-model/train-test testing-model)))
 
+
+
+(def with-seed-scores-nones (re/pattern-update (-> prepared-model
+                                                   (assoc :pattern-seed-matches 1
+                                                          :cluster-thresh 0.9
+                                                          :confidence-thresh 0
+                                                          :cluster-merge-fn re-model/add-to-pattern
+                                                          :vector-fn #(re-model/context-vector % prepared-model)))))
+
+(def with-seed-scores (re/pattern-update (-> prepared-model
+                                             (update :properties (fn [properties] (disj properties re-model/NONE)))
+                                             (assoc :pattern-seed-matches 1
+                                                    :cluster-thresh 0.7
+                                                    :confidence-thresh 0
+                                                    :cluster-merge-fn re-model/add-to-pattern
+                                                    :vector-fn #(re-model/context-vector % prepared-model)))))
+(->> with-seed-scores-nones
+     (filter (fn [{:keys [seed-match-scores]}] (->> seed-match-scores
+                                                    (filter #(< 0.99 %))
+                                                    (count)
+                                                    (< 1))))
+     (group-by :predicted)
+     (util/map-kv count))
+
 (def results (-> prepared-model
-                 (update :seeds (fn [seeds] (->> seeds
-                                                 (remove #(= (:predicted %) re-model/NONE))
-                                                 (take 1000))))
-                 (assoc :context-path-length-cap 100
-                        :match-thresh 0.95
+                 (update :seeds (fn [seeds] nil #_(->> with-seed-scores
+                                                       (filter #(< 3 (:seed-match %)))
+                                                       (remove #(= (:predicted %) re-model/NONE))
+                                                       #_(take 500))))
+                 (assoc :patterns (->> with-seed-scores-nones
+                                       (filter (fn [{:keys [seed-match-scores]}] (->> seed-match-scores
+                                                                                      (filter #(< 0.99 %))
+                                                                                      (count)
+                                                                                      (< 4)))))
+                        :context-path-length-cap 100
+                        :match-thresh 0.8
                         :cluster-thresh 0.7
                         :confidence-thresh 0
                         :min-pattern-support 1
-                        :max-iterations 100
+                        :max-iterations 0
                         :max-matches 5000
                         :re-clustering? true
-                        :match-fn re/support-weighted-sim-distribution-context-match)
+                        :match-fn re/concept-context-match)
                  (evaluation/run-model results-dir)))
-(count (:all-samples results))
+
+(evaluation/calc-metrics results)
 (count (:matches results))
-
-
-(evaluation/calc-overall-metrics results)
 #_(incanter/view (:plot results))
 
 #_(def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir

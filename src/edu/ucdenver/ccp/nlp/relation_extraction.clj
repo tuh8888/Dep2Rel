@@ -27,13 +27,15 @@
        (some #(= concepts %))))
 
 (defn log-starting-values
-  [{:keys [properties seeds all-samples]}]
-  (let [p1 (util/map-kv count (group-by :predicted seeds))]
+  [{:keys [properties seeds all-samples patterns]}]
+  (let [p1 (util/map-kv count (group-by :predicted seeds))
+        p2 (util/map-kv count (group-by :predicted patterns))]
     (->> properties
          (map (fn [property]
                 {:seeds           (get p1 property)
                  :predicted       property
                  :samples         (count all-samples)
+                 :patterns        (get p2 property)
                  :actual-positive (count (re-model/actual-positive property all-samples))}))
          (incanter/to-dataset)
          (log/info))))
@@ -227,24 +229,33 @@
 
 
 (defn pattern-update
-  [{:keys [properties seeds patterns confidence-thresh] :as model}]
+  [{:keys [properties seeds patterns confidence-thresh vector-fn factory pattern-seed-matches] :as model}]
   (let [seeds    (->> seeds
                       (filter #(< confidence-thresh (:confidence %)))
                       (group-by :predicted))
-        patterns (group-by :predicted patterns)
-        patterns (->> properties
-                      (pmap (fn [property]
-                              (let [samples  (get seeds property)
-                                    patterns (get patterns property)]
-                                (if (seq samples)
+        patterns (group-by :predicted patterns)]
+    (->> properties
+         (pmap (fn [property]
+                 (let [samples  (vec (get seeds property))
+                       patterns (get patterns property)
+                       patterns (if (seq samples)
                                   (do
                                     (log/info "Clustering" property)
                                     (->> patterns
                                          (cluster-tools/single-pass-cluster model samples)
                                          (map #(assoc % :predicted property))))
-                                  patterns))))
-                      (apply concat))]
-    patterns))
+                                  patterns)]
+                   (if (and pattern-seed-matches (< 0 pattern-seed-matches))
+                     (let [pattern-vectors (map vector-fn patterns)
+                           sample-vectors  (map vector-fn samples)]
+                       (log/info "Calculating seed matches" property)
+                       (->> pattern-vectors
+                            (linear-algebra/mdot factory sample-vectors)
+                            (map vector patterns)
+                            (pmap (fn [[pattern scores]]
+                                    (assoc pattern :seed-match-scores scores)))))
+                     patterns))))
+         (apply concat))))
 
 
 (defn terminate?
