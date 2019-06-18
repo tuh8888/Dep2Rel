@@ -141,16 +141,13 @@
   [model {:keys [doc] :as ann}]
   (let [concept-start (min-start ann)
         concept-end   (max-end ann)
-        tok-ids       (->> model
-                           :structure-annotations
-                           (vals)
-                           (filter #(= (:doc %) doc))
-                           (filter #(let [tok-start (min-start %)
-                                          tok-end   (max-end %)]
-                                      #_(log/info concept-start tok-start tok-end concept-end)
-                                      (or (<= tok-start concept-start tok-end)
-                                          (<= tok-start concept-end tok-end))
-                                      #_(<= concept-start tok-start tok-end concept-end))))]
+        tok-ids       (into [] (comp (filter #(= (:doc %) doc))
+                                     (filter #(let [tok-start (min-start %)
+                                                    tok-end   (max-end %)]
+                                                (or (<= tok-start concept-start tok-end)
+                                                    (<= tok-start concept-end tok-end))
+                                                #_(<= concept-start tok-start tok-end concept-end))))
+                            (vals (:structure-annotations model)))]
     (when-not (seq tok-ids) (log/warn "No token found for" ann)
                             (throw (ex-info (str "No token found for " ann)
                                             {:type :tok-assignment, :cause :tok-not-found})))

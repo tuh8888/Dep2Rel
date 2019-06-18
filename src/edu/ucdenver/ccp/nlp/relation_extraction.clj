@@ -108,39 +108,106 @@
                          s)))
              samples))))
 
+(defn patterns-with-support-weight
+  [patterns]
+  (let [total-support (->> patterns
+                           (map :support)
+                           (map count)
+                           (reduce +))]
+    (->> patterns
+         (vec)
+         (map #(assoc % :weight (/ (count (:support %))
+                                   total-support))))))
+
 (defn support-weighted-sim-distribution-context-match
   [{:keys [vector-fn samples patterns match-thresh factory]}]
   (when (and (seq samples) (seq patterns))
     (log/info "Finding matches")
-    (let [samples                (vec samples)
-          patterns               (vec patterns)
-          pattern-vectors        (map vector-fn patterns)
-          pattern-support-counts (->> patterns
-                                      (map :support)
-                                      (map count))
-          total-support          (reduce + pattern-support-counts)
-          pattern-weights        (map #(/ % total-support) pattern-support-counts)]
+    (let [patterns (->> patterns
+                        (patterns-with-support-weight)
+                        (map #(assoc % :VEC (vector-fn %)))
+                        (vec))
+          samples  (vec samples)]
       (->> samples
            (map vector-fn)
-           (linear-algebra/mdot factory pattern-vectors)
+           (linear-algebra/mdot factory (map :VEC patterns))
            (map vector samples)
            (pmap (fn [[sample sample-scores]]
-                   (let [[best-j best-score] (apply max-key second (map-indexed vector sample-scores))
-                         {best-predicted :predicted best-support :support} (get patterns best-j)
-                         weighted-best-score (* best-score (/ (count best-support)
-                                                              total-support))
-                         other-scores        sample-scores
-                         weights             pattern-weights
-                         weighted-scores     (map * other-scores weights)]
+                   (let [[j score] (apply max-key second (map-indexed vector sample-scores))
+                         {:keys [predicted weight]} (get patterns j)
+                         weighted-best-score (* score weight)
+                         weighted-scores     (->> patterns
+                                                  (map :weight)
+                                                  (map * sample-scores))]
                      (let [{:keys [p-value]} (inc-stats/t-test weighted-scores :mu weighted-best-score)
                            confidence (- 1 p-value)]
                        (if (< match-thresh confidence)
-                         (assoc sample :predicted best-predicted
+                         (assoc sample :predicted predicted
                                        :confidence confidence)
                          sample)))))))))
 
+(defn support-pattern-scores
+  [{:keys [match-thresh]} patterns sample-scores]
+  (let [scores (->> (reduce (fn [[pattern-scores offset] pattern]
+                              (let [support-count (count (:support pattern))
+                                    new-offset    (+ offset support-count)
+                                    scores        (->> new-offset
+                                                       (range offset)
+                                                       (select-keys sample-scores)
+                                                       (map second))
+                                    score         (apply max scores)
+                                    good          (->> scores
+                                                       (filter #(< match-thresh %))
+                                                       (count))
+                                    bad           (- support-count good)]
+                                [(conj pattern-scores (assoc pattern
+                                                        :score score
+                                                        :scores scores
+                                                        :good good
+                                                        :bad bad))
+                                 new-offset]))
+                            [nil 0] patterns)
+                    (first)
+                    (filter (fn [{:keys [bad good]}] (< bad good))))]
+    scores))
+
+
+(defn support-weighted-sim-pattern-distribution-context-match
+  [{:keys [vector-fn samples patterns match-thresh factory] :as params}]
+  (when (and (seq samples) (seq patterns))
+    (log/info "Finding matches")
+    (let [patterns        (patterns-with-support-weight patterns)
+          samples         (vec samples)
+          support         (mapcat :support patterns)
+          support-vectors (map vector-fn support)]
+      (->> samples
+           (map vector-fn)
+           (linear-algebra/mdot factory support-vectors)
+           (map vector samples)
+           (map (fn [[sample sample-scores]]
+                  (let [scores (support-pattern-scores params patterns sample-scores)]
+                    (if (seq scores)
+                      (let [{:keys [predicted weight] best-scores :scores} (apply max-key :score scores)
+                            other-scores (->> scores
+                                              (remove #(= (:predicted %) predicted))
+                                              (mapcat #(map (fn [score]
+                                                              (* score (:weight %)))
+                                                            (:scores %))))]
+                        (if (seq other-scores)
+                          (let [mu          (inc-stats/mean other-scores)
+                                best-scores (map #(* % weight) best-scores)
+                                {:keys [p-value]} (inc-stats/t-test best-scores :mu mu)
+                                confidence  (- 1 p-value)]
+                            (if (< match-thresh confidence)
+                              (assoc sample :predicted predicted
+                                            :confidence confidence)
+                              sample)
+                            (assoc sample :predicted predicted
+                                          :confidence confidence))))
+                      sample))))))))
+
 (defn sim-to-support-in-pattern-match
-  [{:keys [samples vector-fn patterns match-thresh factory]}]
+  [{:keys [samples vector-fn patterns factory] :as params}]
   (let [patterns        (vec patterns)
         support         (mapcat :support patterns)
         support-vectors (map vector-fn support)
@@ -150,30 +217,12 @@
          (linear-algebra/mdot factory support-vectors)
          (map vector samples)
          (map (fn [[sample sample-scores]]
-                (let [[best-score best-pattern good] (->> patterns
-                                                          (reduce (fn [[[best-score _ _ :as best] offset] pattern]
-                                                                    (let [support-count  (count (:support pattern))
-                                                                          support-offset (+ offset support-count)
-                                                                          pattern-scores (->> support-offset
-                                                                                              (range offset)
-                                                                                              (select-keys sample-scores)
-                                                                                              (map second))]
-                                                                      (let [best-pattern-score (apply max pattern-scores)
-                                                                            good               (->> pattern-scores
-                                                                                                    (filter #(< match-thresh %))
-                                                                                                    (count))
-                                                                            bad                (- support-count good)]
-
-                                                                        (if (and (< bad good)
-                                                                                 (< best-score best-pattern-score))
-                                                                          [[best-pattern-score pattern good] support-offset]
-                                                                          [best support-count]))))
-                                                                  [[match-thresh nil nil] 0])
-                                                          (first))]
+                (let [{:keys [score good predicted support]} (->> sample-scores
+                                                                  (support-pattern-scores params patterns)
+                                                                  (apply max-key :score))]
                   (if good
-                    (assoc sample :predicted (:predicted best-pattern)
-                                  :confidence (* best-score (/ good
-                                                               (count (:support best-pattern)))))
+                    (assoc sample :predicted predicted
+                                  :confidence (* score (/ good support)))
                     sample)))))))
 
 
