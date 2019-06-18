@@ -94,9 +94,9 @@ Combination of the word vectors along the context path
 
 |   | Dep2Rel 20 | Dep2Rel All | State of the Art |
 |---|---|---|---|
-| Precision | | 0.3283 | 0.4544 
-| Recall | | 0.6195 | 0.5387
-| F1-Score | | 0.3128 | 0.3729      
+| Precision | 0.1416 | 0.3283 | 0.4544 
+| Recall | 0.6020 | 0.6195 | 0.5387
+| F1-Score | 0.2292 | 0.3128 | 0.3729      
 
 ---
 @title[Conclusion]
