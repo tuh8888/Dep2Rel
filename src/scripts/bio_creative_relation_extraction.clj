@@ -144,7 +144,7 @@
 
   (incanter/save (:sentences-dataset clusters-dataset) (str (io/file training-dir " clusters-dataset.csv ")))
   (def pca-plots (evaluation/pca-plots clusters-dataset
-                                       {:save {:file (io/file results-dir "%s")}})))
+                                       {:save {:file (io/file results-dir "Clustering %s")}})))
 #_(incanter/view (get pca-plots "ALL"))
 
 ;;; PCA ;;;
@@ -173,18 +173,18 @@
                         (re-model/split-train-test)
                         (re-model/train-test testing-model)))
 
-#_(def results (-> prepared-model
-                   (update :seeds (fn [seeds] (take 100 seeds)))
-                   (assoc :context-path-length-cap 100
-                          :match-thresh 0.95
-                          :cluster-thresh 0.75
-                          :confidence-thresh 0
-                          :min-pattern-support 1
-                          :max-iterations 100
-                          :max-matches 5000
-                          :re-clustering? true
-                          :match-fn re/sim-to-support-in-pattern-match)
-                   (evaluation/run-model results-dir)))
+(def results (-> prepared-model
+                 (update :seeds (fn [seeds] (take 100 seeds)))
+                 (assoc :context-path-length-cap 100
+                        :match-thresh 0.7
+                        :cluster-thresh 0.7
+                        :confidence-thresh 0
+                        :min-pattern-support 1
+                        :max-iterations 100
+                        :max-matches 5000
+                        :re-clustering? false
+                        :match-fn re/sim-to-support-in-pattern-match)
+                 (evaluation/run-model results-dir)))
 
 #_(incanter/view (:plot results))
 
