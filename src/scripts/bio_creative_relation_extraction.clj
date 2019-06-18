@@ -178,18 +178,10 @@
 
 (def with-seed-scores-nones (re/pattern-update (-> prepared-model
                                                    (assoc :pattern-seed-matches 1
-                                                          :cluster-thresh 0.9
+                                                          :cluster-thresh 0.95
                                                           :confidence-thresh 0
                                                           :cluster-merge-fn re-model/add-to-pattern
                                                           :vector-fn #(re-model/context-vector % prepared-model)))))
-
-(def with-seed-scores (re/pattern-update (-> prepared-model
-                                             (update :properties (fn [properties] (disj properties re-model/NONE)))
-                                             (assoc :pattern-seed-matches 1
-                                                    :cluster-thresh 0.7
-                                                    :confidence-thresh 0
-                                                    :cluster-merge-fn re-model/add-to-pattern
-                                                    :vector-fn #(re-model/context-vector % prepared-model)))))
 (->> with-seed-scores-nones
      (filter (fn [{:keys [seed-match-scores]}] (->> seed-match-scores
                                                     (filter #(< 0.99 %))
@@ -198,21 +190,59 @@
      (group-by :predicted)
      (util/map-kv count))
 
+(def with-selectivity (->> (for [cluster-thresh (range 0.9 0.5 -0.05)
+                                 :let [ps (re/pattern-update (-> prepared-model
+                                                                 (assoc :pattern-seed-matches 1
+                                                                        :cluster-thresh cluster-thresh
+                                                                        :confidence-thresh 0
+                                                                        :cluster-merge-fn re-model/add-to-pattern
+                                                                        :vector-fn #(re-model/context-vector % prepared-model))))]
+                                 match-thresh   (range 0.95 0.5 -0.05)]
+                             (-> prepared-model
+                                 (assoc :patterns ps
+                                        :match-thresh match-thresh
+                                        :pattern-seed-matches 1
+                                        :vector-fn #(re-model/context-vector % prepared-model))
+                                 (re/pattern-seed-match-ratio)))
+                           (filter (fn [ps]
+                                     (->> ps
+                                          (filter (fn [{:keys [f1]}] (< 0.4 f1)))
+                                          (filter (fn [{:keys [recall]}] (< 0.3 recall)))
+                                          #_(filter (fn [{:keys [precision]}] (< 0 precision)))
+                                          (group-by :predicted)
+                                          (util/map-kv count)
+                                          (map second)
+                                          (filter #(< 10 %))
+                                          (count)
+                                          (= (count properties)))))
+                           (first)))
+
+(seq with-selectivity)
+(->> with-selectivity
+     (filter (fn [{:keys [recall]}] (< 0 recall)))
+     (filter (fn [{:keys [precision]}] (< 0 precision)))
+     (filter (fn [{:keys [f1]}] (< 0.25 f1)))
+     (filter (fn [{:keys [support]}] (< 0 (count support))))
+     (group-by :predicted)
+     (util/map-kv count)
+     (map second)
+     (filter #(< 0 %))
+     (count)
+     (= (count properties)))
 (def results (-> prepared-model
                  (update :seeds (fn [seeds] nil #_(->> with-seed-scores
                                                        (filter #(< 3 (:seed-match %)))
                                                        (remove #(= (:predicted %) re-model/NONE))
                                                        #_(take 500))))
-                 (assoc :patterns (->> with-seed-scores-nones
-                                       (filter (fn [{:keys [seed-match-scores]}] (->> seed-match-scores
-                                                                                      (filter #(< 0.99 %))
-                                                                                      (count)
-                                                                                      (< 4)))))
+                 (assoc :patterns (->> with-selectivity
+                                       (filter (fn [{:keys [recall]}] (< 0 recall)))
+                                       (filter (fn [{:keys [precision]}] (< 0 precision)))
+                                       (filter (fn [{:keys [f1]}] (< 0.2 f1))))
                         :context-path-length-cap 100
-                        :match-thresh 0.8
+                        :match-thresh 0.95
                         :cluster-thresh 0.7
                         :confidence-thresh 0
-                        :min-pattern-support 1
+                        :min-pattern-support 0
                         :max-iterations 0
                         :max-matches 5000
                         :re-clustering? true

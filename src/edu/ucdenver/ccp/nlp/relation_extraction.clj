@@ -227,9 +227,62 @@
                          sample))
                      sample)))))))
 
+(defn pattern-seed-match-scores
+  [{:keys [seeds patterns vector-fn factory pattern-seed-matches]}]
+  (if (and pattern-seed-matches (< 0 pattern-seed-matches))
+    (let [seeds           (vec seeds)
+          pattern-vectors (map vector-fn patterns)
+          sample-vectors  (map vector-fn seeds)]
+      (log/info "Calculating seed matches")
+      (->> pattern-vectors
+           (linear-algebra/mdot factory sample-vectors)
+           (map vector patterns)
+           (pmap (fn [[pattern scores]]
+                   (assoc pattern :seed-match-scores scores)))))
+    patterns))
+
+(defn pattern-seed-match-ratio
+  [{:keys [seeds match-thresh] :as model}]
+  (let [patterns (pattern-seed-match-scores model)
+        seeds-m  (->> seeds
+                      (map-indexed vector)
+                      (group-by #(:predicted (second %)))
+                      (util/map-kv #(map first %)))]
+    (map (fn [p]
+           (let [predicted-positive (->> p
+                                         :seed-match-scores
+                                         (filter #(< match-thresh %))
+                                         (count))]
+             (if (= 0 predicted-positive)
+               (assoc p :recall 0
+                        :precision 0)
+               (let [tp              (->> p
+                                          :predicted
+                                          (get seeds-m)
+                                          (select-keys (:seed-match-scores p))
+                                          (vals)
+                                          (filter #(< match-thresh %))
+                                          (count))
+                     actual-positive (count (get seeds-m (:predicted p)))
+                     fp              (- predicted-positive tp)
+                     fn              (- actual-positive tp)
+                     precision       (/ tp predicted-positive)
+                     recall          (/ tp actual-positive)]
+                 (assoc p :precision precision
+                          :recall recall
+                          :f1 (/ (* 2 precision recall)
+                                 (+ precision recall))
+                          :tp tp
+                          :fp fp
+                          :fn fn
+                          :fn (- (count seeds) tp fp fn))))))
+
+         patterns)))
+
+
 
 (defn pattern-update
-  [{:keys [properties seeds patterns confidence-thresh vector-fn factory pattern-seed-matches] :as model}]
+  [{:keys [properties seeds patterns confidence-thresh] :as model}]
   (let [seeds    (->> seeds
                       (filter #(< confidence-thresh (:confidence %)))
                       (group-by :predicted))
@@ -245,16 +298,8 @@
                                          (cluster-tools/single-pass-cluster model samples)
                                          (map #(assoc % :predicted property))))
                                   patterns)]
-                   (if (and pattern-seed-matches (< 0 pattern-seed-matches))
-                     (let [pattern-vectors (map vector-fn patterns)
-                           sample-vectors  (map vector-fn samples)]
-                       (log/info "Calculating seed matches" property)
-                       (->> pattern-vectors
-                            (linear-algebra/mdot factory sample-vectors)
-                            (map vector patterns)
-                            (pmap (fn [[pattern scores]]
-                                    (assoc pattern :seed-match-scores scores)))))
-                     patterns))))
+                   (pattern-seed-match-scores (assoc model :patterns patterns)))))
+
          (apply concat))))
 
 
