@@ -15,10 +15,9 @@
 ## Some observations
 
 - There's not many gold standard relation annotations
-- We can 
-- Can we construct syntactic/semantic patterns for finding relations in 
-scientific literature?
-- How many relations are there in the scientific literature?
+- We can construct syntactic/semantic patterns for finding relations in 
+scientific literature
+- We don't know how many different relations are in the scientific literature
 
 ---
 @title[Method]
@@ -30,26 +29,27 @@ scientific literature?
 ---
 @title[Context]
 
-@snap[north span-75]
-### Context
+@snap[north-west span-50 text-center]
+**Context Path:** 
+</br>
+Word vectors along the dependency path between two entities
 @snapend
 
-@snap[west span-60]
-**Context Path:** Word vectors along the dependency path between two entities
+@snap[north-east span-50 text-center]
+**Context Vector:** 
+</br>
+Combination of the word vectors along the context path
 @snapend
 
-@snap[south-east]
-@size[.5em]("Little is known about genetic factors affecting intraocular pressure [IOP] in mice and other mammals.")
-@snapend
-
-@snap[east span-40]
+@snap[south span-100]
 @img[clean-img](/assets/dep_example.svg) 
+@size[.6em](Depencency path for "Little is known about genetic factors affecting intraocular pressure [IOP] in mice and other mammals.")
 @snapend
 
 ---
 @title[Context Path Lengths]
 
-@img[clean-img](/assets/Context%20Path%20Lengths.svg) 
+@img[border=none width=1000 height=400](assets/Training Context Path Lengths.svg) 
 
 ---
 @title[Relation Extraction]
