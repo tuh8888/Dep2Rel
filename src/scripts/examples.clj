@@ -34,21 +34,22 @@
 (def input-color :green)
 (def important-color :red)
 
-(def algorithm (uber/digraph [:text-sources {:color input-color}]
-                             [:patterns {:color output-color}]
-                             [:matches {:color output-color}]
-                             [:text-sources :dependency-annotations]
-                             [:text-sources :concept-annotations]
-                             [:concept-annotations :context-paths]
-                             [:dependency-annotations :context-paths]
-                             [:context-paths :seeds]
-                             [:context-paths :sentences]
-                             [:seeds :patterns {:label :clustering}]
-                             [:patterns :filtering]
-                             [:sentences :filtering]
-                             [:filtering :matches]
-                             [:matches :seeds {:label :bootstrapping :color important-color}]))
+(let [algorithm (uber/digraph [:text-sources {:color input-color}]
+                              [:patterns {:color output-color}]
+                              [:matches {:color output-color}]
+                              [:text-sources :dependency-annotations]
+                              [:text-sources :concept-annotations]
+                              [:concept-annotations :context-paths]
+                              [:context-paths :samples]
+                              [:samples :matches]
+                              [:dependency-annotations :context-paths]
+                              [:context-paths :seeds]
+                              [:patterns :samples {:label :filter}]
+                              [:seeds :patterns {:label :cluster}]
+                              [:matches :patterns {:color important-color}]
+                              [:matches :results])]
 
-(uber/viz-graph algorithm {:bgcolor :transparent
-                           :save {:filename "resources/algorithm.svg"
-                                  :format   :svg}})
+  (uber/viz-graph algorithm {:rankdir :TD
+                             :bgcolor :transparent
+                             :save    {:filename "assets/algorithm.svg"
+                                       :format   :svg}}))

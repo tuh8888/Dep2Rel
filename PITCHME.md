@@ -15,9 +15,9 @@
 ## Some observations
 
 - There's not many gold standard relation annotations
-- We can construct syntactic/semantic patterns for finding relations in 
-scientific literature
 - We don't know how many different relations are in the scientific literature
+- It's difficult to construct syntactic/semantic patterns for finding relations in 
+scientific literature
 
 ---
 @title[Method]
@@ -47,20 +47,33 @@ Combination of the word vectors along the context path
 @snapend
 
 ---
+@title[Relation Extraction]
+
+@img[clean-img height=500](assets/algorithm.svg)
+
+
+---
+@title[Table 1]
+
+  | Group |  Num Sentences |
+| -----------|------------|
+|  Train |      18020 |
+|   Test | 15764       |
+
+| Relation Group | Num Sentences |
+|---|---|
+| CPR:3 | 762 |
+| CPR:4 | 2251 |
+| CPR:5 | 172  |
+| CPR:6 | 232 |
+| CPR:9 | 722 |
+| NONE | 13881 |
+
+---
+
 @title[Context Path Lengths]
 
 @img[border=none width=1000 height=400](assets/Training Context Path Lengths.svg) 
-
----
-@title[Relation Extraction]
-
-@snap[west span-50]
-### Relation Extraction
-@snapend
-
-@snap[east span-50]
-@img[clean-img](assets/algorithm.svg)
-@snapend
 
 ---
 @title[Results]
@@ -76,6 +89,14 @@ Combination of the word vectors along the context path
 @snap[east span-50]
 @img[clean-img](assets/metrics.svg)
 @snapend
+
+---
+
+|   | Dep2Rel 20 | Dep2Rel All | State of the Art |
+|---|---|---|---|
+| Precision | | 0.3283 | 0.4544 
+| Recall | | 0.6195 | 0.5387
+| F1-Score | | 0.3128 | 0.3729      
 
 ---
 @title[Conclusion]
