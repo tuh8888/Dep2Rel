@@ -141,17 +141,19 @@
   [model {:keys [doc] :as ann}]
   (let [concept-start (min-start ann)
         concept-end   (max-end ann)
-        tok-ids       (do
-                        (log/info concept-start concept-end)
-                        (->> model
-                             :structure-annotations
-                             (vals)
-                             (filter #(= (:doc %) doc))
-                             (filter #(let [tok-start (min-start %)
-                                            tok-end   (max-end %)]
-                                        (log/info tok-start tok-end)
-                                        (<= concept-start tok-start tok-end concept-end)))))]
-    (when-not (seq tok-ids) (log/warn "No token found for" ann))
+        tok-ids       (->> model
+                           :structure-annotations
+                           (vals)
+                           (filter #(= (:doc %) doc))
+                           (filter #(let [tok-start (min-start %)
+                                          tok-end   (max-end %)]
+                                      #_(log/info concept-start tok-start tok-end concept-end)
+                                      (or (<= tok-start concept-start tok-end)
+                                          (<= tok-start concept-end tok-end))
+                                      #_(<= concept-start tok-start tok-end concept-end))))]
+    (when-not (seq tok-ids) (log/warn "No token found for" ann)
+                            (throw (ex-info (str "No token found for " ann)
+                                            {:type :tok-assignment, :cause :tok-not-found})))
     tok-ids))
 
 (defn tok-sent-id
@@ -270,7 +272,7 @@
   (word2vec/with-word2vec word2vec-db
     (log/info "Making model")
     (let [model               (k/simple-model v)
-          model               (->> (let [structure-annotations (when structure-annotations-file
+          model               (->> (let [structure-annotations (when (and structure-annotations-file (.exists ^File structure-annotations-file))
                                                                  (read-string (slurp structure-annotations-file)))]
                                      (if (seq structure-annotations)
                                        structure-annotations
@@ -279,10 +281,10 @@
                                                                      (util/pmap-kv (fn [s]
                                                                                      (assign-sent-id model s))
                                                                                    (:structure-annotations model)))]
-                                         (spit structure-annotations-file (pr-str structure-annotations))
+                                         (when structure-annotations-file (spit structure-annotations-file (pr-str structure-annotations)))
                                          structure-annotations)))
                                    (assoc model :structure-annotations))
-          concept-annotations (let [concept-annotations (when concept-annotations-file
+          concept-annotations (let [concept-annotations (when (and concept-annotations-file (.exists ^File concept-annotations-file))
                                                           (read-string (slurp concept-annotations-file)))]
                                 (if (seq concept-annotations)
                                   concept-annotations
@@ -291,7 +293,7 @@
                                                               (util/pmap-kv (fn [s]
                                                                               (assign-toks model s))
                                                                             (:concept-annotations model)))]
-                                    (spit concept-annotations-file (pr-str concept-annotations))
+                                    (when concept-annotations-file (spit concept-annotations-file (pr-str concept-annotations)))
                                     concept-annotations)))]
 
       (assoc model :factory factory

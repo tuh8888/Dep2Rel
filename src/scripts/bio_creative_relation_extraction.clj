@@ -78,7 +78,7 @@
 (def training-knowtator (k/model training-dir nil))
 (rdr/read-biocreative-files training-dir training-pattern training-knowtator)
 (def base-training-model (re-model/make-model training-knowtator word2vec-db factory
-                                              nil #_(io/file training-dir "concept-annotations.edn")
+                                              (io/file training-dir "concept-annotations.edn")
                                               (io/file training-dir "structure-annotations.edn")))
 (def training-sentences (re-model/make-sentences base-training-model (io/file training-dir "sentences.edn")))
 (def training-model (biocreative-model base-training-model training-sentences property-map))
@@ -173,18 +173,18 @@
                         (re-model/split-train-test)
                         (re-model/train-test testing-model)))
 
-(def results (-> prepared-model
-                 #_(update :seeds (fn [seeds] (take 100 seeds)))
-                 (assoc :context-path-length-cap 100
-                        :match-thresh 0.8
-                        :cluster-thresh 0.8
-                        :confidence-thresh 0
-                        :min-pattern-support 1
-                        :max-iterations 100
-                        :max-matches 5000
-                        :re-clustering? true
-                        :match-fn re/sim-to-support-in-pattern-match)
-                 (evaluation/run-model results-dir)))
+#_(def results (-> prepared-model
+                   #_(update :seeds (fn [seeds] (take 100 seeds)))
+                   (assoc :context-path-length-cap 100
+                          :match-thresh 0.8
+                          :cluster-thresh 0.8
+                          :confidence-thresh 0
+                          :min-pattern-support 1
+                          :max-iterations 100
+                          :max-matches 5000
+                          :re-clustering? true
+                          :match-fn re/sim-to-support-in-pattern-match)
+                   (evaluation/run-model results-dir)))
 
 #_(incanter/view (:plot results))
 
