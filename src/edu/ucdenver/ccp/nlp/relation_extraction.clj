@@ -149,26 +149,32 @@
          (map vector-fn)
          (linear-algebra/mdot factory support-vectors)
          (map vector samples)
-         (pmap (fn [[sample samples-scores]]
-                 (let [[best-pattern best-score good] (->> patterns
-                                                           (reduce (fn [[[best-score _ _ :as best] support-offset] pattern]
-                                                                     (let [support-count      (count (:support pattern))
-                                                                           pattern-scores     (->> support-count
-                                                                                                   (range support-offset)
-                                                                                                   (select-keys samples-scores))
-                                                                           best-pattern-score (apply max-key second pattern-scores)
-                                                                           good               (->> pattern-scores
-                                                                                                   (filter #(< match-thresh %))
-                                                                                                   (count))
-                                                                           bad                (- support-count good)]
-                                                                       (if (and (< bad good)
-                                                                                (< best-score best-pattern-score))
-                                                                         [[best-pattern-score pattern] support-count]
-                                                                         [best support-count])))
-                                                                   [[match-thresh nil 0] 0]))]
-                   (assoc sample :predicted (:predicted best-pattern)
-                                 :confidence (* best-score (/ good
-                                                              (count (:support best-pattern)))))))))))
+         (map (fn [[sample sample-scores]]
+                (let [[best-score best-pattern good] (->> patterns
+                                                          (reduce (fn [[[best-score _ _ :as best] offset] pattern]
+                                                                    (let [support-count  (count (:support pattern))
+                                                                          support-offset (+ offset support-count)
+                                                                          pattern-scores (->> support-offset
+                                                                                              (range offset)
+                                                                                              (select-keys sample-scores)
+                                                                                              (map second))]
+                                                                      (let [best-pattern-score (apply max pattern-scores)
+                                                                            good               (->> pattern-scores
+                                                                                                    (filter #(< match-thresh %))
+                                                                                                    (count))
+                                                                            bad                (- support-count good)]
+
+                                                                        (if (and (< bad good)
+                                                                                 (< best-score best-pattern-score))
+                                                                          [[best-pattern-score pattern good] support-offset]
+                                                                          [best support-count]))))
+                                                                  [[match-thresh nil nil] 0])
+                                                          (first))]
+                  (if good
+                    (assoc sample :predicted (:predicted best-pattern)
+                                  :confidence (* best-score (/ good
+                                                               (count (:support best-pattern)))))
+                    sample)))))))
 
 
 (defn pattern-update
