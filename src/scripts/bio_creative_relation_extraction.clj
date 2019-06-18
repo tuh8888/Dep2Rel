@@ -178,9 +178,9 @@
                  (update :seeds (fn [seeds] (->> seeds
                                                  (remove #(= (:predicted %) re-model/NONE))
                                                  (take 1000))))
-                 (assoc :context-path-length-cap 100
-                        :match-thresh 0.5
-                        :cluster-thresh 0.75
+                 (assoc :context-path-length-cap 10
+                        :match-thresh 0.95
+                        :cluster-thresh 0.95
                         :confidence-thresh 0
                         :min-pattern-support 1
                         :max-iterations 100

@@ -17,7 +17,8 @@
                   :min-pattern-support
                   :re-clustering?
                   :max-iterations
-                  :max-matches})
+                  :max-matches
+                  :match-fn})
 
 (defn sent-pattern-concepts-match?
   [{:keys [concepts]} {:keys [support]}]
@@ -187,7 +188,7 @@
            (map (fn [[sample sample-scores]]
                   (let [scores (support-pattern-scores params patterns sample-scores)]
                     (if (seq scores)
-                      (let [{:keys [predicted weight] best-scores :scores :as pattern} (apply max-key :score scores)
+                      (let [{:keys [predicted weight] best-scores :scores} (apply max-key :score scores)
                             other-scores (->> scores
                                               (remove #(= (:predicted %) predicted))
                                               (mapcat #(map (fn [score]
