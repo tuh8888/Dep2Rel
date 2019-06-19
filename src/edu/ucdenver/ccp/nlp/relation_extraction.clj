@@ -285,10 +285,8 @@
 
 
 (defn pattern-update
-  [{:keys [properties seeds patterns confidence-thresh] :as model}]
-  (let [seeds    (->> seeds
-                      (filter #(< confidence-thresh (:confidence %)))
-                      (group-by :predicted))
+  [{:keys [properties seeds patterns] :as model}]
+  (let [seeds    (group-by :predicted seeds)
         patterns (group-by :predicted patterns)]
     (->> properties
          (pmap (fn [property]
@@ -360,7 +358,8 @@
     (log/info (select-keys model PARAM-KEYS))
     (log-starting-values model)
     (loop [model model]
-      (let [model       (assoc model :patterns (pattern-update model))
+      (let [model       (update model :seeds (fn [seeds] (filter #(< confidence-thresh (:confidence %)) seeds)))
+            model       (assoc model :patterns (pattern-update model))
             unclustered (decluster model)
             model       (update model :patterns (fn [patterns] (filter (fn [pattern] (support-filter model pattern)) patterns)))
             model       (assoc model :seeds (match-fn model))
