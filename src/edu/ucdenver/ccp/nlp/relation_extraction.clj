@@ -227,63 +227,6 @@
                          sample))
                      sample)))))))
 
-(defn pattern-seed-match-scores
-  [{:keys [seeds patterns factory] :as params}]
-  (let [seeds           (vec seeds)
-        pattern-vectors (map #(re-model/context-vector % params) patterns)
-        sample-vectors  (map #(re-model/context-vector % params) seeds)]
-    (log/info "Calculating seed matches")
-    (->> pattern-vectors
-         (linear-algebra/mdot factory sample-vectors)
-         (map vector patterns)
-         (pmap (fn [[pattern scores]]
-                 (assoc pattern :seed-match-scores scores)))))
-  patterns)
-
-(defn pattern-seed-match-ratio
-  [{:keys [seeds match-thresh] :as model}]
-  (let [patterns (pattern-seed-match-scores model)
-        seeds-m  (->> seeds
-                      (map-indexed vector)
-                      (group-by #(:predicted (second %)))
-                      (util/map-kv #(map first %)))]
-    (map (fn [p]
-           (let [predicted-positive (->> p
-                                         :seed-match-scores
-                                         (filter #(< match-thresh %))
-                                         (count))]
-             (if (= 0 predicted-positive)
-               (assoc p :recall 0
-                        :precision 0
-                        :f1 0)
-               (let [tp              (->> p
-                                          :predicted
-                                          (get seeds-m)
-                                          (select-keys (:seed-match-scores p))
-                                          (vals)
-                                          (filter #(< match-thresh %))
-                                          (count))
-                     actual-positive (count (get seeds-m (:predicted p)))
-                     fp              (- predicted-positive tp)
-                     fn              (- actual-positive tp)
-                     precision       (/ tp predicted-positive)
-                     recall          (/ tp actual-positive)]
-                 (assoc p
-                   :tp tp
-                   :fp fp
-                   :fn fn
-                   :fn (- (count seeds) tp fp fn)
-                   :recall recall
-                   :precision precision
-                   :f1 (if (or (= 0 precision) (= 0 recall))
-                         0
-                         (/ (* 2 precision recall)
-                            (+ precision recall))))))))
-
-         patterns)))
-
-
-
 (defn pattern-update
   [{:keys [properties seeds patterns] :as model}]
   (let [seeds    (group-by :predicted seeds)

@@ -2,6 +2,7 @@
   (:require [clojure.java.io :as io]
             [edu.ucdenver.ccp.knowtator-clj :as k]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]
+            [edu.ucdenver.ccp.nlp.seeds :as seeds]
             [taoensso.timbre :as log]
             [taoensso.timbre.appenders.core :as appenders]
             [edu.ucdenver.ccp.nlp.evaluation :as evaluation]
@@ -167,86 +168,38 @@
                              :sentences (fn [sentences]
                                           (map #(re-model/map->Sentence %) sentences)))))
 
-(def prepared-model (-> training-model
-                        (assoc :seed-frac 1
-                               :rng 0.022894
-                               :negative-cap 3000)
-                        (re-model/split-train-test)
-                        (re-model/train-test testing-model)))
+(def split-model (-> training-model
+                     (assoc :seed-frac 1
+                            :rng 0.022894
+                            :negative-cap 3000)
+                     (re-model/split-train-test)
+                     (re-model/train-test testing-model)))
 
 
+(def prepared-model (assoc split-model
+                      :all-seed-patterns (seeds/all-seed-patterns prepared-model
+                                                                  {:cluster-thresh (range 0.9 0.5 -0.05)
+                                                                   :match-thresh   (range 0.9 0.5 -0.05)})))
 
-(def with-seed-scores-nones (re/pattern-update (-> prepared-model
-                                                   (assoc :pattern-seed-matches 1
-                                                          :cluster-thresh 0.95
-                                                          :confidence-thresh 0
-                                                          :cluster-merge-fn re-model/add-to-pattern
-                                                          :vector-fn #(re-model/context-vector % prepared-model)))))
-(->> with-seed-scores-nones
-     (filter (fn [{:keys [seed-match-scores]}] (->> seed-match-scores
-                                                    (filter #(< 0.99 %))
-                                                    (count)
-                                                    (< 1))))
-     (group-by :predicted)
-     (util/map-kv count))
-
-(def with-selectivity (->> (for [cluster-thresh (range 0.9 0.5 -0.05)
-                                 :let [ps (re/pattern-update (-> prepared-model
-                                                                 (assoc :pattern-seed-matches 1
-                                                                        :cluster-thresh cluster-thresh
-                                                                        :confidence-thresh 0
-                                                                        :cluster-merge-fn re-model/add-to-pattern
-                                                                        :vector-fn #(re-model/context-vector % prepared-model))))]
-                                 match-thresh   (range 0.95 0.5 -0.05)]
-                             (-> prepared-model
-                                 (assoc :patterns ps
-                                        :match-thresh match-thresh
-                                        :pattern-seed-matches 1
-                                        :vector-fn #(re-model/context-vector % prepared-model))
-                                 (re/pattern-seed-match-ratio)))
-                           (filter (fn [ps]
-                                     (->> ps
-                                          (filter (fn [{:keys [f1]}] (< 0.4 f1)))
-                                          (filter (fn [{:keys [recall]}] (< 0.3 recall)))
-                                          #_(filter (fn [{:keys [precision]}] (< 0 precision)))
-                                          (group-by :predicted)
-                                          (util/map-kv count)
-                                          (map second)
-                                          (filter #(< 10 %))
-                                          (count)
-                                          (= (count properties)))))
-                           (first)))
-
-(seq with-selectivity)
-(->> with-selectivity
-     (filter (fn [{:keys [recall]}] (< 0 recall)))
-     (filter (fn [{:keys [precision]}] (< 0 precision)))
-     (filter (fn [{:keys [f1]}] (< 0.25 f1)))
-     (filter (fn [{:keys [support]}] (< 0 (count support))))
-     (group-by :predicted)
-     (util/map-kv count)
-     (map second)
-     (filter #(< 0 %))
-     (count)
-     (= (count properties)))
 (def results (-> prepared-model
-                 (update :seeds (fn [seeds] nil #_(->> with-seed-scores
-                                                       (filter #(< 3 (:seed-match %)))
-                                                       (remove #(= (:predicted %) re-model/NONE))
-                                                       #_(take 500))))
-                 (assoc :patterns (->> with-selectivity
-                                       (filter (fn [{:keys [recall]}] (< 0 recall)))
-                                       (filter (fn [{:keys [precision]}] (< 0 precision)))
-                                       (filter (fn [{:keys [f1]}] (< 0.2 f1))))
+                 #_(update :seeds (fn [seeds] (->> seeds
+                                                   (remove #(= (:predicted %) re-model/NONE))
+                                                   (take 500))))
+                 (assoc :patterns (-> prepared-model
+                                      :all-seed-patterns
+                                      (seeds/seed-patterns-with-selectivity {:f1 0.4}))
                         :context-path-length-cap 100
                         :match-thresh 0.95
                         :cluster-thresh 0.7
                         :confidence-thresh 0
                         :min-pattern-support 0
-                        :max-iterations 0
+                        :max-iterations 0 `
                         :max-matches 5000
                         :re-clustering? true
-                        :match-fn re/concept-context-match)
+                        :match-fn re/concept-context-match
+                        re/support-weighted-sim-pattern-distribution-context-match
+                        re/sim-to-support-in-pattern-match)
+
                  (evaluation/run-model results-dir)))
 
 (evaluation/calc-metrics results)
@@ -264,9 +217,9 @@
                                                       :negative-cap                     5000
                                                       :match-fn                         re/support-weighted-sim-distribution-context-match}))
 
-(def baseline-results {:precision 0.4544
-                       :recall    0.5387
-                       :f1        0.3729})
+#_(def baseline-results {:precision 0.4544
+                         :recall    0.5387
+                         :f1        0.3729})
 
 (def results (with-open [rdr (clojure.java.io/reader (io/file results-dir "results.edn"))]
                (->> (line-seq rdr)
