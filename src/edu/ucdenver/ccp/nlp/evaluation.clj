@@ -176,17 +176,17 @@
       (let [p2-x (vec (map first p2-xy))
             p2-y (vec (map second p2-xy))]
         (inc-charts/add-points plot p2-x p2-y :series-label p)
-        (when save (inc-svg/save-svg plot (format (str file ".svg") title)))
+        (when save (incanter/save plot (format (str file ".png") title)))
         plot)
       (log/warn "No points found for" p))))
 
 (defn property-plot
-  ([{:keys [properties]} dataset x y {{:as save :keys [file]} :save :as params}]
+  ([{:keys [properties]} dataset x y {{:as save :keys [file]} :save :keys [title] :as params}]
    (let [groups (map-indexed vector (incanter/sel dataset :cols :property))]
      (let [property (first properties)
            plot     (make-property-plot params property groups x y)]
        (doseq [property (rest properties)] (add-property-series plot property groups x y (assoc params :save false)))
-       (when save (inc-svg/save-svg plot (str file)))
+       (when save (inc-svg/save-svg plot (format (str file ".svg") title)))
        plot)))
   ([{:keys [properties]} dataset p1 x y params]
    (let [properties (disj properties p1)

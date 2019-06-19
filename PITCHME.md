@@ -8,11 +8,10 @@
 @img[](assets/CUAnschutz_sl_clr.png)
 @snapend
 
-
 ---
 @title[Background]
 
-## Some observations
+## Challenges
 
 - There's not many gold standard relation annotations
 - We don't know how many different relations are in the scientific literature
@@ -23,6 +22,7 @@ scientific literature
 @title[Method]
 
 ## Semi-Supervised Method
+
 - Few seed sentences required
 - Bootstrapping
 
@@ -32,7 +32,7 @@ scientific literature
 @snap[north-west span-50 text-center]
 **Context Path:** 
 </br>
-Word vectors along the dependency path between two entities
+Tokens along the dependency path between two entities
 @snapend
 
 @snap[north-east span-50 text-center]
@@ -55,67 +55,46 @@ Combination of the word vectors along the context path
 ---
 @title[Table 1]
 
-  | Group |  Num Sentences |
-| -----------|------------|
-|  Train |      18020 |
-|   Test | 15764       |
+@snap[north]
+**BioCreative VI Task 4.2**
+@snapend
 
-| Relation Group | Num Sentences |
-|---|---|
-| CPR:3 | 762 |
-| CPR:4 | 2251 |
-| CPR:5 | 172  |
-| CPR:6 | 232 |
-| CPR:9 | 722 |
-| NONE | 13881 |
+@snap[west]
+@table[table-header](assets/train-test.csv)
+@snapend
+
+@snap[east]
+@table[table-header](assets/train-test-relations.csv)
+@snapend
 
 ---
+@title[PCA]
 
-@title[Context Path Lengths]
+@img[clean-img width=750](assets/PCA for NONE and CPR:9.png)
 
-@img[border=none width=1000 height=400](assets/Training Context Path Lengths.svg) 
 
 ---
 @title[Results]
 
-@snap[north span-50]
-#### Results
-@snapend
-
-@snap[west span-50]
-@img[clean-img](assets/PCA%20for%20NONE%20and%20ACTIVATOR.svg)
-@snapend
-
-@snap[east span-50]
-@img[clean-img](assets/metrics.svg)
-@snapend
+@table[table-header](assets/best-of-results.csv)
 
 ---
 
-|   | Dep2Rel 20 | Dep2Rel All | State of the Art |
-|---|---|---|---|
-| Precision | 0.1416 | 0.3283 | 0.4544 
-| Recall | 0.6020 | 0.6195 | 0.5387
-| F1-Score | 0.2292 | 0.3128 | 0.3729      
-
----
-@title[Conclusion]
-
-@snap[north-west span-100]
-## Conclusion
-@snapend
-
----
-@title[Acknoledgements]
-
+@title[Acknowledgements]
+@snap[north]
 ## Acknowledgements
-
-UCD Computational Bioscience Program
-
+UC, Denver Computational Bioscience Program
+</br>
 Funding: T15 LM009451
+@snapend
 
+@snap[south span-100]
+
+**Contact**
+</br>
 Email: Harrison.Pielke-Lombardo@ucdenver.edu
-
+</br>
 GitHub: https://github.com/tuh8888
-
+</br>
 Project: https://github.com/tuh8888/Dep2Rel
+@snapend
