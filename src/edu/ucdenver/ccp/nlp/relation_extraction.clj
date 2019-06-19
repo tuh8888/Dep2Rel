@@ -79,7 +79,7 @@
           samples))
 
 (defn concept-context-match
-  [{:keys [match-thresh vector-fn samples patterns factory]}]
+  [{:keys [match-thresh samples patterns factory] :as model}]
   (when (and (seq samples) (seq patterns))
     (log/info "Finding matches")
     (let [max-cluster-support-m (->> patterns
@@ -91,10 +91,10 @@
                                     (concept-filter patterns)
                                     (vec))
           patterns              (->> patterns
-                                     (map #(assoc % :VEC (vector-fn %)))
+                                     (map #(assoc % :VEC (re-model/context-vector % model)))
                                      (vec))]
       (->> filtered-samples
-           (map vector-fn)
+           (map #(re-model/context-vector % model))
            (linear-algebra/mdot factory (map :VEC patterns))
            (map vector filtered-samples)
            (pmap (fn [[sample sample-scores]]
@@ -119,16 +119,16 @@
                                    total-support))))))
 
 (defn support-weighted-sim-distribution-context-match
-  [{:keys [vector-fn samples patterns match-thresh factory]}]
+  [{:keys [samples patterns match-thresh factory] :as model}]
   (when (and (seq samples) (seq patterns))
     (log/info "Finding matches")
     (let [patterns (->> patterns
                         (patterns-with-support-weight)
-                        (map #(assoc % :VEC (vector-fn %)))
+                        (map #(assoc % :VEC (re-model/context-vector % model)))
                         (vec))
           samples  (vec samples)]
       (->> samples
-           (map vector-fn)
+           (map #(re-model/context-vector % model))
            (linear-algebra/mdot factory (map :VEC patterns))
            (map vector samples)
            (pmap (fn [[sample sample-scores]]
@@ -172,15 +172,15 @@
 
 
 (defn support-weighted-sim-pattern-distribution-context-match
-  [{:keys [vector-fn samples patterns match-thresh factory] :as params}]
+  [{:keys [samples patterns match-thresh factory] :as params}]
   (when (and (seq samples) (seq patterns))
     (log/info "Finding matches")
     (let [patterns        (patterns-with-support-weight patterns)
           samples         (vec samples)
           support         (mapcat :support patterns)
-          support-vectors (map vector-fn support)]
+          support-vectors (map #(re-model/context-vector % params) support)]
       (->> samples
-           (map vector-fn)
+           (map #(re-model/context-vector % params))
            (linear-algebra/mdot factory support-vectors)
            (map vector samples)
            (pmap (fn [[sample sample-scores]]
@@ -208,13 +208,13 @@
                        sample))))))))
 
 (defn sim-to-support-in-pattern-match
-  [{:keys [samples vector-fn patterns factory] :as params}]
+  [{:keys [samples patterns factory] :as params}]
   (let [patterns        (vec patterns)
         support         (mapcat :support patterns)
-        support-vectors (map vector-fn support)
+        support-vectors (map #(re-model/context-vector % params) support)
         samples         (vec samples)]
     (->> samples
-         (map vector-fn)
+         (map #(re-model/context-vector % params))
          (linear-algebra/mdot factory support-vectors)
          (map vector samples)
          (pmap (fn [[sample sample-scores]]
@@ -228,18 +228,17 @@
                      sample)))))))
 
 (defn pattern-seed-match-scores
-  [{:keys [seeds patterns vector-fn factory pattern-seed-matches]}]
-  (if (and pattern-seed-matches (< 0 pattern-seed-matches))
-    (let [seeds           (vec seeds)
-          pattern-vectors (map vector-fn patterns)
-          sample-vectors  (map vector-fn seeds)]
-      (log/info "Calculating seed matches")
-      (->> pattern-vectors
-           (linear-algebra/mdot factory sample-vectors)
-           (map vector patterns)
-           (pmap (fn [[pattern scores]]
-                   (assoc pattern :seed-match-scores scores)))))
-    patterns))
+  [{:keys [seeds patterns factory] :as params}]
+  (let [seeds           (vec seeds)
+        pattern-vectors (map #(re-model/context-vector % params) patterns)
+        sample-vectors  (map #(re-model/context-vector % params) seeds)]
+    (log/info "Calculating seed matches")
+    (->> pattern-vectors
+         (linear-algebra/mdot factory sample-vectors)
+         (map vector patterns)
+         (pmap (fn [[pattern scores]]
+                 (assoc pattern :seed-match-scores scores)))))
+  patterns)
 
 (defn pattern-seed-match-ratio
   [{:keys [seeds match-thresh] :as model}]
@@ -294,18 +293,19 @@
     (->> properties
          (pmap (fn [property]
                  (let [samples  (vec (get seeds property))
-                       patterns (get patterns property)
-                       patterns (if (seq samples)
-                                  (do
-                                    (log/info "Clustering" property)
-                                    (->> patterns
-                                         (cluster-tools/single-pass-cluster model samples)
-                                         (map #(assoc % :predicted property))))
-                                  patterns)]
-                   (pattern-seed-match-scores (assoc model :patterns patterns)))))
+                       patterns (get patterns property)]
+                   (if (seq samples)
+                     (do
+                       (log/info "Clustering" property)
+                       (->> patterns
+                            (cluster-tools/single-pass-cluster (assoc model
+                                                                 :cluster-merge-fn re-model/add-to-pattern
+                                                                 :vector-fn #(re-model/context-vector % model))
+                                                               samples)
+                            (map #(assoc % :predicted property))))
+                     patterns))))
 
          (apply concat))))
-
 
 (defn terminate?
   [{:keys [max-iterations iteration seeds matches patterns samples max-matches] :as model}]
@@ -348,11 +348,10 @@
   (filter #(<= (count (:context %)) context-path-length-cap) all-samples))
 
 (defn bootstrap
-  [{:keys [seeds factory vector-fn match-fn] :as model}]
+  [{:keys [seeds factory match-fn confidence-thresh] :as model}]
   (let [model (assoc model :samples (->> model
                                          (context-path-filter)
-                                         (map #(->> %
-                                                    (vector-fn)
+                                         (map #(->> (re-model/context-vector % model)
                                                     (linear-algebra/unit-vec factory)
                                                     (assoc % :VEC))))
                            :matches #{}

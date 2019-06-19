@@ -235,13 +235,6 @@
                           model
                           (re-model/split-train-test model))
         results         (-> model
-                            (assoc :vector-fn #(re-model/context-vector % model)
-                                   :cluster-merge-fn re-model/add-to-pattern
-                                   :pattern-update-fn re/pattern-update
-                                   :support-filter re/support-filter
-                                   :terminate? re/terminate?
-                                   :decluster re/decluster
-                                   :context-path-filter-fn re/context-path-filter)
                             (re/bootstrap)
                             (doall))
         metrics         (calc-metrics results)
