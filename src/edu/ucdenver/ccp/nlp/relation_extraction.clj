@@ -255,7 +255,8 @@
                                          (count))]
              (if (= 0 predicted-positive)
                (assoc p :recall 0
-                        :precision 0)
+                        :precision 0
+                        :f1 0)
                (let [tp              (->> p
                                           :predicted
                                           (get seeds-m)
@@ -268,14 +269,17 @@
                      fn              (- actual-positive tp)
                      precision       (/ tp predicted-positive)
                      recall          (/ tp actual-positive)]
-                 (assoc p :precision precision
-                          :recall recall
-                          :f1 (/ (* 2 precision recall)
-                                 (+ precision recall))
-                          :tp tp
-                          :fp fp
-                          :fn fn
-                          :fn (- (count seeds) tp fp fn))))))
+                 (assoc p
+                   :tp tp
+                   :fp fp
+                   :fn fn
+                   :fn (- (count seeds) tp fp fn)
+                   :recall recall
+                   :precision precision
+                   :f1 (if (or (= 0 precision) (= 0 recall))
+                         0
+                         (/ (* 2 precision recall)
+                            (+ precision recall))))))))
 
          patterns)))
 
