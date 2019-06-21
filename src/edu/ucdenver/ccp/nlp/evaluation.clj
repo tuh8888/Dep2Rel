@@ -4,7 +4,6 @@
             [taoensso.timbre :as log]
             [incanter.core :as incanter]
             [incanter.stats :as inc-stats]
-            [math :as math]
             [incanter.charts :as inc-charts]
             [incanter.svg :as inc-svg]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]
@@ -95,19 +94,38 @@
     [x1 x2]))
 
 (defn calc-metrics
-  [{:keys [matches properties all-samples]}]
-  (let [all     (sentences->entities all-samples)
-        metrics (map (fn [property]
-                       (let [actual-positive    (sentences->entities (re-model/actual-positive property all-samples))
-                             predicted-positive (sentences->entities (re-model/predicted-positive property matches))]
-                         #_(log/info property "ALL" (count all) "AT" (count actual-positive) "PT" (count predicted-positive))
-                         (-> {:actual-positive    actual-positive
-                              :predicted-positive predicted-positive
-                              :all                all}
-                             (math/calc-metrics)
-                             (assoc :property property))))
-                     properties)]
-    metrics))
+  [{:keys [matches properties]}]
+  (->> properties
+       (map (fn [p]
+              (let [tp        (->> matches
+                                   (filter #(= (:property %) p))
+                                   (filter #(= (:predicted %) p))
+                                   (count))
+                    fp        (->> matches
+                                   (filter #(not= p (:property %)))
+                                   (filter #(= p (:predicted %)))
+                                   (count))
+                    tn        (->> matches
+                                   (filter #(not= (:property %) p))
+                                   (filter #(not= (:predicted %) p))
+                                   (count))
+                    fn        (->> matches
+                                   (filter #(= (:property %) p))
+                                   (filter #(not= (:predicted %) p))
+                                   (count))
+                    precision (/ (float tp) (+ fp tp))
+                    recall    (/ (float tp) (+ tp fn))
+                    f1        (/ (* 2 precision recall)
+                                 (+ precision recall))
+                    metrics   {:property  p
+                               :tp        tp
+                               :tn        tn
+                               :fp        fp
+                               :fn        fn
+                               :precision precision
+                               :recall    recall
+                               :f1        f1}]
+                metrics)))))
 
 (defn calc-overall-metrics
   [{:keys [matches properties]}]
