@@ -11,6 +11,7 @@
 (def PARAM-KEYS #{:match-thresh
                   :cluster-thresh
                   :context-path-length-cap
+                  :context-path-length-min
                   :confidence-thresh
                   :rng
                   :seed-frac
@@ -278,15 +279,17 @@
 
 
 (defn decluster
-  [{:keys [re-clustering? support-filter patterns] :as model}]
+  [{:keys [re-clustering? patterns] :as model}]
   (when re-clustering?
     (->> patterns
          (remove #(support-filter model %))
          (mapcat :support))))
 
 (defn context-path-filter
-  [{:keys [context-path-length-cap all-samples]}]
-  (filter #(<= (count (:context %)) context-path-length-cap) all-samples))
+  [{:keys [context-path-length-cap context-path-length-min all-samples]}]
+  (->> all-samples
+       (filter #(<= (count (:context %)) context-path-length-cap))
+       (filter #(>= (count (:context %)) context-path-length-min))))
 
 (defn bootstrap
   [{:keys [seeds factory match-fn confidence-thresh] :as model}]
