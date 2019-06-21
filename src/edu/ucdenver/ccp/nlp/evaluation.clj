@@ -75,13 +75,6 @@
            (cluster-tools/single-pass-cluster sentences #{}
              {:cluster-merge-fn re-model/add-to-pattern})))))
 
-(defn sentences->entities
-  [sentences]
-  (->> sentences
-       (map :entities)
-       (map set)
-       (set)))
-
 (defn pca-2
   [data]
   (let [X          (incanter/to-matrix data)
