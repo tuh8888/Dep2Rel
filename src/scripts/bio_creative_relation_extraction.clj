@@ -10,7 +10,8 @@
             [uncomplicate.neanderthal.native :as thal-native]
             [incanter.core :as incanter]
             [incanter.io :as inc-io]
-            [edu.ucdenver.ccp.nlp.relation-extraction :as re]))
+            [edu.ucdenver.ccp.nlp.relation-extraction :as re]
+            [clojure.string :as str]))
 
 ;; File naming patterns
 (def sep "_")
@@ -180,44 +181,73 @@
                                                                   {:cluster-thresh (range 0.9 0.5 -0.05)
                                                                    :match-thresh   (range 0.9 0.5 -0.05)})))
 
-(-> prepared-model
-    :all-seed-patterns
-    (seeds/seed-patterns-with-selectivity properties {:min-f1        0
-                                                      :min-recall    0.9
-                                                      :min-precision 0})
-    (count))
+(->> (-> prepared-model
+         :all-seed-patterns
+         (seeds/seed-patterns-with-selectivity properties {:min-f1        0
+                                                           :min-recall    0.9
+                                                           :min-precision 0})
+         #_(count))
+     (group-by :predicted)
+     (util/map-kv count))
 
-(def results (-> prepared-model
-                 (update :seeds (fn [seeds] nil #_(->> seeds
-                                                       (remove #(= (:predicted %) re-model/NONE))
-                                                       (take 500))))
-                 (assoc :patterns (lazy-cat (apply min-key count
-                                                   (-> prepared-model
-                                                       :all-seed-patterns
-                                                       (seeds/seed-patterns-with-selectivity properties
-                                                                                             {:min-f1        0
-                                                                                              :min-recall    0.9
-                                                                                              :min-precision 0})))
-                                            (apply max-key count
-                                                   (-> prepared-model
-                                                       :all-seed-patterns
-                                                       (seeds/seed-patterns-with-selectivity properties
-                                                                                             {:min-f1        0
-                                                                                              :min-recall    0
-                                                                                              :min-precision 0.7}))))
-                        :context-path-length-cap 6
-                        :context-path-length-min 3
-                        :match-thresh 0.5
-                        :cluster-thresh 0.7
-                        :confidence-thresh 0
-                        :min-pattern-support 0
-                        :max-iterations 0 :max-matches 5000
-                        :re-clustering? true
-                        :match-fn re/support-weighted-sim-distribution-context-match
-                        re/support-weighted-sim-pattern-distribution-context-match
-                        re/sim-to-support-in-pattern-match)
+(count (remove #(or (nil? (:property %))
+                    (= re-model/NONE (:property %)))
+               (:sentences testing-model)))
+(def results (let [results (-> prepared-model
+                               (update :seeds (fn [seeds] nil #_(->> seeds
+                                                                     (remove #(= (:predicted %) re-model/NONE))
+                                                                     (take 500))))
+                               #_(update :matches (fn [matches]
+                                                    (map #(assoc % :predicted (:property %)) (:all-samples prepared-model))))
+                               #_(update :all-samples (fn [all-samples] nil))
+                               (assoc :patterns (lazy-cat
+                                                  #_(apply concat
+                                                           (-> prepared-model
+                                                               :all-seed-patterns
+                                                               (seeds/seed-patterns-with-selectivity properties
+                                                                                                     {:min-f1        0
+                                                                                                      :min-recall    0.9
+                                                                                                      :min-precision 0})))
+                                                  (apply min-key count
+                                                         (-> prepared-model
+                                                             :all-seed-patterns
+                                                             (seeds/seed-patterns-with-selectivity properties
+                                                                                                   {:min-f1        0
+                                                                                                    :min-recall    0.8
+                                                                                                    :min-precision 0})))
+                                                  (apply max-key count
+                                                         (-> prepared-model
+                                                             :all-seed-patterns
+                                                             (seeds/seed-patterns-with-selectivity properties
+                                                                                                   {:min-f1        0
+                                                                                                    :min-recall    0
+                                                                                                    :min-precision 0.7}))))
+                                      :context-path-length-cap 10
+                                      :context-path-length-min 0
+                                      :match-thresh 0.5
+                                      :cluster-thresh 0.7
+                                      :confidence-thresh 0
+                                      :min-pattern-support 0
+                                      :max-iterations 0 :max-matches 5000
+                                      :re-clustering? true
+                                      :match-fn re/sim-to-support-in-pattern-match
+                                      #_re/concept-context-match
+                                      #_re/sim-to-support-in-pattern-match)
 
-                 (evaluation/run-model results-dir)))
+                               (evaluation/run-model results-dir))]
+               (let [results-file (io/file results-dir "results.tsv")]
+                 (when (.exists results-file) (io/delete-file results-file))
+                 (doseq [m (remove #(= (:predicted %) re-model/NONE) (:matches results))]
+                   (let [[e1 e2] (vec (:entities m))
+                         p        (:predicted m)
+                         doc      (get-in results [:concept-annotations e1 :doc])
+                         [e1 e2] (sort [(Integer/parseInt (str/replace e1 (str doc "-T") ""))
+                                        (Integer/parseInt (str/replace e2 (str doc "-T") ""))])
+                         e1       (str "Arg1:T" e1)
+                         e2       (str "Arg2:T" e2)
+                         to-write (str (apply str (interpose "\t" [doc p e1 e2])) "\n")]
+                     (spit results-file to-write :append true))))
+               results))
 
 (evaluation/calc-metrics results)
 (count (:matches results))
