@@ -175,28 +175,45 @@
                      (re-model/split-train-test)
                      (re-model/train-test testing-model)))
 
-
 (def prepared-model (assoc split-model
-                      :all-seed-patterns (seeds/all-seed-patterns prepared-model
+                      :all-seed-patterns (seeds/all-seed-patterns split-model
                                                                   {:cluster-thresh (range 0.9 0.5 -0.05)
                                                                    :match-thresh   (range 0.9 0.5 -0.05)})))
 
+(-> prepared-model
+    :all-seed-patterns
+    (seeds/seed-patterns-with-selectivity properties {:min-f1        0
+                                                      :min-recall    0.9
+                                                      :min-precision 0})
+    (count))
+
 (def results (-> prepared-model
-                 #_(update :seeds (fn [seeds] (->> seeds
-                                                   (remove #(= (:predicted %) re-model/NONE))
-                                                   (take 500))))
-                 (assoc :patterns (-> prepared-model
-                                      :all-seed-patterns
-                                      (seeds/seed-patterns-with-selectivity {:f1 0.4}))
-                        :context-path-length-cap 100
-                        :match-thresh 0.95
+                 (update :seeds (fn [seeds] nil #_(->> seeds
+                                                       (remove #(= (:predicted %) re-model/NONE))
+                                                       (take 500))))
+                 (assoc :patterns (lazy-cat (apply min-key count
+                                                   (-> prepared-model
+                                                       :all-seed-patterns
+                                                       (seeds/seed-patterns-with-selectivity properties
+                                                                                             {:min-f1        0
+                                                                                              :min-recall    0.9
+                                                                                              :min-precision 0})))
+                                            (apply max-key count
+                                                   (-> prepared-model
+                                                       :all-seed-patterns
+                                                       (seeds/seed-patterns-with-selectivity properties
+                                                                                             {:min-f1        0
+                                                                                              :min-recall    0
+                                                                                              :min-precision 0.7}))))
+                        :context-path-length-cap 6
+                        :context-path-length-min 3
+                        :match-thresh 0.5
                         :cluster-thresh 0.7
                         :confidence-thresh 0
                         :min-pattern-support 0
-                        :max-iterations 0 `
-                        :max-matches 5000
+                        :max-iterations 0 :max-matches 5000
                         :re-clustering? true
-                        :match-fn re/concept-context-match
+                        :match-fn re/support-weighted-sim-distribution-context-match
                         re/support-weighted-sim-pattern-distribution-context-match
                         re/sim-to-support-in-pattern-match)
 
@@ -221,12 +238,12 @@
                          :recall    0.5387
                          :f1        0.3729})
 
-(def results (with-open [rdr (clojure.java.io/reader (io/file results-dir "results.edn"))]
-               (->> (line-seq rdr)
-                    (map read-string)
-                    (map #(merge % (:overall-metrics %)))
-                    (vec))))
+#_(def results (with-open [rdr (clojure.java.io/reader (io/file results-dir "results.edn"))]
+                 (->> (line-seq rdr)
+                      (map read-string)
+                      (map #(merge % (:overall-metrics %)))
+                      (vec))))
 
-(def dataset (incanter/to-dataset results))
-(incanter/view dataset)
-(count results)
+#_(def dataset (incanter/to-dataset results))
+#_(incanter/view dataset)
+#_(count results)
