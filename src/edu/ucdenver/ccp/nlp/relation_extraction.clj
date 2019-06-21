@@ -210,23 +210,25 @@
 
 (defn sim-to-support-in-pattern-match
   [{:keys [samples patterns factory] :as params}]
-  (let [patterns        (vec patterns)
-        support         (mapcat :support patterns)
-        support-vectors (map #(re-model/context-vector % params) support)
-        samples         (vec samples)]
-    (->> samples
-         (map #(re-model/context-vector % params))
-         (linear-algebra/mdot factory support-vectors)
-         (map vector samples)
-         (pmap (fn [[sample sample-scores]]
-                 (let [scores (support-pattern-scores params patterns sample-scores)]
-                   (if (seq scores)
-                     (let [{:keys [score good predicted support]} (apply max-key :score scores)]
-                       (if good
-                         (assoc sample :predicted predicted
-                                       :confidence (* score (/ good (count support))))
-                         sample))
-                     sample)))))))
+  (when (and (seq samples) (seq patterns))
+    (log/info "Finding matches")
+    (let [patterns        (vec patterns)
+          support         (mapcat :support patterns)
+          support-vectors (map #(re-model/context-vector % params) support)
+          samples         (vec samples)]
+      (->> samples
+           (map #(re-model/context-vector % params))
+           (linear-algebra/mdot factory support-vectors)
+           (map vector samples)
+           (pmap (fn [[sample sample-scores]]
+                   (let [scores (support-pattern-scores params patterns sample-scores)]
+                     (if (seq scores)
+                       (let [{:keys [score good predicted support]} (apply max-key :score scores)]
+                         (if good
+                           (assoc sample :predicted predicted
+                                         :confidence (* score (/ good (count support))))
+                           sample))
+                       sample))))))))
 
 (defn pattern-update
   [{:keys [properties seeds patterns] :as model}]
@@ -285,22 +287,24 @@
          (remove #(support-filter model %))
          (mapcat :support))))
 
-(defn context-path-filter
-  [{:keys [context-path-length-cap context-path-length-min all-samples]}]
-  (->> all-samples
-       (filter #(<= (count (:context %)) context-path-length-cap))
-       (filter #(>= (count (:context %)) context-path-length-min))))
-
 (defn bootstrap
-  [{:keys [seeds factory match-fn confidence-thresh] :as model}]
-  (let [model (assoc model :samples (->> model
-                                         (context-path-filter)
-                                         (map #(->> (re-model/context-vector % model)
-                                                    (linear-algebra/unit-vec factory)
-                                                    (assoc % :VEC))))
-                           :matches #{}
-                           :seeds seeds
-                           :iteration 0)]
+  [{:keys [seeds factory match-fn confidence-thresh context-path-length-cap context-path-length-min] :as model}]
+
+  (let [context-filter   #(and (<= (count (:context %)) context-path-length-cap)
+                                 (>= (count (:context %)) context-path-length-min))
+        filtered-samples (filter context-filter (:all-samples model))
+        removed-samples  (remove context-filter (:all-samples model))
+        model            (assoc model :samples (->> filtered-samples
+                                                    (map #(->> (re-model/context-vector % model)
+                                                               (linear-algebra/unit-vec factory)
+                                                               (assoc % :VEC)))
+                                                    (filter :VEC))
+                                      :matches (->> removed-samples
+                                                    (map #(assoc % :predicted re-model/NONE))
+                                                    (lazy-cat (:matches model))
+                                                    (set))
+                                      :seeds seeds
+                                      :iteration 0)]
     (log/info (select-keys model PARAM-KEYS))
     (log-starting-values model)
     (loop [model model]
