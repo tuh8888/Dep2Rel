@@ -335,7 +335,6 @@
                          :all-samples (->> testing-model
                                            :sentences
                                            (map #(assign-embedding testing-model %))
-                                           (filter :VEC)
                                            (doall)))))
 
 (defn split-train-test
