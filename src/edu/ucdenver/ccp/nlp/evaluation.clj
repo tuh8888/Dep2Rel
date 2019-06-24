@@ -7,7 +7,8 @@
             [incanter.charts :as inc-charts]
             [incanter.svg :as inc-svg]
             [edu.ucdenver.ccp.nlp.re-model :as re-model]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [edu.ucdenver.ccp.nlp.seeds :as seeds]))
 
 (def EVAL-KEYS #{:fn :tp :fp :tn :precision :recall :f1 :metrics :overall-metrics})
 
@@ -264,35 +265,61 @@
                                                           (io/file results-dir))}}))))
 
 (defn parameter-walk
-  [training-model testing-model results-dir {:keys [context-path-length-cap
-                                                    match-thresh
-                                                    cluster-thresh
-                                                    confidence-thresh
-                                                    min-pattern-support
-                                                    seed-frac
-                                                    rng negative-cap
-                                                    match-fn]}]
+  [{:keys [properties] :as training-model} testing-model results-dir {:keys [context-path-length-cap
+                                                                             match-thresh
+                                                                             cluster-thresh
+                                                                             confidence-thresh
+                                                                             min-pattern-support
+                                                                             seed-frac
+                                                                             rng negative-cap
+                                                                             match-fn
+                                                                             min-seed-pattern-precision
+                                                                             min-seed-pattern-recall]}]
   (doall
     ;; parallelize with
     #_(cp/upfor (dec (cp/ncpus)))
-    (for [seed-frac               seed-frac
-          :let [split-model    (re-model/split-train-test (assoc training-model :seed-frac seed-frac
-                                                                                :rng rng
-                                                                                :negative-cap negative-cap))
-                prepared-model (if (seq testing-model)
-                                 (re-model/train-test split-model testing-model)
-                                 split-model)]
-          context-path-length-cap context-path-length-cap
-          context-thresh          match-thresh
-          cluster-thresh          cluster-thresh
-          confidence-thresh       confidence-thresh
-          min-match-support       min-pattern-support]
+    (for [seed-frac                  seed-frac
+          :let [prepared-model (let [split-model (re-model/split-train-test (assoc training-model :seed-frac seed-frac
+                                                                                                  :rng rng
+                                                                                                  :negative-cap negative-cap))]
+                                 (cond (contains? testing-model :all-seed-patterns) testing-model
+                                      (seq testing-model) (re-model/train-test split-model testing-model)
+                                      :else split-model))]
+          context-path-length-cap    context-path-length-cap
+          context-thresh             match-thresh
+          cluster-thresh             cluster-thresh
+          confidence-thresh          confidence-thresh
+          min-match-support          min-pattern-support
+          min-seed-pattern-precision min-seed-pattern-precision
+          min-seed-pattern-recall    min-seed-pattern-recall
+          match-fn                   match-fn]
+
       (-> prepared-model
-          (assoc :match-thresh context-thresh
+          (update :seeds (fn [seeds] (if (and (zero? min-seed-pattern-recall)
+                                              (zero? min-seed-pattern-precision))
+                                       seeds
+                                       nil)))
+          (assoc :patterns (lazy-cat
+                             (apply min-key count
+                                    (-> prepared-model
+                                        :all-seed-patterns
+                                        (seeds/seed-patterns-with-selectivity properties
+                                                                              {:min-recall    min-seed-pattern-recall
+                                                                               :min-precision min-seed-pattern-precision})))
+                             #_(apply max-key count
+                                      (-> prepared-model
+                                          :all-seed-patterns
+                                          (seeds/seed-patterns-with-selectivity properties
+                                                                                {:min-f1        0
+                                                                                 :min-recall    0
+                                                                                 :min-precision 0.7}))))
+                 :match-thresh context-thresh
                  :cluster-thresh cluster-thresh
                  :confidence-thresh confidence-thresh
                  :min-pattern-support min-match-support
-                 :max-iterations 100
+                 :min-seed-pattern-precision min-seed-pattern-precision
+                 :min-seed-pattern-recall min-seed-pattern-recall
+                 :max-iterations 0
                  :max-matches 5000
                  :re-clustering? true
                  :context-path-length-cap context-path-length-cap

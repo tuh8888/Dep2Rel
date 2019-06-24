@@ -19,6 +19,8 @@
                   :re-clustering?
                   :max-iterations
                   :max-matches
+                  :min-seed-pattern-precision
+                  :min-seed-pattern-recall
                   :match-fn})
 
 (defn sent-pattern-concepts-match?

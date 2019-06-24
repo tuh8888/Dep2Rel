@@ -73,7 +73,6 @@
     :or   {min-f1        0
            min-recall    0
            min-precision 0}}]
-  (log/info min-f1 min-precision min-recall)
   (->> seed-patterns
        (map #(into [] (comp
                         (filter (fn [{:keys [f1]}] (<= min-f1 f1)))

@@ -110,6 +110,7 @@
                     [:training :testing])
                (incanter/to-dataset)))
 
+
 (comment
   (def training-context-paths-plot (evaluation/plot-context-lengths training-model results-dir "Training %s"))
   (incanter/view training-context-paths-plot)
@@ -193,76 +194,83 @@
 (count (remove #(or (nil? (:property %))
                     (= re-model/NONE (:property %)))
                (:sentences testing-model)))
-(def results (let [results (-> prepared-model
-                               (update :seeds (fn [seeds] nil #_(->> seeds
-                                                                     (remove #(= (:predicted %) re-model/NONE))
-                                                                     (take 500))))
-                               #_(update :matches (fn [matches]
-                                                    (map #(assoc % :predicted (:property %)) (:all-samples prepared-model))))
-                               #_(update :all-samples (fn [all-samples] nil))
-                               (assoc :patterns (lazy-cat
-                                                  #_(apply concat
+#_(def results (let [results (-> prepared-model
+                                 (update :seeds (fn [seeds] nil #_(->> seeds
+                                                                       (remove #(= (:predicted %) re-model/NONE))
+                                                                       (take 500))))
+                                 #_(update :matches (fn [matches]
+                                                      (map #(assoc % :predicted (:property %)) (:all-samples prepared-model))))
+                                 #_(update :all-samples (fn [all-samples] nil))
+                                 (assoc :patterns (lazy-cat
+                                                    #_(apply concat
+                                                             (-> prepared-model
+                                                                 :all-seed-patterns
+                                                                 (seeds/seed-patterns-with-selectivity properties
+                                                                                                       {:min-f1        0
+                                                                                                        :min-recall    0.9
+                                                                                                        :min-precision 0})))
+                                                    (apply min-key count
                                                            (-> prepared-model
                                                                :all-seed-patterns
                                                                (seeds/seed-patterns-with-selectivity properties
                                                                                                      {:min-f1        0
-                                                                                                      :min-recall    0.9
+                                                                                                      :min-recall    0.8
                                                                                                       :min-precision 0})))
-                                                  (apply min-key count
-                                                         (-> prepared-model
-                                                             :all-seed-patterns
-                                                             (seeds/seed-patterns-with-selectivity properties
-                                                                                                   {:min-f1        0
-                                                                                                    :min-recall    0.8
-                                                                                                    :min-precision 0})))
-                                                  (apply max-key count
-                                                         (-> prepared-model
-                                                             :all-seed-patterns
-                                                             (seeds/seed-patterns-with-selectivity properties
-                                                                                                   {:min-f1        0
-                                                                                                    :min-recall    0
-                                                                                                    :min-precision 0.7}))))
-                                      :context-path-length-cap 10
-                                      :context-path-length-min 0
-                                      :match-thresh 0.5
-                                      :cluster-thresh 0.7
-                                      :confidence-thresh 0
-                                      :min-pattern-support 0
-                                      :max-iterations 0 :max-matches 5000
-                                      :re-clustering? true
-                                      :match-fn re/sim-to-support-in-pattern-match
-                                      #_re/concept-context-match
-                                      #_re/sim-to-support-in-pattern-match)
+                                                    (apply max-key count
+                                                           (-> prepared-model
+                                                               :all-seed-patterns
+                                                               (seeds/seed-patterns-with-selectivity properties
+                                                                                                     {:min-f1        0
+                                                                                                      :min-recall    0
+                                                                                                      :min-precision 0.7}))))
+                                        :context-path-length-cap 10
+                                        :context-path-length-min 0
+                                        :match-thresh 0.25
+                                        :cluster-thresh 0.7
+                                        :confidence-thresh 0
+                                        :min-pattern-support 0
+                                        :max-iterations 0 :max-matches 5000
+                                        :re-clustering? true
+                                        :match-fn re/sim-to-support-in-pattern-match
+                                        #_re/concept-context-match
+                                        #_re/sim-to-support-in-pattern-match)
 
-                               (evaluation/run-model results-dir))]
-               (let [results-file (io/file results-dir "results.tsv")]
-                 (when (.exists results-file) (io/delete-file results-file))
-                 (doseq [m (remove #(= (:predicted %) re-model/NONE) (:matches results))]
-                   (let [[e1 e2] (vec (:entities m))
-                         p        (:predicted m)
-                         doc      (get-in results [:concept-annotations e1 :doc])
-                         [e1 e2] (sort [(Integer/parseInt (str/replace e1 (str doc "-T") ""))
-                                        (Integer/parseInt (str/replace e2 (str doc "-T") ""))])
-                         e1       (str "Arg1:T" e1)
-                         e2       (str "Arg2:T" e2)
-                         to-write (str (apply str (interpose "\t" [doc p e1 e2])) "\n")]
-                     (spit results-file to-write :append true))))
-               results))
+                                 (evaluation/run-model results-dir))]
+                 (let [results-file (io/file results-dir "results.tsv")]
+                   (when (.exists results-file) (io/delete-file results-file))
+                   (doseq [m (remove #(= (:predicted %) re-model/NONE) (:matches results))]
+                     (let [[e1 e2] (vec (:entities m))
+                           p        (:predicted m)
+                           doc      (get-in results [:concept-annotations e1 :doc])
+                           [e1 e2] (sort [(Integer/parseInt (str/replace e1 (str doc "-T") ""))
+                                          (Integer/parseInt (str/replace e2 (str doc "-T") ""))])
+                           e1       (str "Arg1:T" e1)
+                           e2       (str "Arg2:T" e2)
+                           to-write (str (apply str (interpose "\t" [doc p e1 e2])) "\n")]
+                       (spit results-file to-write :append true))))
+                 results))
 
-(evaluation/calc-metrics results)
-(count (:matches results))
+#_(evaluation/calc-metrics results)
+#_(count (:matches results))
 #_(incanter/view (:plot results))
 
-#_(def param-walk-results (evaluation/parameter-walk training-model testing-model results-dir
-                                                     {:context-path-length-cap          [100 10] #_[2 3 5 10 20 35 100]
-                                                      :match-thresh          #_[0.95]   [0.7 0.8 0.9]
-                                                      :cluster-thresh          #_[0.95] [0.975 0.95 0.9]
-                                                      :confidence-thresh                [0.9 0.7 0.5]
-                                                      :min-pattern-support              [1] #_[0 5 25]
-                                                      :seed-frac                        [1] #_[0.05 0.25 0.5 0.75]
-                                                      :rng                              0.022894
-                                                      :negative-cap                     5000
-                                                      :match-fn                         re/support-weighted-sim-distribution-context-match}))
+(def param-walk-results (evaluation/parameter-walk nil #_training-model
+                                                   prepared-model #_testing-model
+                                                   results-dir
+                                                   {:context-path-length-cap          [100 10] #_[2 3 5 10 20 35 100]
+                                                    :context-path-length-min          [2 8]
+                                                    :match-thresh          #_[0.95]   [0.5 0.7 0.8 0.9]
+                                                    :cluster-thresh          #_[0.95] [0.7 0.8 0.9]
+                                                    :confidence-thresh                [0.9]
+                                                    :min-pattern-support              [1] #_[0 5 25]
+                                                    :seed-frac                        [1] #_[0.05 0.25 0.5 0.75]
+                                                    :rng                              0.022894
+                                                    :negative-cap                     3000
+                                                    :min-seed-pattern-precision       [0 0.25 0.5 0.7 0.9]
+                                                    :min-seed-pattern-recall          [0 0.25 0.5 0.7 0.9]
+                                                    :match-fn                         [re/support-weighted-sim-distribution-context-match
+                                                                                       re/concept-context-match
+                                                                                       re/sim-to-support-in-pattern-match]}))
 
 #_(def baseline-results {:precision 0.4544
                          :recall    0.5387
