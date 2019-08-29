@@ -19,14 +19,6 @@
 scientific literature
 
 ---
-@title[Method]
-
-## Semi-Supervised Method
-
-- Few seed sentences required
-- Bootstrapping
-
----
 @title[Context]
 
 @snap[north-west span-50 text-center]
@@ -56,39 +48,29 @@ Combination of the word vectors along the context path
 @title[Table 1]
 
 @snap[north]
-**BioCreative VI Task 4.2**
+**BioCreative VI Task 5**
 @snapend
 
-@snap[west]
+@snap[west span-50]
 @table[table-header](assets/train-test.csv)
 @snapend
 
-@snap[east]
-@table[table-header](assets/train-test-relations.csv)
-@snapend
 
----
-@title[PCA]
-
-@img[clean-img width=750](assets/PCA for NONE and CPR:9.png)
-
-
----
-@title[Results]
-
+@snap[east span-50]
 @table[table-header](assets/best-of-results.csv)
-
+@snapend
 ---
 
 @title[Acknowledgements]
 @snap[north]
 ## Acknowledgements
+
 UC, Denver Computational Bioscience Program
 </br>
 Funding: T15 LM009451
 @snapend
 
-@snap[south span-100]
+@snap[south-west span-50]
 
 **Contact**
 </br>
@@ -97,4 +79,12 @@ Email: Harrison.Pielke-Lombardo@ucdenver.edu
 GitHub: https://github.com/tuh8888
 </br>
 Project: https://github.com/tuh8888/Dep2Rel
+
+@snap[south-east span-50]
+
+<img src="https://img.shields.io/badge/ReproducibleResearch-AbraCollaboratory-magenta.svg?style=plastic" alt="git-AbraCollaboratory">
+
+
+
+@img[width=200 height=200](assets/AbraCollaboratoryQR.png)
 @snapend

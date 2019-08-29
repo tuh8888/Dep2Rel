@@ -6,16 +6,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="fd68d31a-9ca3-4dbc-9e5f-186ec0e5f744" name="Default Changelist" comment="Filter patterns by number of matches to seeds">
-      <change afterPath="$PROJECT_DIR$/assets/best-of-results.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/train-test-relations.csv" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/assets/train-test.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/Word2Vec-clj.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/Word2Vec-clj.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules/hpl-util.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules/hpl-util.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Dep2Rel.iml" beforeDir="false" afterPath="$PROJECT_DIR$/Dep2Rel.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/PITCHME.md" beforeDir="false" afterPath="$PROJECT_DIR$/PITCHME.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/PITCHME.pptx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/relation_extraction.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/relation_extraction.clj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj" beforeDir="false" afterPath="$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../hpl-util/src/math.clj" beforeDir="false" afterPath="$PROJECT_DIR$/../hpl-util/src/math.clj" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/PCA for NONE and CPR:3.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/PCA for NONE and CPR:3.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/PCA for NONE and CPR:4.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/PCA for NONE and CPR:4.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/PCA for NONE and CPR:5.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/PCA for NONE and CPR:5.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/PCA for NONE and CPR:6.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/PCA for NONE and CPR:6.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/PCA for NONE and CPR:9.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/PCA for NONE and CPR:9.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/assets/best-of-results.csv" beforeDir="false" afterPath="$PROJECT_DIR$/assets/best-of-results.csv" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/classes/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -95,7 +101,7 @@
       <map>
         <entry key="$USER_HOME$/.clojure/deps.edn" value="0" />
         <entry key="$PROJECT_DIR$" value="4675345987000" />
-        <entry key="$PROJECT_DIR$/deps.edn" value="4281492506" />
+        <entry key="$PROJECT_DIR$/deps.edn" value="2640623760" />
         <entry key="$PROJECT_DIR$/../Word2Vec-clj" value="4675026121000" />
         <entry key="$PROJECT_DIR$/../Word2Vec-clj/deps.edn" value="3032155016" />
         <entry key="$PROJECT_DIR$/../hpl-util" value="4670933584000" />
@@ -162,12 +168,36 @@
     <favorites_list name="Dep2Rel" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
-      <file pinned="false" current-in-tab="true">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="450">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/assets/best-of-results.csv">
+          <provider editor-type-id="csv-table-editor">
+            <state showInfoPanel="true" fixedHeaders="false" rowLines="3" />
+          </provider>
+          <provider selected="true" editor-type-id="csv-text-editor">
+            <state relative-caret-position="62">
+              <caret line="2" column="14" selection-start-line="2" selection-start-column="14" selection-end-line="2" selection-end-column="14" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="351">
-              <caret line="152" selection-start-line="152" selection-end-line="152" />
+            <state relative-caret-position="6758">
+              <caret line="218" selection-start-line="218" selection-end-line="218" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/PITCHME.md">
+          <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+            <state split_layout="SPLIT">
+              <first_editor relative-caret-position="289">
+                <caret line="19" selection-start-line="19" selection-end-line="19" />
+              </first_editor>
+              <second_editor />
             </state>
           </provider>
         </entry>
@@ -277,20 +307,20 @@
         <option value="$PROJECT_DIR$/../hpl-util/src/math.clj" />
         <option value="$PROJECT_DIR$/assets/train-test.csv" />
         <option value="$PROJECT_DIR$/assets/train-test-relations.csv" />
-        <option value="$PROJECT_DIR$/assets/best-of-results.csv" />
         <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj" />
-        <option value="$PROJECT_DIR$/PITCHME.md" />
         <option value="$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/relation_extraction.clj" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.clj" />
         <option value="$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj" />
+        <option value="$PROJECT_DIR$/assets/best-of-results.csv" />
+        <option value="$PROJECT_DIR$/PITCHME.md" />
       </list>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="1600" />
-    <option name="y" value="30" />
-    <option name="width" value="1120" />
-    <option name="height" value="680" />
+  <component name="ProjectFrameBounds">
+    <option name="x" value="960" />
+    <option name="y" value="36" />
+    <option name="width" value="960" />
+    <option name="height" value="1044" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <ConfirmationsSetting value="2" id="Add" />
@@ -299,123 +329,7 @@
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
-    <panes>
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Dep2Rel" type="72ca9032:PsiDirectoryNodeCustom" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Dep2Rel" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="src" type="72ca9032:PsiDirectoryNodeCustom" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Dep2Rel" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="src" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="scripts" type="72ca9032:PsiDirectoryNodeCustom" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Dep2Rel" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="assets" type="72ca9032:PsiDirectoryNodeCustom" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Dep2Rel" type="72ca9032:PsiDirectoryNodeCustom" />
-              <item name="resources" type="72ca9032:PsiDirectoryNodeCustom" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Scratches and Consoles" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Scratches and Consoles" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
-              <item name="Scratches" type="d62648e6:ScratchProjectViewPane$MyRootNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="Scope">
-        <subPane subId="Scope 'Production'; set:Production; class com.intellij.psi.search.scope.ProjectProductionScope">
-          <expand>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="Dep2Rel" type="2674bda8:ScopeViewTreeModel$GroupNode" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="Dep2Rel" type="2674bda8:ScopeViewTreeModel$GroupNode" />
-              <item name="src" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="Dep2Rel" type="2674bda8:ScopeViewTreeModel$GroupNode" />
-              <item name="src" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-              <item name="edu" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="Dep2Rel" type="2674bda8:ScopeViewTreeModel$GroupNode" />
-              <item name="src" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-              <item name="edu" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-              <item name="ucdenver" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="Dep2Rel" type="2674bda8:ScopeViewTreeModel$GroupNode" />
-              <item name="src" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-              <item name="edu" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-              <item name="ucdenver" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-              <item name="ccp" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="Dep2Rel" type="2674bda8:ScopeViewTreeModel$GroupNode" />
-              <item name="src" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-              <item name="edu" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-              <item name="ucdenver" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-              <item name="ccp" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-              <item name="nlp" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="hpl-util" type="2674bda8:ScopeViewTreeModel$GroupNode" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="hpl-util" type="2674bda8:ScopeViewTreeModel$GroupNode" />
-              <item name="src" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="Word2Vec-clj" type="2674bda8:ScopeViewTreeModel$GroupNode" />
-            </path>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="Word2Vec-clj" type="2674bda8:ScopeViewTreeModel$GroupNode" />
-              <item name="src" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-        <subPane subId="Scope 'Project Files'; set:Project Files; class com.intellij.psi.search.scope.ProjectFilesScope">
-          <expand>
-            <path>
-              <item name="Dep2Rel" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="~/Documents/Dep2Rel" type="442cc68d:ScopeViewTreeModel$RootNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="PackagesPane" />
-    </panes>
+    <panes />
   </component>
   <component name="PropertiesComponent">
     <property name="GoToKeyword.includeLibraries" value="false" />
@@ -432,7 +346,7 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="preferences.pluginManager" />
+    <property name="settings.editor.selected.configurable" value="MTConfigurable" />
   </component>
   <component name="RecentsManager">
     <key name="OPEN_URL_DIALOG">
@@ -566,7 +480,7 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="1599" y="29" width="1682" height="1022" extended-state="6" />
+    <frame x="960" y="36" width="960" height="1044" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info auto_hide="true" content_ui="combo" id="Project" internal_type="SLIDING" order="0" sideWeight="0.4988938" type="SLIDING" weight="0.1916972" />
@@ -583,10 +497,10 @@
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32964602" />
       <window_info anchor="bottom" id="FindBugs-IDEA" order="7" weight="0.32964602" />
       <window_info anchor="bottom" id="Version Control" order="8" sideWeight="0.4993895" weight="0.4921301" />
-      <window_info anchor="bottom" id="Build" order="9" weight="0.2623295" />
+      <window_info anchor="bottom" id="Build" order="9" sideWeight="0.4994618" weight="0.26124197" />
       <window_info anchor="bottom" id="Docker" order="10" show_stripe_button="false" />
       <window_info anchor="bottom" id="CheckStyle" order="11" weight="0.32964602" />
-      <window_info anchor="bottom" id="Event Log" order="12" sideWeight="0.5011905" side_tool="true" visible="true" weight="0.2832618" />
+      <window_info anchor="bottom" id="Event Log" order="12" sideWeight="0.50053823" side_tool="true" weight="0.26231262" />
       <window_info anchor="bottom" id="Database Changes" order="13" />
       <window_info anchor="bottom" id="Run with VisualVM" order="14" />
       <window_info anchor="bottom" id="Debug with VisualVM" order="15" />
@@ -603,7 +517,7 @@
       <window_info anchor="right" id="Leiningen" order="8" />
       <window_info anchor="right" id="Palette&#9;" order="9" />
       <window_info anchor="right" auto_hide="true" id="Clojure Deps" order="10" sideWeight="0.48990825" weight="0.2" />
-      <window_info active="true" anchor="right" x="1" y="443" width="1598" height="876" id="REPL" order="11" sideWeight="0.5100917" side_tool="true" type="WINDOWED" visible="true" weight="0.43772894" />
+      <window_info anchor="right" x="1" y="443" width="1598" height="876" id="REPL" order="11" sideWeight="0.5100917" side_tool="true" type="WINDOWED" weight="0.43772894" />
       <window_info anchor="right" x="0" y="0" width="350" height="694" id="Documentation" order="12" side_tool="true" weight="0.32967034" />
     </layout>
   </component>
@@ -868,13 +782,7 @@
     <entry file="file://$PROJECT_DIR$/.attach_pid8189">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
-    <entry file="file://$USER_HOME$/.gitlibs/libs/github-tuh8888/hpl-utl/101b1b52beb68ad4ee3c62a5ed8d68fec6f4f719/src/util.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="212">
-          <caret line="59" column="6" selection-start-line="59" selection-start-column="6" selection-end-line="59" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$USER_HOME$/.gitlibs/libs/github-tuh8888/hpl-utl/101b1b52beb68ad4ee3c62a5ed8d68fec6f4f719/src/util.clj" />
     <entry file="jar://$MAVEN_REPOSITORY$/com/google/inject/guice/4.0/guice-4.0.jar!/com/google/inject/internal/cglib/core/$CodeGenerationException.class">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="88">
@@ -890,13 +798,7 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/uncomplicate_context_alg.clj" />
-    <entry file="file://$USER_HOME$/.gitlibs/libs/github-tuh8888/Word2Vec-clj/a9ccf752bc5ff1231a0cbbcfe945eabe439d40d4/src/word2vec.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="193">
-          <caret line="40" column="6" selection-start-line="40" selection-start-column="6" selection-end-line="40" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$USER_HOME$/.gitlibs/libs/github-tuh8888/Word2Vec-clj/a9ccf752bc5ff1231a0cbbcfe945eabe439d40d4/src/word2vec.clj" />
     <entry file="jar://$MAVEN_REPOSITORY$/net/mikera/core.matrix/0.52.0/core.matrix-0.52.0.jar!/clojure/core/matrix/dataset.clj">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-88">
@@ -934,13 +836,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../Word2Vec-clj/src/Word2VecNotSet.java" />
     <entry file="file://$PROJECT_DIR$/../Word2Vec-clj/src/Word2VecNotSet.clj" />
-    <entry file="file://$USER_HOME$/.gitlibs/libs/github-tuh8888/hpl-utl/b3a4a2eacc14d32386ce389845eba897615388ac/src/cluster_tools.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="336">
-          <caret line="39" column="62" lean-forward="true" selection-start-line="39" selection-start-column="62" selection-end-line="39" selection-end-column="62" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$USER_HOME$/.gitlibs/libs/github-tuh8888/hpl-utl/b3a4a2eacc14d32386ce389845eba897615388ac/src/cluster_tools.clj" />
     <entry file="file://$PROJECT_DIR$/../Word2Vec-clj/deps.edn">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="110">
@@ -970,13 +866,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/.gitlibs/libs/github-tuh8888/hpl-utl/89d4aa7c2e2b67e60030f7d1ef3d84d851341857/src/cluster_tools.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="257">
-          <caret line="36" column="28" selection-start-line="36" selection-start-column="28" selection-end-line="36" selection-end-column="28" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$USER_HOME$/.gitlibs/libs/github-tuh8888/hpl-utl/89d4aa7c2e2b67e60030f7d1ef3d84d851341857/src/cluster_tools.clj" />
     <entry file="file://$PROJECT_DIR$/../hpl-util/target/uncomplicate/neanderthal/internal/host/buffer_block.clj">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="80">
@@ -984,13 +874,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/.gitlibs/libs/github-tuh8888/hpl-utl/89d4aa7c2e2b67e60030f7d1ef3d84d851341857/src/linear_algebra.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="196">
-          <caret line="43" column="6" selection-start-line="43" selection-start-column="6" selection-end-line="43" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$USER_HOME$/.gitlibs/libs/github-tuh8888/hpl-utl/89d4aa7c2e2b67e60030f7d1ef3d84d851341857/src/linear_algebra.clj" />
     <entry file="file://$PROJECT_DIR$/../hpl-util/target/uncomplicate/commons/utils.clj">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="196">
@@ -1134,27 +1018,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/assets/best-of-results.csv">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="66">
-          <caret line="3" column="32" lean-forward="true" selection-start-line="3" selection-start-column="32" selection-end-line="3" selection-end-column="32" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/edu/ucdenver/ccp/nlp/evaluation.clj">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="649">
           <caret line="183" column="44" selection-start-line="183" selection-start-column="44" selection-end-line="183" selection-end-column="44" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/PITCHME.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
-        <state split_layout="SPLIT">
-          <first_editor relative-caret-position="424">
-            <caret line="72" column="55" selection-start-line="72" selection-start-column="55" selection-end-line="72" selection-end-column="55" />
-          </first_editor>
-          <second_editor />
         </state>
       </provider>
     </entry>
@@ -1165,17 +1032,36 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.clj">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="623">
-          <caret line="39" column="30" selection-start-line="39" selection-start-column="30" selection-end-line="39" selection-end-column="30" />
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.clj" />
+    <entry file="file://$PROJECT_DIR$/assets/best-of-results.csv">
+      <provider editor-type-id="csv-table-editor">
+        <state showInfoPanel="true" fixedHeaders="false" rowLines="3" />
+      </provider>
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="66">
+          <caret line="3" column="32" lean-forward="true" selection-start-line="3" selection-start-column="32" selection-end-line="3" selection-end-column="32" />
+        </state>
+      </provider>
+      <provider selected="true" editor-type-id="csv-text-editor">
+        <state relative-caret-position="62">
+          <caret line="2" column="14" selection-start-line="2" selection-start-column="14" selection-end-line="2" selection-end-column="14" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/scripts/bio_creative_relation_extraction.clj">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="351">
-          <caret line="152" selection-start-line="152" selection-end-line="152" />
+        <state relative-caret-position="6758">
+          <caret line="218" selection-start-line="218" selection-end-line="218" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/PITCHME.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
+        <state split_layout="SPLIT">
+          <first_editor relative-caret-position="289">
+            <caret line="19" selection-start-line="19" selection-end-line="19" />
+          </first_editor>
+          <second_editor />
         </state>
       </provider>
     </entry>
