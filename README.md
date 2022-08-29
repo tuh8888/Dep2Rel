@@ -21,4 +21,4 @@ _____
 Return to [Menu](#getting-started)
 
 
-[algorithm]:https://github.com/tuh8888/Dep2Rel/raw/master/resources/algorithm.png "Dep2Rel Algorithm"
+[algorithm]:https://github.com/tuh8888/Dep2Rel/raw/master/resources/algorithm.svg "Dep2Rel Algorithm"
